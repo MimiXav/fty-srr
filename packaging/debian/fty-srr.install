@@ -1,0 +1,4 @@
+usr/bin/fty-srr
+etc/fty-srr/fty-srr.cfg
+lib/systemd/system/fty-srr.service
+

@@ -1,0 +1,96 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configurationDescriptor version="100">
+  <logicalFolder name="root" displayName="root" projectFiles="true" kind="ROOT">
+    <df root="." name="0">
+      <df name="autom4te.cache">
+      </df>
+      <df name="builds">
+        <df name="check_zproject">
+        </df>
+        <df name="cmake">
+          <df name="Modules">
+          </df>
+        </df>
+      </df>
+      <df name="config">
+      </df>
+      <df name="doc">
+      </df>
+      <df name="include">
+        <in>fty_srr.h</in>
+        <in>fty_srr_exception.h</in>
+        <in>fty_srr_library.h</in>
+      </df>
+      <df name="packaging">
+        <df name="debian">
+        </df>
+        <df name="redhat">
+        </df>
+      </df>
+      <df name="src">
+        <df name="selftest-ro">
+        </df>
+        <in>fty_srr.cc</in>
+        <in>fty_srr_classes.h</in>
+        <in>fty_srr_manager.cc</in>
+        <in>fty_srr_manager.h</in>
+        <in>fty_srr_private_selftest.c</in>
+        <in>fty_srr_private_selftest.cc</in>
+        <in>fty_srr_selftest.c</in>
+        <in>fty_srr_selftest.cc</in>
+        <in>fty_srr_test.cc</in>
+        <in>fty_srr_worker.cc</in>
+        <in>fty_srr_worker.h</in>
+      </df>
+    </df>
+  </logicalFolder>
+  <projectmakefile>Makefile</projectmakefile>
+  <confs>
+    <conf name="Default" type="0">
+      <toolsSet>
+        <developmentServer>admin@user-xav-master.mbt.lab.etn.com:4222</developmentServer>
+        <platform>2</platform>
+      </toolsSet>
+      <compile>
+        <compiledirpicklist>
+          <compiledirpicklistitem>.</compiledirpicklistitem>
+          <compiledirpicklistitem>${AUTO_FOLDER}</compiledirpicklistitem>
+        </compiledirpicklist>
+        <compiledir>${AUTO_FOLDER}</compiledir>
+        <compilecommandpicklist>
+          <compilecommandpicklistitem>${MAKE} ${ITEM_NAME}.o</compilecommandpicklistitem>
+          <compilecommandpicklistitem>${AUTO_COMPILE}</compilecommandpicklistitem>
+        </compilecommandpicklist>
+        <compilecommand>${AUTO_COMPILE}</compilecommand>
+      </compile>
+      <dbx_gdbdebugger version="1">
+        <gdb_pathmaps>
+        </gdb_pathmaps>
+        <gdb_interceptlist>
+          <gdbinterceptoptions gdb_all="false" gdb_unhandled="true" gdb_unexpected="true"/>
+        </gdb_interceptlist>
+        <gdb_options>
+          <DebugOptions>
+          </DebugOptions>
+        </gdb_options>
+        <gdb_buildfirst gdb_buildfirst_overriden="false" gdb_buildfirst_old="false"/>
+      </dbx_gdbdebugger>
+      <nativedebugger version="1">
+        <engine>gdb</engine>
+      </nativedebugger>
+      <runprofile version="9">
+        <runcommandpicklist>
+          <runcommandpicklistitem>"${OUTPUT_PATH}"</runcommandpicklistitem>
+        </runcommandpicklist>
+        <runcommand>"${OUTPUT_PATH}"</runcommand>
+        <rundir>./src/.libs</rundir>
+        <buildfirst>false</buildfirst>
+        <terminal-type>0</terminal-type>
+        <remove-instrumentation>0</remove-instrumentation>
+        <environment>
+          <variable name="LD_LIBRARY_PATH" value="."/>
+        </environment>
+      </runprofile>
+    </conf>
+  </confs>
+</configurationDescriptor>
