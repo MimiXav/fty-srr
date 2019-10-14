@@ -26,14 +26,11 @@
 @end
  */
 
-#include <cxxtools/serializationinfo.h>
-#include <fty_common_messagebus.h>
-#include <fty_common_dto.h>
-
 #include "fty_srr_classes.h"
 
 namespace srr
 {
+    // Timout for Request/Reply in s
     const int TIME_OUT = 4;
     
     /**

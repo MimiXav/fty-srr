@@ -24,6 +24,11 @@
 
 namespace srr {
 
+    /**
+     * Srr exception Class
+     * @param 
+     * @return 
+     */
     class SrrException : public std::runtime_error {
       public:
         SrrException(const std::string& what) : std::runtime_error(what) {}

@@ -19,14 +19,9 @@
     =========================================================================
  */
 
-#ifndef FTY_SRR_SERVER_H_INCLUDED
-#define FTY_SRR_SERVER_H_INCLUDED
+#ifndef FTY_SRR_MANAGER_H_INCLUDED
+#define FTY_SRR_MANAGER_H_INCLUDED
 
-#include <functional>
-
-#include <fty_common_messagebus.h>
-#include "fty_common_client.h"
-#include "fty_common_sync_server.h"
 #include "fty_srr_worker.h"
 
 /**

@@ -28,21 +28,12 @@
 
 #include "fty_srr_classes.h"
 
-#include <fty_common_messagebus.h>
-
-#include <iostream>
-#include <fstream>
-#include <functional>
-#include <string>
-#include <vector>
-#include <fty_common_messagebus_interface.h>
-
 using namespace std::placeholders;
 
 namespace srr
 {
     /**
-     * 
+     * Constructor
      * @param parameters
      * @param streamPublisher
      */
@@ -52,23 +43,24 @@ namespace srr
         init();
     }
 
+    /**
+     * Destructor
+     */
     SrrManager::~SrrManager()
     {
         log_debug("Release all Srr resources");
         if (m_srrworker) 
         {
             delete m_srrworker;
-            log_debug("worker resource deleted");
         }
         if (m_msgBus) 
         {
             delete m_msgBus;
-            log_debug("msgBus resource deleted");
         }
     }
     
     /**
-     * 
+     * Class initialization 
      */
     void SrrManager::init()
     {
@@ -96,7 +88,7 @@ namespace srr
     }
 
     /**
-     * 
+     * Handle all incoming request
      * @param sender
      * @param payloadea
      * @return 
