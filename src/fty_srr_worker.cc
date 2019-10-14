@@ -80,6 +80,7 @@ namespace srr
         m_featuresAssociation ["notification"] = FeaturesAssociation(CONFIG_AGENT_NAME, CONFIG_MSG_QUEUE_NAME);
         m_featuresAssociation ["user-session"] = FeaturesAssociation(CONFIG_AGENT_NAME, CONFIG_MSG_QUEUE_NAME);
         m_featuresAssociation ["automation-settings"] = FeaturesAssociation(CONFIG_AGENT_NAME, CONFIG_MSG_QUEUE_NAME);
+        m_featuresAssociation ["network"] = FeaturesAssociation(CONFIG_AGENT_NAME, CONFIG_MSG_QUEUE_NAME);
         m_featuresAssociation ["automations"] = FeaturesAssociation(EMC4J_AGENT_NAME, EMC4J_MSG_QUEUE_NAME);
         m_featuresAssociation ["virtual-assets"] = FeaturesAssociation(EMC4J_AGENT_NAME, EMC4J_MSG_QUEUE_NAME);
         m_featuresAssociation ["automations,virtual-assets"] = FeaturesAssociation(EMC4J_AGENT_NAME, EMC4J_MSG_QUEUE_NAME);
