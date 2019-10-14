@@ -39,6 +39,20 @@
 // EMC4J agent definition
 #define EMC4J_AGENT_NAME                   "etn-malamute-translator"
 #define EMC4J_MSG_QUEUE_NAME               "ETN.Q.EMC4J.REQ"
+// Features definition
+#define EMC4J_AGENT_NAME                   "etn-malamute-translator"
+#define EMC4J_MSG_QUEUE_NAME               "ETN.Q.EMC4J.REQ"
+// Features definition
+#define MONITORING_FEATURE_NAME            "monitoring"
+#define NOTIFICATION_FEATURE_NAME          "notification"
+#define AUTOMATION_SETTINGS                "automation-settings"
+#define USER_SESSION_FEATURE_NAME          "user-session"
+#define DISCOVERY                          "discovery"
+#define GENERAL_CONFIG                     "general-config"
+#define NETWORK                            "network"
+#define AUTOMATIONS                        "automations"
+#define VIRTUAL_ASSETS                     "virtual-assets"
+
 // Action definition
 #define GET_ACTION                         "getFeatureList"
 #define SAVE_ACTION                        "save"

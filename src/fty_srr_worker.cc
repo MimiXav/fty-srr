@@ -76,14 +76,16 @@ namespace srr
      */
     void SrrWorker::buildFeaturesAssociation()
     {
-        m_featuresAssociation ["monitoring"] = FeaturesAssociation(CONFIG_AGENT_NAME, CONFIG_MSG_QUEUE_NAME);
-        m_featuresAssociation ["notification"] = FeaturesAssociation(CONFIG_AGENT_NAME, CONFIG_MSG_QUEUE_NAME);
-        m_featuresAssociation ["user-session"] = FeaturesAssociation(CONFIG_AGENT_NAME, CONFIG_MSG_QUEUE_NAME);
-        m_featuresAssociation ["automation-settings"] = FeaturesAssociation(CONFIG_AGENT_NAME, CONFIG_MSG_QUEUE_NAME);
-        m_featuresAssociation ["network"] = FeaturesAssociation(CONFIG_AGENT_NAME, CONFIG_MSG_QUEUE_NAME);
-        m_featuresAssociation ["automations"] = FeaturesAssociation(EMC4J_AGENT_NAME, EMC4J_MSG_QUEUE_NAME);
-        m_featuresAssociation ["virtual-assets"] = FeaturesAssociation(EMC4J_AGENT_NAME, EMC4J_MSG_QUEUE_NAME);
-        m_featuresAssociation ["automations,virtual-assets"] = FeaturesAssociation(EMC4J_AGENT_NAME, EMC4J_MSG_QUEUE_NAME);
+        m_featuresAssociation [MONITORING_FEATURE_NAME] = FeaturesAssociation(CONFIG_AGENT_NAME, CONFIG_MSG_QUEUE_NAME);
+        m_featuresAssociation [NOTIFICATION_FEATURE_NAME] = FeaturesAssociation(CONFIG_AGENT_NAME, CONFIG_MSG_QUEUE_NAME);
+        m_featuresAssociation [AUTOMATION_SETTINGS] = FeaturesAssociation(CONFIG_AGENT_NAME, CONFIG_MSG_QUEUE_NAME);
+        m_featuresAssociation [USER_SESSION_FEATURE_NAME] = FeaturesAssociation(CONFIG_AGENT_NAME, CONFIG_MSG_QUEUE_NAME);
+        m_featuresAssociation [DISCOVERY] = FeaturesAssociation(CONFIG_AGENT_NAME, CONFIG_MSG_QUEUE_NAME);
+        m_featuresAssociation [GENERAL_CONFIG] = FeaturesAssociation(CONFIG_AGENT_NAME, CONFIG_MSG_QUEUE_NAME);
+        m_featuresAssociation [NETWORK] = FeaturesAssociation(CONFIG_AGENT_NAME, CONFIG_MSG_QUEUE_NAME);
+        // Emc4j
+        m_featuresAssociation [AUTOMATIONS] = FeaturesAssociation(EMC4J_AGENT_NAME, EMC4J_MSG_QUEUE_NAME);
+        m_featuresAssociation [VIRTUAL_ASSETS] = FeaturesAssociation(EMC4J_AGENT_NAME, EMC4J_MSG_QUEUE_NAME);
     }
     
     /**
