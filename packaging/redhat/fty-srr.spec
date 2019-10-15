@@ -55,15 +55,13 @@ BuildRequires:  xmlto
 # "4.9 or newer".
 BuildRequires:  devtoolset-3-gcc devtoolset-3-gcc-c++
 BuildRequires:  gcc-c++ >= 4.9.0
-BuildRequires:  augeas-devel
-BuildRequires:  libxml-2.0-devel
 BuildRequires:  libsodium-devel
 BuildRequires:  zeromq-devel
 BuildRequires:  czmq-devel >= 3.0.2
+BuildRequires:  malamute-devel >= 1.0.0
 BuildRequires:  openssl-devel
 BuildRequires:  fty-common-devel
 BuildRequires:  fty-common-mlm-devel
-BuildRequires:  malamute-devel >= 1.0.0
 BuildRequires:  log4cplus-devel
 BuildRequires:  fty-common-logging-devel
 BuildRequires:  cxxtools-devel
@@ -94,7 +92,7 @@ This package contains shared library for fty-srr: save, restore and reset agent 
 
 %build
 sh autogen.sh
-%{configure} --enable-drafts=%{DRAFTS} --with-systemd-units --with-augeas=yes
+%{configure} --enable-drafts=%{DRAFTS} --with-systemd-units
 make %{_smp_mflags}
 
 %install
