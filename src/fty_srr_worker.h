@@ -51,10 +51,16 @@ namespace srr
         private:
           std::map<std::string, std::string> m_parameters;
           std::map<std::string, FeaturesAssociation> m_featuresAssociation;
+          
+          std::map<const std::string, std::string> m_agentQueueAssociation;
+          
           messagebus::MessageBus *m_msgBus;
 
           void init();
           void buildFeaturesAssociation();
+          
+          void saveFactorizationCall(const cxxtools::SerializationInfo& siFeatureList, std::map<const std::string, std::string>& association);
+          void restoreFactorizationCall(cxxtools::SerializationInfo& siData, std::map<const std::string, cxxtools::SerializationInfo>& association);
 
           void sendResponse(const messagebus::Message& msg, const messagebus::UserData& userData, const std::string& subject);
 
