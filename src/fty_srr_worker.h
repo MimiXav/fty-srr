@@ -24,8 +24,10 @@
 
 #include <fty_common_messagebus.h>
 
-namespace srr 
+namespace srr
 {
+    #define FEATURE_SEPARATOR   ","
+
     class SrrWorker
     {
         public:
@@ -44,10 +46,10 @@ namespace srr
             messagebus::MessageBus *m_msgBus;
 
             void init();
-            void buildFeaturesAssociation();
+            void buildMapAssociation();
 
-            void saveFactorizationCall(const cxxtools::SerializationInfo& siFeatureList, std::map<const std::string, std::string>& association);
-            void restoreFactorizationCall(cxxtools::SerializationInfo& siData, std::map<const std::string, cxxtools::SerializationInfo>& association);
+            void factorizationSaveCall(const cxxtools::SerializationInfo& siFeatureList, std::map<const std::string, std::string>& association);
+            void factorizationRestoreCall(cxxtools::SerializationInfo& siData, std::map<const std::string, cxxtools::SerializationInfo>& association);
 
             void sendResponse(const messagebus::Message& msg, const messagebus::UserData& userData, const std::string& subject);
 

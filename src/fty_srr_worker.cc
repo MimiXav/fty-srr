@@ -30,10 +30,8 @@
 
 namespace srr
 {
-    // Timout for Request/Reply in s
+    // Timeout for Request/Reply in s
     static const int TIME_OUT = 4;
-    // Feature separator
-    static const char FEATURE_SEPARATOR = ',';
     
     /**
      * Constructor
@@ -61,8 +59,8 @@ namespace srr
     {
         try
         {
-            // Set features associations.
-            buildFeaturesAssociation();
+            // Build map associations.
+            buildMapAssociation();
         }        
         catch (messagebus::MessageBusException& ex)
         {
@@ -76,7 +74,7 @@ namespace srr
     /**
      * Set all associations
      */
-    void SrrWorker::buildFeaturesAssociation()
+    void SrrWorker::buildMapAssociation()
     {
         // Feature -> Agent (fty-config)
         m_featuresToAgent [MONITORING_FEATURE_NAME] = CONFIG_AGENT_NAME;
@@ -137,7 +135,7 @@ namespace srr
                 
                 // Get all feature association to factorize request
                 std::map<const std::string, std::string> agentAssoc;
-                saveFactorizationCall(si.getMember(FEATURE_LIST_NAME), agentAssoc);
+                factorizationSaveCall(si.getMember(FEATURE_LIST_NAME), agentAssoc);
                 
                 for(auto const& agent: agentAssoc)
                 {
@@ -164,9 +162,8 @@ namespace srr
 
                     log_debug("Settings for: '%s' retrieved", features.c_str());
                     // Response serialization 
-                    messagebus::UserData data = resp.userData();
                     dto::config::ConfigResponseDto configResponse;
-                    data >> configResponse;
+                    resp.userData() >> configResponse;
                     // Get data member
                     cxxtools::SerializationInfo& si = *(ipm2ConfSi.findMember(DATA_MEMBER));
                     cxxtools::SerializationInfo siConfigResp;
@@ -211,7 +208,7 @@ namespace srr
         respList.status = STATUS_UNKNOWN;
         try
         {
-            log_debug("Data to set %s:", query.data.c_str());
+            log_debug("Data to set %s", query.data.c_str());
             // Get the si from the request
             cxxtools::SerializationInfo si;
             JSON::readFromString(query.data, si);
@@ -223,7 +220,7 @@ namespace srr
             }
             // Factorization agent's call.
             std::map<const std::string, cxxtools::SerializationInfo> agentAssoc;
-            restoreFactorizationCall(siData, agentAssoc);
+            factorizationRestoreCall(siData, agentAssoc);
             
             for(auto const& agent: agentAssoc)
             {
@@ -232,8 +229,6 @@ namespace srr
                 // Get queue name from agent name
                 std::string agentNameDest = agent.first;
                 std::string queueNameDest = m_agentToQueue.at(agentNameDest);
-                
-                //dto::srr::SrrRestoreDto srrResponseDto;
                 // Build query
                 dto::config::ConfigQueryDto configQuery(RESTORE_ACTION);
                 configQuery.data = "{" + JSON::writeToString(restoreSi, false) + "}";
@@ -248,9 +243,8 @@ namespace srr
                 messagebus::Message resp = m_msgBus->request(queueNameDest, req, TIME_OUT);
 
                 // Serialize response
-                messagebus::UserData data = resp.userData();
                 dto::srr::SrrRestoreDtoList respDto;
-                data >> respDto;
+                resp.userData() >> respDto;
 
                 if ((respDto.status.compare(STATUS_FAILED) == 0 && respList.status.compare(STATUS_SUCCESS) == 0 )||
                     (respDto.status.compare(STATUS_SUCCESS) == 0 && respList.status.compare(STATUS_FAILED) == 0))
@@ -283,7 +277,7 @@ namespace srr
      * @param siFeatureList
      * @param association
      */
-    void SrrWorker::saveFactorizationCall(const cxxtools::SerializationInfo& siFeatureList, std::map<const std::string, std::string>& association)
+    void SrrWorker::factorizationSaveCall(const cxxtools::SerializationInfo& siFeatureList, std::map<const std::string, std::string>& association)
     {   
         for (const auto &feature : siFeatureList)
         {
@@ -308,7 +302,7 @@ namespace srr
      * @param siFeatureList
      * @param association
      */
-    void SrrWorker::restoreFactorizationCall(cxxtools::SerializationInfo& siData, std::map<const std::string, cxxtools::SerializationInfo>& association)
+    void SrrWorker::factorizationRestoreCall(cxxtools::SerializationInfo& siData, std::map<const std::string, cxxtools::SerializationInfo>& association)
     {  
         cxxtools::SerializationInfo::Iterator it;
         for (it = siData.begin(); it != siData.end(); ++it)
