@@ -25,7 +25,7 @@
 #include "fty_srr_worker.h"
 
 /**
- * \brief Agent config server actor
+ * \brief Agent srr server
  */
 
 namespace srr 
@@ -33,12 +33,10 @@ namespace srr
     class SrrManager 
     {
         public:
-
             explicit SrrManager(const std::map<std::string, std::string> & parameters);
             ~SrrManager();
             
         private:
-
             std::map<std::string, std::string> m_parameters;
             messagebus::MessageBus *m_msgBus;
             srr::SrrWorker* m_srrworker;

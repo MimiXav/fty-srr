@@ -26,46 +26,33 @@
 
 namespace srr 
 {
-    struct FeaturesAssociation 
-    {
-            std::string agentName;
-            std::string queueName;
-            
-            FeaturesAssociation() = default;
-            FeaturesAssociation(const std::string agentName, const std::string queueName):
-                agentName(agentName),
-                queueName(queueName) {}
-    };
-    
     class SrrWorker
     {
         public:
 
-          explicit SrrWorker(messagebus::MessageBus* msgBus, const std::map<std::string, std::string>& parameters);
-          ~SrrWorker();
+            explicit SrrWorker(messagebus::MessageBus* msgBus, const std::map<std::string, std::string>& parameters);
+            ~SrrWorker();
           
-          void getFeatureListManaged(const messagebus::Message& msg, const std::string& subject);
-          void saveIpm2Configuration(const messagebus::Message& msg, const dto::srr::SrrQueryDto& query);
-          void restoreIpm2Configuration(const messagebus::Message& msg, const dto::srr::SrrQueryDto& query);
+            void getFeatureListManaged(const messagebus::Message& msg, const std::string& subject);
+            void saveIpm2Configuration(const messagebus::Message& msg, const dto::srr::SrrQueryDto& query);
+            void restoreIpm2Configuration(const messagebus::Message& msg, const dto::srr::SrrQueryDto& query);
 
         private:
-          std::map<std::string, std::string> m_parameters;
-          std::map<std::string, FeaturesAssociation> m_featuresAssociation;
-          
-          std::map<const std::string, std::string> m_agentQueueAssociation;
-          
-          messagebus::MessageBus *m_msgBus;
+            std::map<std::string, std::string> m_parameters;
+            std::map<const std::string, std::string> m_featuresToAgent;
+            std::map<const std::string, std::string> m_agentToQueue;
+            messagebus::MessageBus *m_msgBus;
 
-          void init();
-          void buildFeaturesAssociation();
-          
-          void saveFactorizationCall(const cxxtools::SerializationInfo& siFeatureList, std::map<const std::string, std::string>& association);
-          void restoreFactorizationCall(cxxtools::SerializationInfo& siData, std::map<const std::string, cxxtools::SerializationInfo>& association);
+            void init();
+            void buildFeaturesAssociation();
 
-          void sendResponse(const messagebus::Message& msg, const messagebus::UserData& userData, const std::string& subject);
+            void saveFactorizationCall(const cxxtools::SerializationInfo& siFeatureList, std::map<const std::string, std::string>& association);
+            void restoreFactorizationCall(cxxtools::SerializationInfo& siData, std::map<const std::string, cxxtools::SerializationInfo>& association);
 
-          cxxtools::SerializationInfo buildIpm2ConfigurationStruct();
-          void buildResponsePayload(const std::string& featureName, cxxtools::SerializationInfo& siOutput, cxxtools::SerializationInfo& siInput);
+            void sendResponse(const messagebus::Message& msg, const messagebus::UserData& userData, const std::string& subject);
+
+            cxxtools::SerializationInfo buildIpm2ConfigurationStruct();
+            void buildResponsePayload(const std::string& featureName, cxxtools::SerializationInfo& siOutput, cxxtools::SerializationInfo& siInput);
     };    
 }
 

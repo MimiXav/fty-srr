@@ -96,7 +96,6 @@ namespace srr
     void SrrManager::handleRequest(messagebus::Message msg)
     {
         log_debug("SRR handleRequest:");
-        //std::vector<dto::srr::SrrResponseDto> responseDtoList;
         try
         {
             messagebus::UserData data = msg.userData();
@@ -112,15 +111,16 @@ namespace srr
             if (query.action.compare(GET_ACTION) == 0)
             {
                 m_srrworker->getFeatureListManaged(msg, query.action);
-            } else if (query.action.compare(SAVE_ACTION) == 0)
+            } 
+            else if (query.action.compare(SAVE_ACTION) == 0)
             {
                 m_srrworker->saveIpm2Configuration(msg, query);
             }
             else if (query.action.compare(RESTORE_ACTION) == 0)
             {
-                // Get all data from data file, and give them to fty-config to save it.
                 m_srrworker->restoreIpm2Configuration(msg, query);
-            } else
+            } 
+            else
             {
                 log_error("Wrong command '%s'", query.action.c_str());
             }
