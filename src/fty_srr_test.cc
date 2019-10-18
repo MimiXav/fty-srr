@@ -80,9 +80,9 @@ static std::string getRestoreIpm2ConfigPayload()
     return JSON::writeToString(si, false);
 }
 
-messagebus::UserData sendRequest(const std::string& subject, const messagebus::UserData& userData)
+dto::UserData sendRequest(const std::string& subject, const dto::UserData& userData)
 {
-    messagebus::UserData response;
+    dto::UserData response;
     try
     {
         // Client id
@@ -117,10 +117,10 @@ static dto::srr::SrrFeaturesListDto getFeatureListManaged()
 {
     dto::srr::SrrFeaturesListDto featuresListDto;
     dto::srr::SrrQueryDto query(GET_ACTION);
-    messagebus::UserData reqData;
+    dto::UserData reqData;
     reqData << query;
     // Send request
-    messagebus::UserData respData = sendRequest(GET_ACTION, reqData);
+    dto::UserData respData = sendRequest(GET_ACTION, reqData);
     respData >> featuresListDto;
     
     return featuresListDto;
@@ -129,9 +129,9 @@ static dto::srr::SrrFeaturesListDto getFeatureListManaged()
 static std::string saveIpm2Configuration(const std::string& inputData)
 {
     dto::srr::SrrQueryDto query(SAVE_ACTION, inputData);
-    messagebus::UserData reqData;
+    dto::UserData reqData;
     reqData << query;
-    messagebus::UserData respData = sendRequest(SAVE_ACTION, reqData);
+    dto::UserData respData = sendRequest(SAVE_ACTION, reqData);
     
     return respData.front();
 }
@@ -141,9 +141,9 @@ static dto::srr::SrrRestoreDtoList restoreIpm2Configuration(const std::string& i
     dto::srr::SrrRestoreDtoList responseDto;
     
     dto::srr::SrrQueryDto query(RESTORE_ACTION, inputData);
-    messagebus::UserData reqData;
+    dto::UserData reqData;
     reqData << query;
-    messagebus::UserData respData = sendRequest(RESTORE_ACTION, reqData);
+    dto::UserData respData = sendRequest(RESTORE_ACTION, reqData);
     respData >> responseDto;
     
     return responseDto;

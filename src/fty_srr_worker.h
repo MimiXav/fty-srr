@@ -51,7 +51,7 @@ namespace srr
             void factorizationSaveCall(const cxxtools::SerializationInfo& siFeatureList, std::map<const std::string, std::string>& association);
             void factorizationRestoreCall(cxxtools::SerializationInfo& siData, std::map<const std::string, cxxtools::SerializationInfo>& association);
 
-            void sendResponse(const messagebus::Message& msg, const messagebus::UserData& userData, const std::string& subject);
+            void sendResponse(const messagebus::Message& msg, const dto::UserData& userData, const std::string& subject);
 
             cxxtools::SerializationInfo buildIpm2ConfigurationStruct();
             void buildResponsePayload(const std::string& featureName, cxxtools::SerializationInfo& siOutput, cxxtools::SerializationInfo& siInput);

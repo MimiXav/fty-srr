@@ -98,7 +98,7 @@ namespace srr
         log_debug("SRR handleRequest:");
         try
         {
-            messagebus::UserData data = msg.userData();
+            dto::UserData data = msg.userData();
             dto::srr::SrrQueryDto query;
             data >> query;
 

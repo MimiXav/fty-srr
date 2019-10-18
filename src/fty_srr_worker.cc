@@ -105,7 +105,7 @@ namespace srr
             featuresListdto.featuresList.push_back(feature.first);
         }
         // Send Response
-        messagebus::UserData userData;
+        dto::UserData userData;
         userData << featuresListdto;
         sendResponse(msg, userData, subject);
     }
@@ -195,7 +195,7 @@ namespace srr
             log_error("Unknown error on save Ipm2 configuration");
         }
         // Send Response
-        messagebus::UserData userData;
+        dto::UserData userData;
         userData.push_back(saveResp);
         sendResponse(msg, userData, query.action);
     }
@@ -273,7 +273,7 @@ namespace srr
             throw SrrException("Unknown error on restore Ipm2 configuration");
         }
         // Send Response
-        messagebus::UserData userData;
+        dto::UserData userData;
         userData << respList;
         sendResponse(msg, userData, query.action);
     }
@@ -348,7 +348,7 @@ namespace srr
      * @param payload
      * @param subject
      */
-    void SrrWorker::sendResponse(const messagebus::Message& msg, const messagebus::UserData& userData, const std::string& subject)
+    void SrrWorker::sendResponse(const messagebus::Message& msg, const dto::UserData& userData, const std::string& subject)
     {
         try
         {
