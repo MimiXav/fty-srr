@@ -162,8 +162,11 @@ namespace srr
 
                     log_debug("Settings for: '%s' retrieved", features.c_str());
                     // Response serialization 
-                    dto::config::ConfigResponseDto configResponse;
-                    resp.userData() >> configResponse;
+                    dto::config::ConfigResponseDto configResponse(features, STATUS_FAILED);
+                    if (!resp.userData().empty())
+                    {
+                        resp.userData() >> configResponse;
+                    }
                     // Get data member
                     cxxtools::SerializationInfo& si = *(ipm2ConfSi.findMember(DATA_MEMBER));
                     cxxtools::SerializationInfo siConfigResp;
@@ -243,17 +246,20 @@ namespace srr
                 messagebus::Message resp = m_msgBus->request(queueNameDest, req, TIME_OUT);
 
                 // Serialize response
-                dto::srr::SrrRestoreDtoList respDto;
-                resp.userData() >> respDto;
+                dto::srr::SrrRestoreDtoList respDto(STATUS_FAILED);
+                if (!resp.userData().empty())
+                {
+                    resp.userData() >> respDto;
 
-                if ((respDto.status.compare(STATUS_FAILED) == 0 && respList.status.compare(STATUS_SUCCESS) == 0 )||
-                    (respDto.status.compare(STATUS_SUCCESS) == 0 && respList.status.compare(STATUS_FAILED) == 0))
-                {
-                    respList.status = STATUS_PARTIAL_SUCCESS;
-                }
-                else 
-                {
-                    respList.status = respDto.status;
+                    if ((respDto.status.compare(STATUS_FAILED) == 0 && respList.status.compare(STATUS_SUCCESS) == 0 )||
+                        (respDto.status.compare(STATUS_SUCCESS) == 0 && respList.status.compare(STATUS_FAILED) == 0))
+                    {
+                        respList.status = STATUS_PARTIAL_SUCCESS;
+                    }
+                    else 
+                    {
+                        respList.status = respDto.status;
+                    }
                 }
                 respList.responseList.insert(respList.responseList.end(), respDto.responseList.begin(), respDto.responseList.end());
             }
