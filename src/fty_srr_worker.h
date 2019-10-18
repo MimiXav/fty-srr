@@ -48,7 +48,7 @@ namespace srr
             void init();
             void buildMapAssociation();
 
-            void factorizationSaveCall(const cxxtools::SerializationInfo& siFeatureList, std::map<const std::string, std::string>& association);
+            void factorizationSaveCall(const cxxtools::SerializationInfo& siFeatureList, std::map<const std::string, std::list<std::string>>& association);
             void factorizationRestoreCall(cxxtools::SerializationInfo& siData, std::map<const std::string, cxxtools::SerializationInfo>& association);
 
             void sendResponse(const messagebus::Message& msg, const dto::UserData& userData, const std::string& subject);

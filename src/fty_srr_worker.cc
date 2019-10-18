@@ -134,7 +134,7 @@ namespace srr
                 JSON::readFromString(query.data, si);            
                 
                 // Get all feature association to factorize request
-                std::map<const std::string, std::string> agentAssoc;
+                std::map<const std::string, std::list<std::string>> agentAssoc;
                 factorizationSaveCall(si.getMember(FEATURE_LIST_NAME), agentAssoc);
                 
                 for(auto const& agent: agentAssoc)
@@ -142,14 +142,14 @@ namespace srr
                     // Get queue name from agent name
                     std::string agentNameDest = agent.first;
                     std::string queueNameDest = m_agentToQueue.at(agentNameDest);
-                    std::string features = agent.second;
+                    //std::string features = agent.second;
                     
-                    log_debug("Send following request '%s' at '%s', to queue '%s', from '%s'", features.c_str(), agentNameDest.c_str(), 
-                            queueNameDest.c_str(), m_parameters.at(AGENT_NAME_KEY).c_str());
+                    log_debug("Send request at '%s', to queue '%s', from '%s'", agentNameDest.c_str(), queueNameDest.c_str(), 
+                            m_parameters.at(AGENT_NAME_KEY).c_str());
                     // Build query
                     dto::config::ConfigQueryDto configQuery;
                     configQuery.action = SAVE_ACTION;
-                    configQuery.featureName = features;
+                    configQuery.features = agent.second;
                     // Build message
                     messagebus::Message req;
                     req.userData() << configQuery;
@@ -160,9 +160,9 @@ namespace srr
                     // Send request
                     messagebus::Message resp = m_msgBus->request(queueNameDest, req, TIME_OUT);
 
-                    log_debug("Settings for: '%s' retrieved", features.c_str());
+                    log_debug("Settings retrieved");
                     // Response serialization 
-                    dto::config::ConfigResponseDto configResponse(features, STATUS_FAILED);
+                    dto::config::ConfigResponseDto configResponse(/*features*/"", STATUS_FAILED);
                     if (!resp.userData().empty())
                     {
                         resp.userData() >> configResponse;
@@ -234,6 +234,7 @@ namespace srr
                 std::string queueNameDest = m_agentToQueue.at(agentNameDest);
                 // Build query
                 dto::config::ConfigQueryDto configQuery(RESTORE_ACTION);
+                configQuery.
                 configQuery.data = "{" + JSON::writeToString(restoreSi, false) + "}";
                 log_debug("Configuration to set %s: by: %s ", configQuery.data.c_str(), agentNameDest.c_str());
                 //Send message
@@ -283,7 +284,7 @@ namespace srr
      * @param siFeatureList
      * @param association
      */
-    void SrrWorker::factorizationSaveCall(const cxxtools::SerializationInfo& siFeatureList, std::map<const std::string, std::string>& association)
+    void SrrWorker::factorizationSaveCall(const cxxtools::SerializationInfo& siFeatureList, std::map<const std::string, std::list<std::string>>& association)
     {   
         for (const auto &feature : siFeatureList)
         {
@@ -293,12 +294,13 @@ namespace srr
             std::string agentName = m_featuresToAgent[featureName];
             if (association.count(agentName) == 0)
             {
-                association[agentName] = featureName;
+                std::list<std::string> features;
+                features.push_back(featureName);
+                association[agentName] = features;
             }
             else
             {
-                std::string temp = association[agentName];
-                association[agentName] = temp + FEATURE_SEPARATOR + featureName;
+                association[agentName].push_back(featureName);
             }
         }
     }
