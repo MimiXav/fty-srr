@@ -85,6 +85,7 @@ namespace srr
         m_featuresToAgent [USER_SESSION_FEATURE_NAME] = CONFIG_AGENT_NAME;
         m_featuresToAgent [DISCOVERY] = CONFIG_AGENT_NAME;
         m_featuresToAgent [GENERAL_CONFIG] = CONFIG_AGENT_NAME;
+        m_featuresToAgent [MASS_MANAGEMENT] = CONFIG_AGENT_NAME;
         m_featuresToAgent [NETWORK] = CONFIG_AGENT_NAME;
         // Feature -> Agent (etn-malamute-translator EMC4J)
         m_featuresToAgent [AUTOMATIONS] = EMC4J_AGENT_NAME;
