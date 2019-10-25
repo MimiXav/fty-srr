@@ -219,7 +219,7 @@ namespace srr
             // Test if the data is well formated
             if (siData.category () != cxxtools::SerializationInfo::Array ) 
             {
-                throw std::invalid_argument(DATA_MEMBER " should be an array");
+                throw std::invalid_argument(DATA_MEMBER + std::string(" should be an array"));
             }
             // Factorization agent's call.
             std::map<const std::string, cxxtools::SerializationInfo> agentAssoc;
@@ -234,7 +234,6 @@ namespace srr
                 std::string queueNameDest = m_agentToQueue.at(agentNameDest);
                 // Build query
                 dto::config::ConfigQueryDto configQuery(RESTORE_ACTION);
-                configQuery.
                 configQuery.data = "{" + JSON::writeToString(restoreSi, false) + "}";
                 log_debug("Configuration to set %s: by: %s ", configQuery.data.c_str(), agentNameDest.c_str());
                 //Send message
@@ -252,8 +251,8 @@ namespace srr
                 {
                     resp.userData() >> respDto;
 
-                    if ((respDto.status.compare(STATUS_FAILED) == 0 && respList.status.compare(STATUS_SUCCESS) == 0 )||
-                        (respDto.status.compare(STATUS_SUCCESS) == 0 && respList.status.compare(STATUS_FAILED) == 0))
+                    if ((respDto.status == STATUS_FAILED && respList.status == STATUS_SUCCESS)||
+                        (respDto.status == STATUS_SUCCESS && respList.status == STATUS_FAILED))
                     {
                         respList.status = STATUS_PARTIAL_SUCCESS;
                     }

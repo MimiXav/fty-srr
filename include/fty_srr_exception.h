@@ -33,7 +33,7 @@ namespace srr {
       public:
         SrrException(const std::string& what) : std::runtime_error(what) {}
         SrrException(const char* what) : std::runtime_error(what) {}
-        ~SrrException() = default;
+        virtual ~SrrException() = default;
     };
 }
 

@@ -48,15 +48,9 @@ namespace srr
      */
     SrrManager::~SrrManager()
     {
-        log_debug("Release all Srr resources");
-        if (m_srrworker) 
-        {
-            delete m_srrworker;
-        }
-        if (m_msgBus) 
-        {
-            delete m_msgBus;
-        }
+        delete m_srrworker;
+        delete m_msgBus;
+        log_debug("All resources released");
     }
     
     /**
@@ -108,15 +102,15 @@ namespace srr
             }
 
             // Check if the command is valid or not.
-            if (query.action.compare(GET_ACTION) == 0)
+            if (query.action == GET_ACTION)
             {
                 m_srrworker->getFeatureListManaged(msg, query.action);
             } 
-            else if (query.action.compare(SAVE_ACTION) == 0)
+            else if (query.action == SAVE_ACTION)
             {
                 m_srrworker->saveIpm2Configuration(msg, query);
             }
-            else if (query.action.compare(RESTORE_ACTION) == 0)
+            else if (query.action == RESTORE_ACTION)
             {
                 m_srrworker->restoreIpm2Configuration(msg, query);
             } 

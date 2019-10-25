@@ -27,6 +27,7 @@
  */
 
 #include <csignal>
+#include <mutex>
 
 #include "fty_srr_classes.h"
 
@@ -35,12 +36,15 @@
 //functions
 
 void usage();
-volatile bool g_compute = true;
+volatile bool g_exit = false;
+std::condition_variable g_cv;
+std::mutex g_cvMutex;
 
-void sigHandler(int s)
+void sigHandler(int )
 {
-    log_debug("Caught signal %d\n", s);
-    g_compute = false;
+    log_debug("Interrupt signal");
+    g_exit = true;
+    g_cv.notify_one();
 }
 
 /**
@@ -55,6 +59,21 @@ void setSignalHandler()
     sigaction(SIGINT, &sigIntHandler, NULL);
 }
 
+/**
+ * Set Signal handler
+ */
+void terminateHandler()
+{
+    log_error((AGENT_NAME + std::string(" Error")).c_str());
+    exit(EXIT_FAILURE);
+}
+
+/**
+ * Main program
+ * @param argc
+ * @param argv
+ * @return 
+ */
 int main(int argc, char *argv [])
 {
     using Parameters = std::map<std::string, std::string>;
@@ -62,87 +81,80 @@ int main(int argc, char *argv [])
     
     // Set signal handler
     setSignalHandler();
-    
-    try
-    {
-        ftylog_setInstance(AGENT_NAME, "");
-        
-        int argn;
-        char *config_file = NULL;
-        bool verbose = false;
-        // Parse command line
-        for (argn = 1; argn < argc; argn++)
-        {
-            char *param = NULL;
-            if (argn < argc - 1) param = argv [argn + 1];
+    // Set terminate pg handler
+    std::set_terminate (terminateHandler);
 
-            if (streq(argv [argn], "--help") || streq(argv [argn], "-h"))
+    ftylog_setInstance(AGENT_NAME, "");
+
+    int argn;
+    char *config_file = NULL;
+    bool verbose = false;
+    // Parse command line
+    for (argn = 1; argn < argc; argn++)
+    {
+        char *param = NULL;
+        if (argn < argc - 1) param = argv [argn + 1];
+
+        if (streq(argv [argn], "--help") || streq(argv [argn], "-h"))
+        {
+            usage();
+            return EXIT_SUCCESS;
+        } 
+        else if (streq(argv [argn], "--verbose") || streq(argv [argn], "-v"))
+        {
+            verbose = true;
+        } 
+        else if (streq(argv [argn], "--config") || streq(argv [argn], "-c"))
+        {
+            if (param)
             {
-                usage();
-                return EXIT_SUCCESS;
-            } 
-            else if (streq(argv [argn], "--verbose") || streq(argv [argn], "-v"))
-            {
-                verbose = true;
-            } 
-            else if (streq(argv [argn], "--config") || streq(argv [argn], "-c"))
-            {
-                if (param)
-                {
-                    config_file = param;
-                }
-                ++argn;
+                config_file = param;
             }
+            ++argn;
         }
-        
-        // Default parameters
-        paramsConfig[AGENT_NAME_KEY] = AGENT_NAME;
-        paramsConfig[ENDPOINT_KEY] = DEFAULT_ENDPOINT;
-        paramsConfig[SRR_QUEUE_NAME_KEY] = SRR_MSG_QUEUE_NAME;
-        paramsConfig[SRR_VERSION_KEY] = ACTIVE_VERSION;
-
-        if (config_file)
-        {
-            log_debug(AGENT_NAME ": loading configuration file from '%s' ...", config_file);
-            mlm::ZConfig config(config_file);
-            
-            paramsConfig[ENDPOINT_KEY] = config.getEntry("srr-msg-bus/endpoint", DEFAULT_ENDPOINT);
-            paramsConfig[AGENT_NAME_KEY] = config.getEntry("srr-msg-bus/address", AGENT_NAME);
-            paramsConfig[SRR_QUEUE_NAME_KEY] = config.getEntry("srr-msg-bus/srrQueueName", SRR_MSG_QUEUE_NAME);
-            paramsConfig[SRR_VERSION_KEY] = config.getEntry("srr/version", ACTIVE_VERSION);
-        }
-        
-        if (verbose)
-        {
-            ftylog_setVeboseMode(ftylog_getInstance());
-            log_trace("Verbose mode OK");
-        }
-
-        log_info(AGENT_NAME " starting");
-        
-        srr::SrrManager srrManager(paramsConfig);
-        
-        while (g_compute == true) 
-        {
-            std::this_thread::sleep_for (std::chrono::seconds(1));
-        }
-
-        log_info(AGENT_NAME " Interrupted ...");
-        return EXIT_SUCCESS;
-    } catch (std::exception & e)
-    {
-        log_error(AGENT_NAME ": Error '%s'", e.what());
-        exit(EXIT_FAILURE);
-    } catch (...)
-    {
-        log_error(AGENT_NAME ": Unknown error");
-        exit(EXIT_FAILURE);
     }
+
+    // Default parameters
+    paramsConfig[AGENT_NAME_KEY] = AGENT_NAME;
+    paramsConfig[ENDPOINT_KEY] = DEFAULT_ENDPOINT;
+    paramsConfig[SRR_QUEUE_NAME_KEY] = SRR_MSG_QUEUE_NAME;
+    paramsConfig[SRR_VERSION_KEY] = ACTIVE_VERSION;
+
+    if (config_file)
+    {
+        log_debug((AGENT_NAME + std::string(": loading configuration file from") + config_file).c_str());
+        mlm::ZConfig config(config_file);
+        // verbose mode
+        std::istringstream(config.getEntry("server/verbose", "0")) >> verbose;
+        paramsConfig[ENDPOINT_KEY] = config.getEntry("srr-msg-bus/endpoint", DEFAULT_ENDPOINT);
+        paramsConfig[AGENT_NAME_KEY] = config.getEntry("srr-msg-bus/address", AGENT_NAME);
+        paramsConfig[SRR_QUEUE_NAME_KEY] = config.getEntry("srr-msg-bus/srrQueueName", SRR_MSG_QUEUE_NAME);
+        paramsConfig[SRR_VERSION_KEY] = config.getEntry("srr/version", ACTIVE_VERSION);
+    }
+
+    if (verbose)
+    {
+        ftylog_setVeboseMode(ftylog_getInstance());
+        log_trace("Verbose mode OK");
+    }
+
+    log_info((AGENT_NAME + std::string(" starting")).c_str());
+
+    srr::SrrManager srrManager(paramsConfig);
+
+    //wait until interrupt
+    std::unique_lock<std::mutex> lock(g_cvMutex);
+    g_cv.wait(lock, [] { return g_exit; });
+
+    log_info((AGENT_NAME + std::string(" interrupted")).c_str());
+    
+    // Exit application
+    return EXIT_SUCCESS;
 }
 
 void usage()
 {
-    puts(AGENT_NAME " [options] ...");
+    puts((AGENT_NAME + std::string(" [options] ...")).c_str());
     puts("  -v|--verbose        verbose test output");
     puts("  -h|--help           this information");
     puts("  -c|--config         path to configuration file");

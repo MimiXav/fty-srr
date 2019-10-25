@@ -26,49 +26,46 @@
 #include "fty_srr_library.h"
 
 //  SRR agent configuration
-#define AGENT_NAME_KEY                     "agentName"
-#define AGENT_NAME                         "fty-srr"
-#define ENDPOINT_KEY                       "endPoint"
-#define DEFAULT_ENDPOINT                   "ipc://@/malamute"
-#define DEFAULT_LOG_CONFIG                 "/etc/fty/ftylog.cfg"
-#define SRR_QUEUE_NAME_KEY                 "queueName"
-#define SRR_MSG_QUEUE_NAME                 "ETN.Q.IPMCORE.SRR"
+constexpr auto AGENT_NAME_KEY            = "agentName";
+constexpr auto AGENT_NAME                = "fty-srr";
+constexpr auto ENDPOINT_KEY              = "endPoint";
+constexpr auto DEFAULT_ENDPOINT          = "ipc://@/malamute";
+constexpr auto DEFAULT_LOG_CONFIG        = "/etc/fty/ftylog.cfg";
+constexpr auto SRR_QUEUE_NAME_KEY        = "queueName";
+constexpr auto SRR_MSG_QUEUE_NAME        = "ETN.Q.IPMCORE.SRR";
 // Config agent definition
-#define CONFIG_AGENT_NAME                  "fty-config"
-#define CONFIG_MSG_QUEUE_NAME              "ETN.Q.IPMCORE.CONFIG"
+constexpr auto CONFIG_AGENT_NAME         = "fty-config";
+constexpr auto CONFIG_MSG_QUEUE_NAME     = "ETN.Q.IPMCORE.CONFIG";
 // EMC4J agent definition
-#define EMC4J_AGENT_NAME                   "etn-malamute-translator"
-#define EMC4J_MSG_QUEUE_NAME               "ETN.Q.EMC4J.REQ"
+constexpr auto EMC4J_AGENT_NAME          = "etn-malamute-translator";
+constexpr auto EMC4J_MSG_QUEUE_NAME      = "ETN.Q.EMC4J.REQ";
 // Features definition
-#define EMC4J_AGENT_NAME                   "etn-malamute-translator"
-#define EMC4J_MSG_QUEUE_NAME               "ETN.Q.EMC4J.REQ"
-// Features definition
-#define MONITORING_FEATURE_NAME            "monitoring"
-#define NOTIFICATION_FEATURE_NAME          "notification"
-#define AUTOMATION_SETTINGS                "automation-settings"
-#define USER_SESSION_FEATURE_NAME          "user-session"
-#define DISCOVERY                          "discovery"
-#define GENERAL_CONFIG                     "general-config"
-#define NETWORK                            "network"
-#define AUTOMATIONS                        "automations"
-#define VIRTUAL_ASSETS                     "virtual-assets"
-
-// Action definition
-#define GET_ACTION                         "getFeatureList"
-#define SAVE_ACTION                        "save"
-#define RESTORE_ACTION                     "restore"
-#define RESET_ACTION                       "reset"
-// Status definition
-#define STATUS_SUCCESS                     "success"
-#define STATUS_FAILED                      "failed"
-#define STATUS_PARTIAL_SUCCESS             "partialSuccess"
-#define STATUS_UNKNOWN                     "unknown"
-// Common definition
-#define SRR_VERSION_KEY                    "version"
-#define SRR_VERSION                        "version"
-#define ACTIVE_VERSION                     "1.0"
-#define FEATURE_LIST_NAME                  "featuresList"
-#define FEATURE_NAME                       "name"
-#define DATA_MEMBER                        "data"
+constexpr auto MONITORING_FEATURE_NAME   = "monitoring";
+constexpr auto NOTIFICATION_FEATURE_NAME ="notification";
+constexpr auto AUTOMATION_SETTINGS       = "automation-settings";
+constexpr auto USER_SESSION_FEATURE_NAME = "user-session";
+constexpr auto DISCOVERY                 = "discovery";
+constexpr auto GENERAL_CONFIG            = "general-config";
+constexpr auto NETWORK                   = "network";
+constexpr auto AUTOMATIONS               = "automations";
+constexpr auto VIRTUAL_ASSETS            = "virtual-assets";
+        
+// Action definition        
+constexpr auto GET_ACTION                = "getFeatureList";
+constexpr auto SAVE_ACTION               = "save";
+constexpr auto RESTORE_ACTION            = "restore";
+constexpr auto RESET_ACTION              = "reset";
+// Status definition                
+constexpr auto STATUS_SUCCESS            = "success";
+constexpr auto STATUS_FAILED             = "failed";
+constexpr auto STATUS_PARTIAL_SUCCESS    = "partialSuccess";
+constexpr auto STATUS_UNKNOWN            = "unknown";
+// Common definition                
+constexpr auto SRR_VERSION_KEY           = "version";
+constexpr auto SRR_VERSION               = "version";
+constexpr auto ACTIVE_VERSION            = "1.0";
+constexpr auto FEATURE_LIST_NAME         = "featuresList";
+constexpr auto FEATURE_NAME              = "name";
+constexpr auto DATA_MEMBER               = "data";
 
 #endif
