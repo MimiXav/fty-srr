@@ -26,6 +26,8 @@
 @end
  */
 
+#include <fty_srr_dto.h>
+
 #include "fty_srr_classes.h"
 
 namespace srr
@@ -87,9 +89,12 @@ namespace srr
         // Feature -> Agent (etn-malamute-translator EMC4J)
         m_featuresToAgent [AUTOMATIONS] = EMC4J_AGENT_NAME;
         m_featuresToAgent [VIRTUAL_ASSETS] = EMC4J_AGENT_NAME;
+        // Feature -> Agent (security-wallet)
+        m_featuresToAgent [SECURITY_WALLET] = SECU_WALLET_AGENT_NAME;
         // Agent -> Queue
         m_agentToQueue [CONFIG_AGENT_NAME] = CONFIG_MSG_QUEUE_NAME;
         m_agentToQueue [EMC4J_AGENT_NAME] = EMC4J_MSG_QUEUE_NAME;
+        m_agentToQueue [SECU_WALLET_AGENT_NAME] = SECU_WALLET_MSG_QUEUE_NAME;
     }
     
     /**
@@ -131,8 +136,11 @@ namespace srr
             if (query.data.size() > 0)
             {
                 cxxtools::SerializationInfo si;
-                JSON::readFromString(query.data, si);            
+                JSON::readFromString(query.data, si);
                 
+                // Passphrase
+                cxxtools::SerializationInfo siPassPhrase = si.getMember(PASS_PHRASE_NAME);
+                std::string passPhrase = JSON::writeToString(siPassPhrase, false);
                 // Get all feature association to factorize request
                 std::map<const std::string, std::list<std::string>> agentAssoc;
                 factorizationSaveCall(si.getMember(FEATURE_LIST_NAME), agentAssoc);
@@ -147,9 +155,7 @@ namespace srr
                     log_debug("Send request at '%s', to queue '%s', from '%s'", agentNameDest.c_str(), queueNameDest.c_str(), 
                             m_parameters.at(AGENT_NAME_KEY).c_str());
                     // Build query
-                    dto::config::ConfigQueryDto configQuery;
-                    configQuery.action = SAVE_ACTION;
-                    configQuery.features = agent.second;
+                    dto::config::ConfigQueryDto configQuery(query.action, passPhrase, agent.second);
                     // Build message
                     messagebus::Message req;
                     req.userData() << configQuery;
@@ -216,6 +222,11 @@ namespace srr
             cxxtools::SerializationInfo si;
             JSON::readFromString(query.data, si);
             cxxtools::SerializationInfo siData = si.getMember(DATA_MEMBER);
+            
+            // Passphrase
+            cxxtools::SerializationInfo siPassPhrase = si.getMember(PASS_PHRASE_NAME);
+            std::string passPhrase = JSON::writeToString(siPassPhrase, false);
+            
             // Test if the data is well formated
             if (siData.category () != cxxtools::SerializationInfo::Array ) 
             {
@@ -233,7 +244,7 @@ namespace srr
                 std::string agentNameDest = agent.first;
                 std::string queueNameDest = m_agentToQueue.at(agentNameDest);
                 // Build query
-                dto::config::ConfigQueryDto configQuery(RESTORE_ACTION);
+                dto::config::ConfigQueryDto configQuery(query.action, passPhrase);
                 configQuery.data = "{" + JSON::writeToString(restoreSi, false) + "}";
                 log_debug("Configuration to set %s: by: %s ", configQuery.data.c_str(), agentNameDest.c_str());
                 //Send message

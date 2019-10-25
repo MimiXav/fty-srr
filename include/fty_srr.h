@@ -26,46 +26,51 @@
 #include "fty_srr_library.h"
 
 //  SRR agent configuration
-constexpr auto AGENT_NAME_KEY            = "agentName";
-constexpr auto AGENT_NAME                = "fty-srr";
-constexpr auto ENDPOINT_KEY              = "endPoint";
-constexpr auto DEFAULT_ENDPOINT          = "ipc://@/malamute";
-constexpr auto DEFAULT_LOG_CONFIG        = "/etc/fty/ftylog.cfg";
-constexpr auto SRR_QUEUE_NAME_KEY        = "queueName";
-constexpr auto SRR_MSG_QUEUE_NAME        = "ETN.Q.IPMCORE.SRR";
-// Config agent definition
-constexpr auto CONFIG_AGENT_NAME         = "fty-config";
-constexpr auto CONFIG_MSG_QUEUE_NAME     = "ETN.Q.IPMCORE.CONFIG";
-// EMC4J agent definition
-constexpr auto EMC4J_AGENT_NAME          = "etn-malamute-translator";
-constexpr auto EMC4J_MSG_QUEUE_NAME      = "ETN.Q.EMC4J.REQ";
-// Features definition
-constexpr auto MONITORING_FEATURE_NAME   = "monitoring";
-constexpr auto NOTIFICATION_FEATURE_NAME ="notification";
-constexpr auto AUTOMATION_SETTINGS       = "automation-settings";
-constexpr auto USER_SESSION_FEATURE_NAME = "user-session";
-constexpr auto DISCOVERY                 = "discovery";
-constexpr auto GENERAL_CONFIG            = "general-config";
-constexpr auto NETWORK                   = "network";
-constexpr auto AUTOMATIONS               = "automations";
-constexpr auto VIRTUAL_ASSETS            = "virtual-assets";
-        
-// Action definition        
-constexpr auto GET_ACTION                = "getFeatureList";
-constexpr auto SAVE_ACTION               = "save";
-constexpr auto RESTORE_ACTION            = "restore";
-constexpr auto RESET_ACTION              = "reset";
-// Status definition                
-constexpr auto STATUS_SUCCESS            = "success";
-constexpr auto STATUS_FAILED             = "failed";
-constexpr auto STATUS_PARTIAL_SUCCESS    = "partialSuccess";
-constexpr auto STATUS_UNKNOWN            = "unknown";
-// Common definition                
-constexpr auto SRR_VERSION_KEY           = "version";
-constexpr auto SRR_VERSION               = "version";
-constexpr auto ACTIVE_VERSION            = "1.0";
-constexpr auto FEATURE_LIST_NAME         = "featuresList";
-constexpr auto FEATURE_NAME              = "name";
-constexpr auto DATA_MEMBER               = "data";
+constexpr auto AGENT_NAME_KEY               = "agentName";
+constexpr auto AGENT_NAME                   = "fty-srr";
+constexpr auto ENDPOINT_KEY                 = "endPoint";
+constexpr auto DEFAULT_ENDPOINT             = "ipc://@/malamute";
+constexpr auto DEFAULT_LOG_CONFIG           = "/etc/fty/ftylog.cfg";
+constexpr auto SRR_QUEUE_NAME_KEY           = "queueName";
+constexpr auto SRR_MSG_QUEUE_NAME           = "ETN.Q.IPMCORE.SRR";
+// Config agent definition  
+constexpr auto CONFIG_AGENT_NAME            = "fty-config";
+constexpr auto CONFIG_MSG_QUEUE_NAME        = "ETN.Q.IPMCORE.CONFIG";
+// EMC4J agent definition   
+constexpr auto EMC4J_AGENT_NAME             = "etn-malamute-translator";
+constexpr auto EMC4J_MSG_QUEUE_NAME         = "ETN.Q.EMC4J.REQ";
+// Security wallet agent definition 
+constexpr auto SECU_WALLET_AGENT_NAME       = "security-wallet";
+constexpr auto SECU_WALLET_MSG_QUEUE_NAME   = "ETN.Q.IPMCORE.SECUWALLET";
+// Features definition  
+constexpr auto MONITORING_FEATURE_NAME      = "monitoring";
+constexpr auto NOTIFICATION_FEATURE_NAME    = "notification";
+constexpr auto AUTOMATION_SETTINGS          = "automation-settings";
+constexpr auto USER_SESSION_FEATURE_NAME    = "user-session";
+constexpr auto DISCOVERY                    = "discovery";
+constexpr auto GENERAL_CONFIG               = "general-config";
+constexpr auto NETWORK                      = "network";
+constexpr auto AUTOMATIONS                  = "automations";
+constexpr auto VIRTUAL_ASSETS               = "virtual-assets";
+constexpr auto SECURITY_WALLET              = "security-wallet";
+            
+// Action definition            
+constexpr auto GET_ACTION                   = "getFeatureList";
+constexpr auto SAVE_ACTION                  = "save";
+constexpr auto RESTORE_ACTION               = "restore";
+constexpr auto RESET_ACTION                 = "reset";
+// Status definition                    
+constexpr auto STATUS_SUCCESS               = "success";
+constexpr auto STATUS_FAILED                = "failed";
+constexpr auto STATUS_PARTIAL_SUCCESS       = "partialSuccess";
+constexpr auto STATUS_UNKNOWN               = "unknown";
+// Common definition                    
+constexpr auto SRR_VERSION_KEY              = "version";
+constexpr auto SRR_VERSION                  = "version";
+constexpr auto ACTIVE_VERSION               = "1.0";
+constexpr auto PASS_PHRASE_NAME             = "passPhrase";
+constexpr auto FEATURE_LIST_NAME            = "featuresList";
+constexpr auto FEATURE_NAME                 = "name";
+constexpr auto DATA_MEMBER                  = "data";
 
 #endif
