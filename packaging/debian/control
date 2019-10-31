@@ -1,0 +1,68 @@
+#
+#    fty-srr - Save, restore and reset agent for 42ITy ecosystem
+#
+#    Copyright (C) 2014 - 2018 Eaton
+#
+#    This program is free software; you can redistribute it and/or modify
+#    it under the terms of the GNU General Public License as published by
+#    the Free Software Foundation; either version 2 of the License, or
+#    (at your option) any later version.
+#
+#    This program is distributed in the hope that it will be useful,
+#    but WITHOUT ANY WARRANTY; without even the implied warranty of
+#    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#    GNU General Public License for more details.
+#
+#    You should have received a copy of the GNU General Public License along
+#    with this program; if not, write to the Free Software Foundation, Inc.,
+#    51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+
+Source:         fty-srr
+Section:        net
+Priority:       optional
+Maintainer:     fty-srr Developers <eatonipcopensource@eaton.com>
+Standards-Version: 4.0.1.0
+Build-Depends: debhelper (>= 9),
+    pkg-config,
+    libsodium-dev,
+    libzmq3-dev,
+    libczmq-dev (>= 3.0.2),
+    libmlm-dev (>= 1.0.0),
+    libssl-dev,
+    libfty-common-dev,
+    libfty-common-mlm-dev,
+    liblog4cplus-dev,
+    libfty-common-logging-dev,
+    libcxxtools-dev,
+    libfty-common-messagebus-dev,
+    libfty-common-dto-dev,
+    gcc (>= 4.9.0), g++ (>= 4.9.0),
+    systemd,
+    dh-systemd,
+    asciidoc-base | asciidoc, xmlto,
+    dh-autoreconf
+
+Package: libfty-srr0
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}
+Description: fty-srr shared library
+ This package contains shared library for fty-srr:
+ save, restore and reset agent for 42ity ecosystem
+
+Package: fty-srr
+Architecture: any
+Depends: ${misc:Depends}, ${shlibs:Depends},
+Description: runnable binaries from fty-srr
+ Main package for fty-srr:
+ save, restore and reset agent for 42ity ecosystem
+
+Package: fty-srr-dbg
+Architecture: any
+Section: debug
+Priority: optional
+Depends:
+    fty-srr (= ${binary:Version}),
+    ${misc:Depends}
+Description: fty-srr debugging symbols
+ This package contains the debugging symbols for fty-srr:
+ save, restore and reset agent for 42ity ecosystem.
