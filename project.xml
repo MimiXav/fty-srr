@@ -4,6 +4,7 @@
     script = "zproject.gsl"
     email = "EatonIPCOpenSource@eaton.com"
     url = "https://42ity.org"
+    check_license_years = "1"
     license = "GPL-2.0+"
     repository = "https://github.com/42ity/fty-srr"
     >
@@ -13,6 +14,8 @@
     <target name = "travis" >
         <!-- option name = "clangformat_implem" value = "autotools" / -->
         <option name = "use_cmake" value = "0" />
+        <!-- option name = "dist" value = "trusty" / -->
+        <option name = "shadow_gcc" value = "2" />
         <!-- option name = "clangformat_require_good" value = "1" / -->
         <option name = "clangformat_allow_failures" value = "1" />
         <option name = "use_pkg_deps_prereqs_source" value = "0" />
@@ -37,7 +40,7 @@
     <include filename = "license.xml" />
     <version major = "1" minor = "0" patch = "0" />
     <abi current = "0" revision = "0" age = "0" />
-    
+
     <use project = "fty-common-mlm" libname = "libfty_common_mlm" header = "fty_common_mlm.h"
         repository = "https://github.com/42ity/fty-common-mlm.git"
         release = "master"
@@ -60,7 +63,9 @@
             </use>
         </use>
 
-        <use project = "cxxtools" test = "cxxtools::Utf8Codec::Utf8Codec" header = "cxxtools/allocator.h"
+        <use project = "cxxtools"
+            test = "cxxtools::Utf8Codec::Utf8Codec"
+            header = "cxxtools/allocator.h"
             repository = "https://github.com/42ity/cxxtools.git"
             release = "2.2-FTY-master"
             />
@@ -76,6 +81,13 @@
             repository = "https://github.com/42ity/fty-common.git"
             release = "master"
             test = "fty_common_selftest" >
+
+            <use project = "cxxtools"
+                test = "cxxtools::Utf8Codec::Utf8Codec"
+                header = "cxxtools/allocator.h"
+                repository = "https://github.com/42ity/cxxtools.git"
+                release = "2.2-FTY-master"
+                />
 
             <use project = "fty-common-logging" libname = "libfty_common_logging" header = "fty_log.h"
                 repository = "https://github.com/42ity/fty-common-logging.git"
