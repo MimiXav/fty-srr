@@ -97,7 +97,7 @@ namespace srr
         m_agentToQueue [EMC4J_AGENT_NAME] = EMC4J_MSG_QUEUE_NAME;
         m_agentToQueue [SECU_WALLET_AGENT_NAME] = SECU_WALLET_MSG_QUEUE_NAME;
     }
-    
+   
     /**
      * Get feature list managed
      * @param msg
@@ -105,11 +105,28 @@ namespace srr
      */
     void SrrWorker::getFeatureListManaged(const messagebus::Message& msg, const std::string& subject)
     {
+        std::map<const std::string, std::string> features = m_featuresToAgent;
         dto::srr::SrrFeaturesListDto featuresListdto;
-        for (const auto& feature : m_featuresToAgent)
+        
+        // Set automation dependencies
+        std::string automationDependencies;
+        automationDependencies.append(AUTOMATION_SETTINGS);
+        automationDependencies.append(STRING_DELIMITER);
+        automationDependencies.append(VIRTUAL_ASSETS);
+        dto::srr::SrrFeatureDto srrFeatureDto(AUTOMATIONS, automationDependencies);
+        featuresListdto.featuresList.push_back(srrFeatureDto);
+        // Remove it to do not add twice.
+        features.erase(AUTOMATIONS);
+        features.erase(AUTOMATION_SETTINGS);
+        features.erase(VIRTUAL_ASSETS);
+        
+        // All remaining entries have not dependencies
+        for (const auto& feature : features)
         {
-            featuresListdto.featuresList.push_back(feature.first);
+            dto::srr::SrrFeatureDto srrFeatureDto(feature.first);
+            featuresListdto.featuresList.push_back(srrFeatureDto);
         }
+
         // Send Response
         dto::UserData userData;
         userData << featuresListdto;
