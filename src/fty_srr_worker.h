@@ -40,10 +40,11 @@ namespace srr
             void restoreIpm2Configuration(const messagebus::Message& msg, const dto::srr::SrrQueryDto& query);
 
         private:
+            messagebus::MessageBus& m_msgBus;
             std::map<std::string, std::string> m_parameters;
             std::map<const std::string, std::string> m_featuresToAgent;
             std::map<const std::string, std::string> m_agentToQueue;
-            messagebus::MessageBus& m_msgBus;
+            
 
             void init();
             void buildMapAssociation();
