@@ -34,12 +34,12 @@ namespace srr
     {
         public:
             explicit SrrManager(const std::map<std::string, std::string> & parameters);
-            ~SrrManager();
+            ~SrrManager() = default;
             
         private:
             std::map<std::string, std::string> m_parameters;
-            messagebus::MessageBus *m_msgBus;
-            srr::SrrWorker* m_srrworker;
+            std::unique_ptr<messagebus::MessageBus> m_msgBus;
+            std::unique_ptr<srr::SrrWorker> m_srrworker;
 
             void init();
             void handleRequest(messagebus::Message msg);

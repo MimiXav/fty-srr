@@ -40,18 +40,10 @@ namespace srr
      * @param msgBus
      * @param parameters
      */
-    SrrWorker::SrrWorker(messagebus::MessageBus* msgBus, const std::map<std::string, std::string>& parameters)
+    SrrWorker::SrrWorker(messagebus::MessageBus& msgBus, const std::map<std::string, std::string>& parameters) :
+        m_msgBus(msgBus), m_parameters(parameters)
     {
-        m_msgBus = msgBus;
-        m_parameters = parameters;
         init();
-    }
-
-    /**
-     * Destructor
-     */
-    SrrWorker::~SrrWorker()
-    {
     }
     
     /**
@@ -182,7 +174,7 @@ namespace srr
                     req.metaData().emplace(messagebus::Message::TO, agentNameDest);
                     req.metaData().emplace(messagebus::Message::COORELATION_ID, messagebus::generateUuid());
                     // Send request
-                    messagebus::Message resp = m_msgBus->request(queueNameDest, req, TIME_OUT);
+                    messagebus::Message resp = m_msgBus.request(queueNameDest, req, TIME_OUT);
 
                     log_debug("Settings retrieved");
                     // Response serialization 
@@ -272,7 +264,7 @@ namespace srr
                 req.metaData().emplace(messagebus::Message::FROM, m_parameters.at(AGENT_NAME_KEY));
                 req.metaData().emplace(messagebus::Message::TO, agentNameDest);
                 req.metaData().emplace(messagebus::Message::COORELATION_ID, messagebus::generateUuid());
-                messagebus::Message resp = m_msgBus->request(queueNameDest, req, TIME_OUT);
+                messagebus::Message resp = m_msgBus.request(queueNameDest, req, TIME_OUT);
 
                 // Serialize response
                 dto::srr::SrrRestoreDtoList respDto(STATUS_FAILED);
@@ -388,7 +380,7 @@ namespace srr
             respMsg.metaData().emplace(messagebus::Message::FROM, m_parameters.at(AGENT_NAME_KEY));
             respMsg.metaData().emplace(messagebus::Message::TO, msg.metaData().find(messagebus::Message::FROM)->second);
             respMsg.metaData().emplace(messagebus::Message::COORELATION_ID, msg.metaData().find(messagebus::Message::COORELATION_ID)->second);
-            m_msgBus->sendReply(msg.metaData().find(messagebus::Message::REPLY_TO)->second, respMsg);
+            m_msgBus.sendReply(msg.metaData().find(messagebus::Message::REPLY_TO)->second, respMsg);
         }
         catch (messagebus::MessageBusException& ex)
         {
