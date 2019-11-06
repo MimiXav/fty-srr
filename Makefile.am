@@ -14,20 +14,20 @@ AM_CXXFLAGS = \
 AM_CPPFLAGS = \
     ${log4cplus_CFLAGS} \
     ${fty_common_logging_CFLAGS} \
+    ${cxxtools_CFLAGS} \
+    ${fty_common_CFLAGS} \
     ${libsodium_CFLAGS} \
     ${libzmq_CFLAGS} \
     ${czmq_CFLAGS} \
     ${malamute_CFLAGS} \
     ${openssl_CFLAGS} \
-    ${fty_common_CFLAGS} \
     ${fty_common_mlm_CFLAGS} \
-    ${cxxtools_CFLAGS} \
     ${fty_common_messagebus_CFLAGS} \
     ${fty_common_dto_CFLAGS} \
     -D__STDC_FORMAT_MACROS \
     -I$(srcdir)/include
 
-project_libs = ${log4cplus_LIBS} ${fty_common_logging_LIBS} ${libsodium_LIBS} ${libzmq_LIBS} ${czmq_LIBS} ${malamute_LIBS} ${openssl_LIBS} ${fty_common_LIBS} ${fty_common_mlm_LIBS} ${cxxtools_LIBS} ${fty_common_messagebus_LIBS} ${fty_common_dto_LIBS}
+project_libs = ${log4cplus_LIBS} ${fty_common_logging_LIBS} ${cxxtools_LIBS} ${fty_common_LIBS} ${libsodium_LIBS} ${libzmq_LIBS} ${czmq_LIBS} ${malamute_LIBS} ${openssl_LIBS} ${fty_common_mlm_LIBS} ${fty_common_messagebus_LIBS} ${fty_common_dto_LIBS}
 
 SUBDIRS = doc
 SUBDIRS += include
@@ -50,14 +50,14 @@ if ENABLE_DIST_CMAKEFILES
 EXTRA_DIST += \
     Findlog4cplus.cmake \
     Findfty_common_logging.cmake \
+    Findcxxtools.cmake \
+    Findfty_common.cmake \
     Findlibsodium.cmake \
     Findlibzmq.cmake \
     Findczmq.cmake \
     Findmalamute.cmake \
     Findopenssl.cmake \
-    Findfty_common.cmake \
     Findfty_common_mlm.cmake \
-    Findcxxtools.cmake \
     Findfty_common_messagebus.cmake \
     Findfty_common_dto.cmake \
     builds/cmake/Modules/ClangFormat.cmake \
