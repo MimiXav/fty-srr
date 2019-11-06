@@ -11,8 +11,8 @@
 *.xml7
 
 # Ignore the source doc texts generated from program sources
-fty-srr.txt
-fty-srr.doc
+fty_srr.txt
+fty_srr.doc
 
 # Make sure to track the manually maintained project description
 !*.adoc

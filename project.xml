@@ -134,8 +134,8 @@
 
     <!-- Project -->
     <header name ="fty_srr_exception">Fty srr exceptions</header>
-    <class name = "fty-srr-manager" private = "1" selftest = "0">Fty srr manager</class>
-    <class name = "fty-srr-worker" private = "1" selftest = "0">Fty srr worker</class>
-    <main name = "fty-srr" service = "1">Binary</main>
+    <class name = "fty_srr_manager" private = "1" selftest = "0">Fty srr manager</class>
+    <class name = "fty_srr_worker" private = "1" selftest = "0">Fty srr worker</class>
+    <main name = "fty_srr" service = "1">Binary</main>
 
 </project>
