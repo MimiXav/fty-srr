@@ -30,8 +30,8 @@
 //  Set up environment for the application
 
 //  External dependencies
+#include <fty_log.h>
 #include <fty_common_mlm.h>
-#include <fty-log/fty_logger.h>
 #include <cxxtools/allocator.h>
 #include <fty_common_messagebus.h>
 #include <fty_common_dto.h>
