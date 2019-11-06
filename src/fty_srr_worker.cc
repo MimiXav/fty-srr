@@ -40,18 +40,10 @@ namespace srr
      * @param msgBus
      * @param parameters
      */
-    SrrWorker::SrrWorker(messagebus::MessageBus* msgBus, const std::map<std::string, std::string>& parameters)
+    SrrWorker::SrrWorker(messagebus::MessageBus& msgBus, const std::map<std::string, std::string>& parameters) :
+        m_msgBus(msgBus), m_parameters(parameters)
     {
-        m_msgBus = msgBus;
-        m_parameters = parameters;
         init();
-    }
-
-    /**
-     * Destructor
-     */
-    SrrWorker::~SrrWorker()
-    {
     }
     
     /**
@@ -97,7 +89,7 @@ namespace srr
         m_agentToQueue [EMC4J_AGENT_NAME] = EMC4J_MSG_QUEUE_NAME;
         m_agentToQueue [SECU_WALLET_AGENT_NAME] = SECU_WALLET_MSG_QUEUE_NAME;
     }
-    
+   
     /**
      * Get feature list managed
      * @param msg
@@ -105,11 +97,28 @@ namespace srr
      */
     void SrrWorker::getFeatureListManaged(const messagebus::Message& msg, const std::string& subject)
     {
+        std::map<const std::string, std::string> features = m_featuresToAgent;
         dto::srr::SrrFeaturesListDto featuresListdto;
-        for (const auto& feature : m_featuresToAgent)
+        
+        // Set automation dependencies
+        std::string automationDependencies;
+        automationDependencies.append(AUTOMATION_SETTINGS);
+        automationDependencies.append(STRING_DELIMITER);
+        automationDependencies.append(VIRTUAL_ASSETS);
+        dto::srr::SrrFeatureDto srrFeatureDto(AUTOMATIONS, automationDependencies);
+        featuresListdto.featuresList.push_back(srrFeatureDto);
+        // Remove it to do not add twice.
+        features.erase(AUTOMATIONS);
+        features.erase(AUTOMATION_SETTINGS);
+        features.erase(VIRTUAL_ASSETS);
+        
+        // All remaining entries have not dependencies
+        for (const auto& feature : features)
         {
-            featuresListdto.featuresList.push_back(feature.first);
+            dto::srr::SrrFeatureDto srrFeatureDto(feature.first);
+            featuresListdto.featuresList.push_back(srrFeatureDto);
         }
+
         // Send Response
         dto::UserData userData;
         userData << featuresListdto;
@@ -165,7 +174,7 @@ namespace srr
                     req.metaData().emplace(messagebus::Message::TO, agentNameDest);
                     req.metaData().emplace(messagebus::Message::COORELATION_ID, messagebus::generateUuid());
                     // Send request
-                    messagebus::Message resp = m_msgBus->request(queueNameDest, req, TIME_OUT);
+                    messagebus::Message resp = m_msgBus.request(queueNameDest, req, TIME_OUT);
 
                     log_debug("Settings retrieved");
                     // Response serialization 
@@ -255,7 +264,7 @@ namespace srr
                 req.metaData().emplace(messagebus::Message::FROM, m_parameters.at(AGENT_NAME_KEY));
                 req.metaData().emplace(messagebus::Message::TO, agentNameDest);
                 req.metaData().emplace(messagebus::Message::COORELATION_ID, messagebus::generateUuid());
-                messagebus::Message resp = m_msgBus->request(queueNameDest, req, TIME_OUT);
+                messagebus::Message resp = m_msgBus.request(queueNameDest, req, TIME_OUT);
 
                 // Serialize response
                 dto::srr::SrrRestoreDtoList respDto(STATUS_FAILED);
@@ -371,7 +380,7 @@ namespace srr
             respMsg.metaData().emplace(messagebus::Message::FROM, m_parameters.at(AGENT_NAME_KEY));
             respMsg.metaData().emplace(messagebus::Message::TO, msg.metaData().find(messagebus::Message::FROM)->second);
             respMsg.metaData().emplace(messagebus::Message::COORELATION_ID, msg.metaData().find(messagebus::Message::COORELATION_ID)->second);
-            m_msgBus->sendReply(msg.metaData().find(messagebus::Message::REPLY_TO)->second, respMsg);
+            m_msgBus.sendReply(msg.metaData().find(messagebus::Message::REPLY_TO)->second, respMsg);
         }
         catch (messagebus::MessageBusException& ex)
         {

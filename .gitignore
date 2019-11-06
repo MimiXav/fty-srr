@@ -24,7 +24,7 @@ save.xml
 
 # Executables
 src/fty-srr_selftest
-src/fty-srr
+src/fty_srr
 src/fty_srr_selftest
 *.exe
 *.out
@@ -136,3 +136,7 @@ nbproject/
 
 # editor backups
 *~
+# CMake in general
+builds/cmake/
+CMake*
+*.cmake

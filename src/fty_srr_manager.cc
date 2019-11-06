@@ -42,16 +42,6 @@ namespace srr
     {
         init();
     }
-
-    /**
-     * Destructor
-     */
-    SrrManager::~SrrManager()
-    {
-        delete m_srrworker;
-        delete m_msgBus;
-        log_debug("All resources released");
-    }
     
     /**
      * Class initialization 
@@ -61,14 +51,17 @@ namespace srr
         try
         {
             // Message bus init
-            m_msgBus = messagebus::MlmMessageBus(m_parameters.at(ENDPOINT_KEY), m_parameters.at(AGENT_NAME_KEY));
+            m_msgBus = std::unique_ptr<messagebus::MessageBus>(messagebus::MlmMessageBus(m_parameters.at(ENDPOINT_KEY), m_parameters.at(AGENT_NAME_KEY)));
             m_msgBus->connect();
+            
+            // Create the worker.
+            m_srrworker = std::unique_ptr<srr::SrrWorker>(new srr::SrrWorker(*m_msgBus, m_parameters));
             
             // Listen all incoming request
             //messagebus::Message fct = [&](messagebus::Message msg){this->handleRequest(msg);};
             auto fct = std::bind(&SrrManager::handleRequest, this, _1);
             m_msgBus->receive(m_parameters.at(SRR_QUEUE_NAME_KEY), fct);
-            m_srrworker = new srr::SrrWorker(m_msgBus, m_parameters);
+            
         }        
         catch (messagebus::MessageBusException& ex)
         {
@@ -89,7 +82,7 @@ namespace srr
      */
     void SrrManager::handleRequest(messagebus::Message msg)
     {
-        log_debug("SRR handleRequest:");
+        log_debug("SRR handleRequest");
         try
         {
             dto::UserData data = msg.userData();
@@ -100,6 +93,7 @@ namespace srr
             {
                 throw SrrException("Empty request");
             }
+            log_debug("Query action: %s", query.action.c_str());
 
             // Check if the command is valid or not.
             if (query.action == GET_ACTION)

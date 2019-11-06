@@ -72,5 +72,7 @@ constexpr auto PASS_PHRASE_NAME             = "passPhrase";
 constexpr auto FEATURE_LIST_NAME            = "featuresList";
 constexpr auto FEATURE_NAME                 = "name";
 constexpr auto DATA_MEMBER                  = "data";
+// Common definition                    
+constexpr auto STRING_DELIMITER             = ";";
 
 #endif

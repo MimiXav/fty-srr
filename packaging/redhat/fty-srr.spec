@@ -55,16 +55,16 @@ BuildRequires:  xmlto
 # "4.9 or newer".
 BuildRequires:  devtoolset-3-gcc devtoolset-3-gcc-c++
 BuildRequires:  gcc-c++ >= 4.9.0
+BuildRequires:  log4cplus-devel
+BuildRequires:  fty-common-logging-devel
+BuildRequires:  cxxtools-devel
+BuildRequires:  fty-common-devel
 BuildRequires:  libsodium-devel
 BuildRequires:  zeromq-devel
 BuildRequires:  czmq-devel >= 3.0.2
 BuildRequires:  malamute-devel >= 1.0.0
 BuildRequires:  openssl-devel
-BuildRequires:  fty-common-devel
 BuildRequires:  fty-common-mlm-devel
-BuildRequires:  log4cplus-devel
-BuildRequires:  fty-common-logging-devel
-BuildRequires:  cxxtools-devel
 BuildRequires:  fty-common-messagebus-devel
 BuildRequires:  fty-common-dto-devel
 BuildRoot:      %{_tmppath}/%{name}-%{version}-build
@@ -105,18 +105,18 @@ find %{buildroot} -name '*.la' | xargs rm -f
 %files
 %defattr(-,root,root)
 %doc README.md
-%{_bindir}/fty-srr
-%{_mandir}/man1/fty-srr*
-%config(noreplace) %{_sysconfdir}/fty-srr/fty-srr.cfg
-%{SYSTEMD_UNIT_DIR}/fty-srr.service
+%{_bindir}/fty_srr
+%{_mandir}/man1/fty_srr*
+%config(noreplace) %{_sysconfdir}/fty-srr/fty_srr.cfg
+%{SYSTEMD_UNIT_DIR}/fty_srr.service
 %dir %{_sysconfdir}/fty-srr
 %if 0%{?suse_version} > 1315
 %post
-%systemd_post fty-srr.service
+%systemd_post fty_srr.service
 %preun
-%systemd_preun fty-srr.service
+%systemd_preun fty_srr.service
 %postun
-%systemd_postun_with_restart fty-srr.service
+%systemd_postun_with_restart fty_srr.service
 %endif
 
 %changelog
