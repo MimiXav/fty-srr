@@ -121,7 +121,7 @@ int main(int argc, char *argv [])
 
     if (config_file)
     {
-        log_debug((AGENT_NAME + std::string(": loading configuration file from") + config_file).c_str());
+        log_debug((AGENT_NAME + std::string(": loading configuration file from ") + config_file).c_str());
         mlm::ZConfig config(config_file);
         // verbose mode
         std::istringstream(config.getEntry("server/verbose", "0")) >> verbose;
