@@ -12,8 +12,7 @@ PartOf=bios.target
 Type=simple
 User=bios
 Environment="prefix=@prefix@"
-Environment='SYSTEMD_UNIT_FULLNAME=%n'
-ExecStart=@prefix@/bin/fty_srr @sysconfdir@/@PACKAGE@/fty_srr.cfg
+ExecStart=@prefix@/bin/fty_srr --config @sysconfdir@/@PACKAGE@/fty_srr.cfg
 Restart=always
 
 [Install]
