@@ -21,7 +21,7 @@
 
 /*
 @header
-    fty_srr - Binary
+    fty-srr - Binary
 @discuss
 @end
  */

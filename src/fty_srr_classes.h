@@ -30,7 +30,7 @@
 #include "platform.h"
 
 //  External API
-#include "../include/fty_srr.h"
+#include "../include/fty-srr.h"
 
 //  Opaque class structures to allow forward references
 #ifndef FTY_SRR_MANAGER_T_DEFINED

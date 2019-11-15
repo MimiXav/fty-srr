@@ -2,17 +2,17 @@
 # You can add hand-written code here.
 
 [Unit]
-Description=fty_srr service
+Description=fty-srr service
 After=malamute.service network.target
 Requires=malamute.service network.target
-Before=fty_config.service
+Before=fty-config.service
 PartOf=bios.target
 
 [Service]
 Type=simple
 User=bios
 Environment="prefix=@prefix@"
-ExecStart=@prefix@/bin/fty_srr --config @sysconfdir@/@PACKAGE@/fty_srr.cfg
+ExecStart=@prefix@/bin/fty-srr --config @sysconfdir@/@PACKAGE@/fty-srr.cfg
 Restart=always
 
 [Install]
