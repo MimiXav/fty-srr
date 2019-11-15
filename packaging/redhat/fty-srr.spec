@@ -105,18 +105,18 @@ find %{buildroot} -name '*.la' | xargs rm -f
 %files
 %defattr(-,root,root)
 %doc README.md
-%{_bindir}/fty_srr
-%{_mandir}/man1/fty_srr*
-%config(noreplace) %{_sysconfdir}/fty-srr/fty_srr.cfg
-%{SYSTEMD_UNIT_DIR}/fty_srr.service
+%{_bindir}/fty-srr
+%{_mandir}/man1/fty-srr*
+%config(noreplace) %{_sysconfdir}/fty-srr/fty-srr.cfg
+%{SYSTEMD_UNIT_DIR}/fty-srr.service
 %dir %{_sysconfdir}/fty-srr
 %if 0%{?suse_version} > 1315
 %post
-%systemd_post fty_srr.service
+%systemd_post fty-srr.service
 %preun
-%systemd_preun fty_srr.service
+%systemd_preun fty-srr.service
 %postun
-%systemd_postun_with_restart fty_srr.service
+%systemd_postun_with_restart fty-srr.service
 %endif
 
 %changelog

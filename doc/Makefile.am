@@ -6,7 +6,7 @@
 all-local: doc
 
 # Public programs ("main" tags in project.xml), auto-regenerated:
-MAN1 = fty_srr.1
+MAN1 = fty-srr.1
 # Public classes ("class" tags in project.xml), auto-regenerated:
 MAN3 =
 # Project overview, written by a human after initial skeleton:
@@ -67,10 +67,10 @@ GENERATED_DOCS =
 ### Note: for mains, we keep the source name rather than flattened name:c
 ### so that the manpages for binary programs match their name, at expense
 ### of perhaps being built in a subdirectory under doc/.
-GENERATED_DOCS += fty_srr.txt fty_srr.doc
-fty_srr.txt: $(top_srcdir)/src/fty_srr.cc
+GENERATED_DOCS += fty-srr.txt fty-srr.doc
+fty-srr.txt: $(top_srcdir)/src/fty_srr.cc
 	mkdir -p "$(builddir)/$(@D)"
-	"$(srcdir)/mkman" "fty_srr" "$(builddir)/fty_srr.txt" "$(srcdir)/.."
+	"$(srcdir)/mkman" "fty_srr" "$(builddir)/fty-srr.txt" "$(srcdir)/.."
 
 
 clean-local:

@@ -1341,10 +1341,10 @@ fi
      AC_MSG_RESULT([$enable_dist_cmakefiles])])
 AM_CONDITIONAL(ENABLE_DIST_CMAKEFILES, test "x$enable_dist_cmakefiles" = "xyes")
 
-# Check for fty_srr intent
-AC_ARG_ENABLE([fty_srr],
-    AS_HELP_STRING([--enable-fty_srr],
-        [Compile and install 'fty_srr' [default=yes]]),
+# Check for fty-srr intent
+AC_ARG_ENABLE([fty-srr],
+    AS_HELP_STRING([--enable-fty-srr],
+        [Compile and install 'fty-srr' [default=yes]]),
     [enable_fty_srr=$enableval],
     [enable_fty_srr=yes])
 
@@ -1503,12 +1503,12 @@ AC_CONFIG_FILES([Makefile
                  doc/Makefile
                  include/Makefile
                  src/libfty_srr.pc
-                 src/fty_srr.cfg
+                 src/fty-srr.cfg
                 ])
 
 AM_COND_IF([WITH_SYSTEMD_UNITS],
     [AC_CONFIG_FILES([
-                 src/fty_srr.service
+                 src/fty-srr.service
     ])],
     [])
 
