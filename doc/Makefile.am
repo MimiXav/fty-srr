@@ -68,9 +68,9 @@ GENERATED_DOCS =
 ### so that the manpages for binary programs match their name, at expense
 ### of perhaps being built in a subdirectory under doc/.
 GENERATED_DOCS += fty-srr.txt fty-srr.doc
-fty-srr.txt: $(top_srcdir)/src/fty_srr.cc
+fty-srr.txt: $(top_srcdir)/src/fty-srr.cc
 	mkdir -p "$(builddir)/$(@D)"
-	"$(srcdir)/mkman" "fty_srr" "$(builddir)/fty-srr.txt" "$(srcdir)/.."
+	"$(srcdir)/mkman" "fty-srr" "$(builddir)/fty-srr.txt" "$(srcdir)/.."
 
 
 clean-local:
