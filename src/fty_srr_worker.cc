@@ -95,7 +95,7 @@ namespace srr
      * @param msg
      * @param subject
      */
-    void SrrWorker::getFeatureListManaged(const messagebus::Message& msg, const std::string& subject)
+    void SrrWorker::getFeatureListManaged(const messagebus::Message& msg)
     {
         std::map<const std::string, std::string> features = m_featuresToAgent;
         dto::srr::SrrFeaturesListDto featuresListdto;
@@ -122,7 +122,7 @@ namespace srr
         // Send Response
         dto::UserData userData;
         userData << featuresListdto;
-        sendResponse(msg, userData, subject);
+        sendResponse(msg, userData, dto::srr::Action::GET_FEATURE_LIST);
     }
     
     /**
@@ -160,16 +160,15 @@ namespace srr
                     // Get queue name from agent name
                     std::string agentNameDest = agent.first;
                     std::string queueNameDest = m_agentToQueue.at(agentNameDest);
-                    //std::string features = agent.second;
                     
                     log_debug("Send request at '%s', to queue '%s', from '%s'", agentNameDest.c_str(), queueNameDest.c_str(), 
                             m_parameters.at(AGENT_NAME_KEY).c_str());
                     // Build query
-                    dto::config::ConfigQueryDto configQuery(query.action, passPhrase, agent.second);
+                    dto::srr::ConfigQueryDto configQuery(dto::srr::Action::SAVE, passPhrase, agent.second);
                     // Build message
                     messagebus::Message req;
                     req.userData() << configQuery;
-                    req.metaData().emplace(messagebus::Message::SUBJECT, SAVE_ACTION);
+                    req.metaData().emplace(messagebus::Message::SUBJECT, actionToString(dto::srr::Action::SAVE));
                     req.metaData().emplace(messagebus::Message::FROM, m_parameters.at(AGENT_NAME_KEY));
                     req.metaData().emplace(messagebus::Message::TO, agentNameDest);
                     req.metaData().emplace(messagebus::Message::COORELATION_ID, messagebus::generateUuid());
@@ -178,7 +177,7 @@ namespace srr
 
                     log_debug("Settings retrieved");
                     // Response serialization 
-                    dto::config::ConfigResponseDto configResponse(/*features*/"", STATUS_FAILED);
+                    dto::srr::ConfigResponseDto configResponse("", dto::srr::Status::FAILED);
                     if (!resp.userData().empty())
                     {
                         resp.userData() >> configResponse;
@@ -224,7 +223,7 @@ namespace srr
     void SrrWorker::restoreIpm2Configuration(const messagebus::Message& msg, const dto::srr::SrrQueryDto& query)
     {
         dto::srr::SrrRestoreDtoList respList;
-        respList.status = STATUS_UNKNOWN;
+        respList.status = dto::srr::Status::UNKNOWN;
         try
         {
             log_debug("Data to set %s", query.data.c_str());
@@ -254,28 +253,28 @@ namespace srr
                 std::string agentNameDest = agent.first;
                 std::string queueNameDest = m_agentToQueue.at(agentNameDest);
                 // Build query
-                dto::config::ConfigQueryDto configQuery(query.action, passPhrase);
+                dto::srr::ConfigQueryDto configQuery(dto::srr::Action::RESTORE, passPhrase);
                 configQuery.data = "{" + JSON::writeToString(restoreSi, false) + "}";
                 log_debug("Configuration to set %s: by: %s ", configQuery.data.c_str(), agentNameDest.c_str());
                 //Send message
                 messagebus::Message req;
                 req.userData() << configQuery;
-                req.metaData().emplace(messagebus::Message::SUBJECT, RESTORE_ACTION);
+                req.metaData().emplace(messagebus::Message::SUBJECT, actionToString(dto::srr::Action::RESTORE));
                 req.metaData().emplace(messagebus::Message::FROM, m_parameters.at(AGENT_NAME_KEY));
                 req.metaData().emplace(messagebus::Message::TO, agentNameDest);
                 req.metaData().emplace(messagebus::Message::COORELATION_ID, messagebus::generateUuid());
                 messagebus::Message resp = m_msgBus.request(queueNameDest, req, TIME_OUT);
 
                 // Serialize response
-                dto::srr::SrrRestoreDtoList respDto(STATUS_FAILED);
+                dto::srr::SrrRestoreDtoList respDto(dto::srr::Status::FAILED);
                 if (!resp.userData().empty())
                 {
                     resp.userData() >> respDto;
 
-                    if ((respDto.status == STATUS_FAILED && respList.status == STATUS_SUCCESS)||
-                        (respDto.status == STATUS_SUCCESS && respList.status == STATUS_FAILED))
+                    if ((respDto.status == dto::srr::Status::FAILED && respList.status == dto::srr::Status::SUCCESS)||
+                        (respDto.status == dto::srr::Status::SUCCESS && respList.status == dto::srr::Status::FAILED))
                     {
-                        respList.status = STATUS_PARTIAL_SUCCESS;
+                        respList.status = dto::srr::Status::PARTIAL_SUCCESS;
                     }
                     else 
                     {
@@ -370,13 +369,13 @@ namespace srr
      * @param payload
      * @param subject
      */
-    void SrrWorker::sendResponse(const messagebus::Message& msg, const dto::UserData& userData, const std::string& subject)
+    void SrrWorker::sendResponse(const messagebus::Message& msg, const dto::UserData& userData, const dto::srr::Action action)
     {
         try
         {
             messagebus::Message respMsg;
             respMsg.userData() = userData;
-            respMsg.metaData().emplace(messagebus::Message::SUBJECT, subject);
+            respMsg.metaData().emplace(messagebus::Message::SUBJECT, actionToString(action));
             respMsg.metaData().emplace(messagebus::Message::FROM, m_parameters.at(AGENT_NAME_KEY));
             respMsg.metaData().emplace(messagebus::Message::TO, msg.metaData().find(messagebus::Message::FROM)->second);
             respMsg.metaData().emplace(messagebus::Message::COORELATION_ID, msg.metaData().find(messagebus::Message::COORELATION_ID)->second);

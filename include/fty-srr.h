@@ -54,16 +54,6 @@ constexpr auto NETWORK                      = "network";
 constexpr auto AUTOMATIONS                  = "automations";
 constexpr auto VIRTUAL_ASSETS               = "virtual-assets";
 constexpr auto SECURITY_WALLET              = "security-wallet";
-// Action definition            
-constexpr auto GET_ACTION                   = "getFeatureList";
-constexpr auto SAVE_ACTION                  = "save";
-constexpr auto RESTORE_ACTION               = "restore";
-constexpr auto RESET_ACTION                 = "reset";
-// Status definition                    
-constexpr auto STATUS_SUCCESS               = "success";
-constexpr auto STATUS_FAILED                = "failed";
-constexpr auto STATUS_PARTIAL_SUCCESS       = "partialSuccess";
-constexpr auto STATUS_UNKNOWN               = "unknown";
 // Common definition                    
 constexpr auto SRR_VERSION_KEY              = "version";
 constexpr auto SRR_VERSION                  = "version";

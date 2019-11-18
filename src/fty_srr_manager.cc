@@ -88,29 +88,24 @@ namespace srr
             dto::UserData data = msg.userData();
             dto::srr::SrrQueryDto query;
             data >> query;
-
-            if (query.action.size() == 0)
-            {
-                throw SrrException("Empty request");
-            }
-            log_debug("Query action: %s", query.action.c_str());
+            log_debug("Query action: %s", actionToString(query.action).c_str());
 
             // Check if the command is valid or not.
-            if (query.action == GET_ACTION)
+            if (query.action == dto::srr::Action::GET_FEATURE_LIST)
             {
-                m_srrworker->getFeatureListManaged(msg, query.action);
+                m_srrworker->getFeatureListManaged(msg);
             } 
-            else if (query.action == SAVE_ACTION)
+            else if (query.action == dto::srr::Action::SAVE)
             {
                 m_srrworker->saveIpm2Configuration(msg, query);
             }
-            else if (query.action == RESTORE_ACTION)
+            else if (query.action == dto::srr::Action::RESTORE)
             {
                 m_srrworker->restoreIpm2Configuration(msg, query);
             } 
             else
             {
-                log_error("Wrong command '%s'", query.action.c_str());
+                log_error("Wrong command '%s'", actionToString(query.action).c_str());
             }
         }        
         catch (std::exception& ex)
