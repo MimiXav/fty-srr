@@ -35,7 +35,7 @@ namespace srr
             explicit SrrWorker(messagebus::MessageBus& msgBus, const std::map<std::string, std::string>& parameters);
             ~SrrWorker() = default;
           
-            void getFeatureListManaged(const messagebus::Message& msg, const std::string& subject);
+            void getFeatureListManaged(const messagebus::Message& msg);
             void saveIpm2Configuration(const messagebus::Message& msg, const dto::srr::SrrQueryDto& query);
             void restoreIpm2Configuration(const messagebus::Message& msg, const dto::srr::SrrQueryDto& query);
 
@@ -52,7 +52,7 @@ namespace srr
             void factorizationSaveCall(const cxxtools::SerializationInfo& siFeatureList, std::map<const std::string, std::list<std::string>>& association);
             void factorizationRestoreCall(cxxtools::SerializationInfo& siData, std::map<const std::string, cxxtools::SerializationInfo>& association);
 
-            void sendResponse(const messagebus::Message& msg, const dto::UserData& userData, const std::string& subject);
+            void sendResponse(const messagebus::Message& msg, const dto::UserData& userData, const dto::srr::Action action);
 
             cxxtools::SerializationInfo buildIpm2ConfigurationStruct();
             void buildResponsePayload(const std::string& featureName, cxxtools::SerializationInfo& siOutput, cxxtools::SerializationInfo& siInput);
