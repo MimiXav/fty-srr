@@ -29,6 +29,7 @@
 #include "fty_srr_classes.h"
 
 using namespace std::placeholders;
+using namespace dto::srr;
 
 namespace srr
 {
@@ -89,23 +90,26 @@ namespace srr
             dto::srr::SrrQueryDto query;
             data >> query;
             log_debug("Query action: %s", actionToString(query.action).c_str());
-
-            // Check if the command is valid or not.
-            if (query.action == dto::srr::Action::GET_FEATURE_LIST)
+            
+            switch (query.action)
             {
-                m_srrworker->getFeatureListManaged(msg);
-            } 
-            else if (query.action == dto::srr::Action::SAVE)
-            {
-                m_srrworker->saveIpm2Configuration(msg, query);
-            }
-            else if (query.action == dto::srr::Action::RESTORE)
-            {
-                m_srrworker->restoreIpm2Configuration(msg, query);
-            } 
-            else
-            {
-                log_error("Wrong command '%s'", actionToString(query.action).c_str());
+                case (Action::GET_FEATURE_LIST):
+                {
+                    m_srrworker->getFeatureListManaged(msg);
+                    break;
+                }
+                case (Action::SAVE):
+                {
+                    m_srrworker->saveIpm2Configuration(msg, query);
+                    break;
+                }
+                case (Action::RESTORE):
+                {
+                    m_srrworker->restoreIpm2Configuration(msg, query);
+                    break;
+                }
+                default:
+                    log_error("Wrong command '%s'", actionToString(query.action).c_str());
             }
         }        
         catch (std::exception& ex)
