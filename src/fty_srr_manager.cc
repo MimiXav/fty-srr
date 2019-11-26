@@ -26,6 +26,7 @@
 @end
  */
 
+#include "srr_pb.h"
 #include "fty_srr_classes.h"
 
 using namespace std::placeholders;
@@ -87,30 +88,32 @@ namespace srr
         try
         {
             dto::UserData data = msg.userData();
-            dto::srr::SrrQueryDto query;
-            data >> query;
-            log_debug("Query action: %s", actionToString(query.action).c_str());
+            Query query;
+            //data >> query;
+            //log_debug("Query action: %s", actionToString(query.action).c_str());
             
-            switch (query.action)
-            {
-                case (Action::GET_FEATURE_LIST):
-                {
-                    m_srrworker->getFeatureListManaged(msg);
-                    break;
-                }
-                case (Action::SAVE):
-                {
-                    m_srrworker->saveIpm2Configuration(msg, query);
-                    break;
-                }
-                case (Action::RESTORE):
-                {
-                    m_srrworker->restoreIpm2Configuration(msg, query);
-                    break;
-                }
-                default:
-                    log_error("Wrong command '%s'", actionToString(query.action).c_str());
-            }
+            /*Response*/ SrrQueryProcessor::processQuery(query);
+            
+//            switch (query.action)
+//            {
+//                case (Action::GET_FEATURE_LIST):
+//                {
+//                    m_srrworker->getFeatureListManaged(msg);
+//                    break;
+//                }
+//                case (Action::SAVE):
+//                {
+//                    m_srrworker->saveIpm2Configuration(msg, query);
+//                    break;
+//                }
+//                case (Action::RESTORE):
+//                {
+//                    m_srrworker->restoreIpm2Configuration(msg, query);
+//                    break;
+//                }
+//                default:
+//                    log_error("Wrong command '%s'", actionToString(query.action).c_str());
+//            }
         }        
         catch (std::exception& ex)
         {
