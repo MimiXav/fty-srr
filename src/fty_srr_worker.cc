@@ -30,6 +30,8 @@
 
 #include "fty_srr_classes.h"
 
+using namespace dto::srr;
+
 namespace srr
 {
     // Timeout for Request/Reply in s
@@ -270,9 +272,10 @@ namespace srr
                 if (!resp.userData().empty())
                 {
                     resp.userData() >> respDto;
+                    log_debug ("General response done by %s: %s", agentNameDest.c_str(), statusToString(respDto.status).c_str());
 
-                    if ((respDto.status == dto::srr::Status::FAILED && respList.status == dto::srr::Status::SUCCESS)||
-                        (respDto.status == dto::srr::Status::SUCCESS && respList.status == dto::srr::Status::FAILED))
+                    if ((respDto.status == Status::FAILED && respList.status == Status::SUCCESS)||
+                        (respDto.status == Status::SUCCESS && respList.status == Status::FAILED))
                     {
                         respList.status = dto::srr::Status::PARTIAL_SUCCESS;
                     }
