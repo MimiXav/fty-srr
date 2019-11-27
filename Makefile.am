@@ -24,10 +24,11 @@ AM_CPPFLAGS = \
     ${fty_common_mlm_CFLAGS} \
     ${fty_common_messagebus_CFLAGS} \
     ${fty_common_dto_CFLAGS} \
+    ${protobuf_CFLAGS} \
     -D__STDC_FORMAT_MACROS \
     -I$(srcdir)/include
 
-project_libs = ${log4cplus_LIBS} ${fty_common_logging_LIBS} ${cxxtools_LIBS} ${fty_common_LIBS} ${libsodium_LIBS} ${libzmq_LIBS} ${czmq_LIBS} ${malamute_LIBS} ${openssl_LIBS} ${fty_common_mlm_LIBS} ${fty_common_messagebus_LIBS} ${fty_common_dto_LIBS}
+project_libs = ${log4cplus_LIBS} ${fty_common_logging_LIBS} ${cxxtools_LIBS} ${fty_common_LIBS} ${libsodium_LIBS} ${libzmq_LIBS} ${czmq_LIBS} ${malamute_LIBS} ${openssl_LIBS} ${fty_common_mlm_LIBS} ${fty_common_messagebus_LIBS} ${fty_common_dto_LIBS} ${protobuf_LIBS}
 
 SUBDIRS = doc
 SUBDIRS += include
@@ -60,6 +61,7 @@ EXTRA_DIST += \
     Findfty_common_mlm.cmake \
     Findfty_common_messagebus.cmake \
     Findfty_common_dto.cmake \
+    Findprotobuf.cmake \
     builds/cmake/Modules/ClangFormat.cmake \
     builds/cmake/clang-format-check.sh.in \
     builds/cmake/Config.cmake.in \
@@ -68,7 +70,6 @@ endif
 
 EXTRA_DIST += \
     src/fty_srr_manager.h \
-    src/fty_srr_worker.h \
     README.md \
     src/fty_srr_classes.h
 

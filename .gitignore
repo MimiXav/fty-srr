@@ -25,6 +25,7 @@ save.xml
 # Executables
 src/fty-srr_selftest
 src/fty-srr
+src/fty-srr-cmd
 src/fty_srr_selftest
 *.exe
 *.out

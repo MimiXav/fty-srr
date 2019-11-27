@@ -50,6 +50,8 @@ namespace srr
      */
     void SrrManager::init()
     {
+        m_processor.listFeatureHandler = std::bind(&SrrManager::getListFeatureHandler, this, _1);
+        
         try
         {
             // Message bus init
@@ -57,7 +59,7 @@ namespace srr
             m_msgBus->connect();
             
             // Create the worker.
-            m_srrworker = std::unique_ptr<srr::SrrWorker>(new srr::SrrWorker(*m_msgBus, m_parameters));
+            //m_srrworker = std::unique_ptr<srr::SrrWorker>(new srr::SrrWorker(*m_msgBus, m_parameters));
             
             // Listen all incoming request
             //messagebus::Message fct = [&](messagebus::Message msg){this->handleRequest(msg);};
@@ -88,36 +90,67 @@ namespace srr
         try
         {
             dto::UserData data = msg.userData();
+      
             Query query;
-            //data >> query;
+            data >> query;
+            
+            Response response = m_processor.processQuery(query);
             //log_debug("Query action: %s", actionToString(query.action).c_str());
             
-            /*Response*/ SrrQueryProcessor::processQuery(query);
+            dto::UserData dataResponse;
+            dataResponse << response;
             
-//            switch (query.action)
-//            {
-//                case (Action::GET_FEATURE_LIST):
-//                {
-//                    m_srrworker->getFeatureListManaged(msg);
-//                    break;
-//                }
-//                case (Action::SAVE):
-//                {
-//                    m_srrworker->saveIpm2Configuration(msg, query);
-//                    break;
-//                }
-//                case (Action::RESTORE):
-//                {
-//                    m_srrworker->restoreIpm2Configuration(msg, query);
-//                    break;
-//                }
-//                default:
-//                    log_error("Wrong command '%s'", actionToString(query.action).c_str());
-//            }
+             sendResponse(msg, dataResponse);
+            
         }        
         catch (std::exception& ex)
         {
             log_error(ex.what());
+        }
+    }
+    
+    ListFeatureResponse SrrManager::getListFeatureHandler(const ListFeatureQuery & /*q*/)
+    {
+        ListFeatureResponse featureSecurityWallet;
+        
+        featureSecurityWallet.mutable_map_features_dependencies()->insert({"security-wallet", {}});
+        
+        
+        ListFeatureResponse featureJava;
+        
+        featureJava.mutable_map_features_dependencies()->insert({"Automation", {}});
+        FeatureDependencies dep;
+        dep.add_dependencies("Automation");
+        featureJava.mutable_map_features_dependencies()->insert({"VM",dep});
+        
+        //response global
+        
+        ListFeatureResponse response;
+        
+        response += featureSecurityWallet;
+        response += featureJava;
+        
+        return response;   
+    }
+    
+    void SrrManager::sendResponse(const messagebus::Message& msg, const dto::UserData& userData)
+    {
+        try
+        {
+            messagebus::Message respMsg;
+            respMsg.userData() = userData;
+            respMsg.metaData().emplace(messagebus::Message::SUBJECT, msg.metaData().at(messagebus::Message::SUBJECT));
+            respMsg.metaData().emplace(messagebus::Message::FROM, m_parameters.at(AGENT_NAME_KEY));
+            respMsg.metaData().emplace(messagebus::Message::TO, msg.metaData().find(messagebus::Message::FROM)->second);
+            respMsg.metaData().emplace(messagebus::Message::COORELATION_ID, msg.metaData().find(messagebus::Message::COORELATION_ID)->second);
+            m_msgBus->sendReply(msg.metaData().find(messagebus::Message::REPLY_TO)->second, respMsg);
+        }
+        catch (messagebus::MessageBusException& ex)
+        {
+            throw SrrException(ex.what());
+        } catch (...)
+        {
+            throw SrrException("Unknown error on send response to the message bus");
         }
     }
 }

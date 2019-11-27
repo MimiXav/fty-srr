@@ -35,11 +35,12 @@ default|default-Werror|default-with-docs|valgrind|clang-format-check)
         # Proto installation area for this project and its deps
         rm -rf ./tmp
     fi
+    mkdir -p tmp
     if [ -d "./tmp-deps" ]; then
         # Checkout/unpack and build area for dependencies
         rm -rf ./tmp-deps
     fi
-    mkdir -p tmp tmp-deps
+    mkdir -p tmp-deps
     BUILD_PREFIX=$PWD/tmp
 
     PATH="`echo "$PATH" | sed -e 's,^/usr/lib/ccache/?:,,' -e 's,:/usr/lib/ccache/?:,,' -e 's,:/usr/lib/ccache/?$,,' -e 's,^/usr/lib/ccache/?$,,'`"
@@ -531,6 +532,39 @@ default|default-Werror|default-with-docs|valgrind|clang-format-check)
         cd ./tmp-deps
         $CI_TIME git clone --quiet --depth 1 -b master https://github.com/42ity/fty-common-dto.git fty-common-dto
         cd ./fty-common-dto
+        CCACHE_BASEDIR=${PWD}
+        export CCACHE_BASEDIR
+        git --no-pager log --oneline -n1
+        if [ -e autogen.sh ]; then
+            $CI_TIME ./autogen.sh 2> /dev/null
+        fi
+        if [ -e buildconf ]; then
+            $CI_TIME ./buildconf 2> /dev/null
+        fi
+        if [ ! -e autogen.sh ] && [ ! -e buildconf ] && [ ! -e ./configure ] && [ -s ./configure.ac ]; then
+            $CI_TIME libtoolize --copy --force && \
+            $CI_TIME aclocal -I . && \
+            $CI_TIME autoheader && \
+            $CI_TIME automake --add-missing --copy && \
+            $CI_TIME autoconf || \
+            $CI_TIME autoreconf -fiv
+        fi
+        $CI_TIME ./configure "${CONFIG_OPTS[@]}"
+        $CI_TIME make -j4
+        $CI_TIME make install
+        cd "${BASE_PWD}"
+    fi
+
+    # Start of recipe for dependency: protobuf
+    if ! (command -v dpkg-query >/dev/null 2>&1 && dpkg-query --list protobuf-dev >/dev/null 2>&1) || \
+           (command -v brew >/dev/null 2>&1 && brew ls --versions protobuf >/dev/null 2>&1) \
+    ; then
+        echo ""
+        BASE_PWD=${PWD}
+        echo "`date`: INFO: Building prerequisite 'protobuf' from Git repository..." >&2
+        cd ./tmp-deps
+        $CI_TIME git clone --quiet --depth 1 https://github.com/42ity/protobuf.git protobuf
+        cd ./protobuf
         CCACHE_BASEDIR=${PWD}
         export CCACHE_BASEDIR
         git --no-pager log --oneline -n1

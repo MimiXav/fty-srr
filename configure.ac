@@ -1146,6 +1146,67 @@ dnl END of PKG_CHECK_MODULES and/or direct tests for libfty_common_dto
 dnl END of enabled attempts to search for libfty_common_dto
 
 
+was_protobuf_check_lib_detected=no
+
+search_protobuf="yes"
+
+AC_ARG_WITH([protobuf],
+    [
+        AS_HELP_STRING([--with-protobuf],
+        [yes or no. Optionally specify protobuf prefix (directory where its include/ and lib/ are located), but that is only used if pkgconfig metadata is not found first])
+    ],
+    [
+        search_protobuf="yes"
+    ],
+    [
+        search_protobuf="yes"
+    ])
+AS_CASE([x"${with_protobuf}"],
+    [xyes], [search_protobuf="yes"],
+    [xno],  [search_protobuf="no"])
+
+dnl We do not abort right now, because the maintainer/developer may have
+dnl something particular in mind, e.g. to build just parts of a project.
+AS_IF([test x"${search_protobuf}" = xno],
+    [AC_MSG_WARN([Required dependency on protobuf was explicitly disabled during configuration by '--with-protobuf=no'; subsequent full build of fty-srr may fail])])
+
+AS_IF([test x"${search_protobuf}" = xyes], [
+    # Archive previously detected and supplied flags
+    PRE_SEARCH_CFLAGS="${CFLAGS}"
+    PRE_SEARCH_LIBS="${LIBS}"
+
+    found_pkgconfig=""
+    PKG_CHECK_MODULES([protobuf], [protobuf >= 0.0.0],
+    [
+        was_protobuf_check_lib_detected=pkgcfg
+        found_pkgconfig="protobuf"
+    ],
+    [
+        AC_MSG_WARN([Attribute 'test' is not set on zproject dependency 'protobuf' - please ensure it is set])
+    ])
+
+dnl END of PKG_CHECK_MODULES and/or direct tests for protobuf
+    AS_CASE(["x${was_protobuf_check_lib_detected}"],
+        [xpkgcfg], [
+                PKGCFG_NAMES_PRIVATE="$PKGCFG_NAMES_PRIVATE ${found_pkgconfig}"
+                CFLAGS="${protobuf_CFLAGS} ${CFLAGS}"
+                LIBS="${protobuf_LIBS} ${LIBS}"
+            ],
+        [xyes], [
+                CFLAGS="${protobuf_synthetic_cflags} ${CFLAGS}"
+                LDFLAGS="${protobuf_synthetic_libs} ${LDFLAGS}"
+                LIBS="${protobuf_synthetic_libs} ${LIBS}"
+
+                AC_SUBST([protobuf_CFLAGS],[${protobuf_synthetic_cflags}])
+                AC_SUBST([protobuf_LIBS],[${protobuf_synthetic_libs}])
+            ],
+        [xno], [
+            AC_MSG_ERROR([Cannot find pkg-config metadata for protobuf 0.0.0 or higher])
+    ])
+])
+dnl END of enabled attempts to search for protobuf
+
+
 CFLAGS="${PREVIOUS_CFLAGS}"
 LIBS="${PREVIOUS_LIBS}"
 
@@ -1350,6 +1411,16 @@ AC_ARG_ENABLE([fty-srr],
 
 AM_CONDITIONAL([ENABLE_FTY_SRR], [test x$enable_fty_srr != xno])
 AM_COND_IF([ENABLE_FTY_SRR], [AC_MSG_NOTICE([ENABLE_FTY_SRR defined])])
+
+# Check for fty-srr-cmd intent
+AC_ARG_ENABLE([fty-srr-cmd],
+    AS_HELP_STRING([--enable-fty-srr-cmd],
+        [Compile and install 'fty-srr-cmd' [default=yes]]),
+    [enable_fty_srr_cmd=$enableval],
+    [enable_fty_srr_cmd=yes])
+
+AM_CONDITIONAL([ENABLE_FTY_SRR_CMD], [test x$enable_fty_srr_cmd != xno])
+AM_COND_IF([ENABLE_FTY_SRR_CMD], [AC_MSG_NOTICE([ENABLE_FTY_SRR_CMD defined])])
 
 # Check for fty_srr_selftest intent
 AC_ARG_ENABLE([fty_srr_selftest],

@@ -20,6 +20,7 @@ git clone --quiet --depth 1 -b master https://github.com/42ity/malamute.git mala
 git clone --quiet --depth 1 -b master https://github.com/42ity/fty-common-mlm.git fty-common-mlm
 git clone --quiet --depth 1 -b master https://github.com/42ity/fty-common-messagebus.git fty-common-messagebus
 git clone --quiet --depth 1 -b master https://github.com/42ity/fty-common-dto.git fty-common-dto
+git clone --quiet --depth 1 https://github.com/42ity/protobuf.git protobuf
 cd -
 
 if ! ((command -v dpkg-query >/dev/null 2>&1 && dpkg-query --list zproject >/dev/null 2>&1) || \
