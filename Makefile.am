@@ -70,6 +70,7 @@ endif
 
 EXTRA_DIST += \
     src/fty_srr_manager.h \
+    src/fty_srr_worker.h \
     README.md \
     src/fty_srr_classes.h
 

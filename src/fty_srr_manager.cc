@@ -50,22 +50,26 @@ namespace srr
      */
     void SrrManager::init()
     {
-        m_processor.listFeatureHandler = std::bind(&SrrManager::getListFeatureHandler, this, _1);
-        
         try
         {
             // Message bus init
             m_msgBus = std::unique_ptr<messagebus::MessageBus>(messagebus::MlmMessageBus(m_parameters.at(ENDPOINT_KEY), m_parameters.at(AGENT_NAME_KEY)));
             m_msgBus->connect();
             
-            // Create the worker.
-            //m_srrworker = std::unique_ptr<srr::SrrWorker>(new srr::SrrWorker(*m_msgBus, m_parameters));
+            // Worker creation.
+            m_srrworker = std::unique_ptr<srr::SrrWorker>(new srr::SrrWorker(*m_msgBus, m_parameters));
+            
+            // Bind all processor handler.
+            m_processor.listFeatureHandler = std::bind(&SrrWorker::getFeatureListManaged, m_srrworker.get(), _1);
+            //m_processor.listFeatureHandler = std::bind(&SrrManager::getListFeatureHandler, this, _1);
+            m_processor.saveHandler = std::bind(&SrrWorker::saveIpm2Configuration, m_srrworker.get(), _1);
+            m_processor.restoreHandler = std::bind(&SrrWorker::restoreIpm2Configuration, m_srrworker.get(), _1);
+            m_processor.resetHandler = std::bind(&SrrWorker::resetIpm2Configuration, m_srrworker.get(), _1);
             
             // Listen all incoming request
             //messagebus::Message fct = [&](messagebus::Message msg){this->handleRequest(msg);};
             auto fct = std::bind(&SrrManager::handleRequest, this, _1);
             m_msgBus->receive(m_parameters.at(SRR_QUEUE_NAME_KEY), fct);
-            
         }        
         catch (messagebus::MessageBusException& ex)
         {
@@ -86,22 +90,19 @@ namespace srr
      */
     void SrrManager::handleRequest(messagebus::Message msg)
     {
-        log_debug("SRR handleRequest");
+        log_debug("SRR handle request");
         try
         {
             dto::UserData data = msg.userData();
-      
+            // Get the query
             Query query;
             data >> query;
-            
+            // Process the query
             Response response = m_processor.processQuery(query);
-            //log_debug("Query action: %s", actionToString(query.action).c_str());
-            
-            dto::UserData dataResponse;
-            dataResponse << response;
-            
-             sendResponse(msg, dataResponse);
-            
+            // Send response
+            dto::UserData respData;
+            respData << response;
+            sendResponse(msg, respData);
         }        
         catch (std::exception& ex)
         {
@@ -109,7 +110,7 @@ namespace srr
         }
     }
     
-    ListFeatureResponse SrrManager::getListFeatureHandler(const ListFeatureQuery & /*q*/)
+    ListFeatureResponse SrrManager::getListFeatureHandler(const ListFeatureQuery&)
     {
         ListFeatureResponse featureSecurityWallet;
         
@@ -133,6 +134,12 @@ namespace srr
         return response;   
     }
     
+    
+    /**
+     * Send response on message bus
+     * @param msg
+     * @param userData
+     */
     void SrrManager::sendResponse(const messagebus::Message& msg, const dto::UserData& userData)
     {
         try

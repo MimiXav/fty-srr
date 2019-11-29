@@ -14,6 +14,7 @@ pkgconfig_DATA = src/libfty_srr.pc
 
 src_libfty_srr_la_SOURCES = \
     src/fty_srr_manager.cc \
+    src/fty_srr_worker.cc \
     src/platform.h
 
 if ENABLE_DRAFTS

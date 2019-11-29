@@ -35,9 +35,10 @@ namespace srr
             explicit SrrWorker(messagebus::MessageBus& msgBus, const std::map<std::string, std::string>& parameters);
             ~SrrWorker() = default;
           
-            void getFeatureListManaged(const messagebus::Message& msg);
-            void saveIpm2Configuration(const messagebus::Message& msg, const dto::srr::SrrQueryDto& query);
-            void restoreIpm2Configuration(const messagebus::Message& msg, const dto::srr::SrrQueryDto& query);
+            dto::srr::ListFeatureResponse getFeatureListManaged(const dto::srr::ListFeatureQuery& query);
+            dto::srr::SaveResponse saveIpm2Configuration(const dto::srr::SaveQuery& query);
+            dto::srr::RestoreResponse restoreIpm2Configuration(const dto::srr::RestoreQuery& query);
+            dto::srr::ResetResponse resetIpm2Configuration(const dto::srr::ResetQuery& query);
 
         private:
             messagebus::MessageBus& m_msgBus;
@@ -49,13 +50,10 @@ namespace srr
             void init();
             void buildMapAssociation();
 
-            void factorizationSaveCall(const cxxtools::SerializationInfo& siFeatureList, std::map<const std::string, std::list<std::string>>& association);
-            void factorizationRestoreCall(cxxtools::SerializationInfo& siData, std::map<const std::string, cxxtools::SerializationInfo>& association);
+            std::map<std::string, std::set<dto::srr::FeatureName>> factorizationSaveCall(const dto::srr::SaveQuery query);
+            std::map<std::string, dto::srr::RestoreQuery> factorizationRestoreCall(const dto::srr::RestoreQuery query);
 
-            void sendResponse(const messagebus::Message& msg, const dto::UserData& userData, const dto::srr::Action action);
-
-            cxxtools::SerializationInfo buildIpm2ConfigurationStruct();
-            void buildResponsePayload(const std::string& featureName, cxxtools::SerializationInfo& siOutput, cxxtools::SerializationInfo& siInput);
+            messagebus::Message sendRequest(const dto::UserData& userData, const std::string& action, const std::string& queueNameDest, const std::string& agentNameDest);
     };    
 }
 
