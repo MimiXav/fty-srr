@@ -104,7 +104,6 @@ namespace srr
         
         // Automation with dependencies
         ListFeatureResponse featureAutomation;
-        //featureAutomation.mutable_map_features_dependencies()->insert({"aa", {}});
         FeatureDependencies automationDep;
         automationDep.add_dependencies(AUTOMATION_SETTINGS);
         automationDep.add_dependencies(VIRTUAL_ASSETS);

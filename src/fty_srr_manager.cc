@@ -109,32 +109,7 @@ namespace srr
             log_error(ex.what());
         }
     }
-    
-    ListFeatureResponse SrrManager::getListFeatureHandler(const ListFeatureQuery&)
-    {
-        ListFeatureResponse featureSecurityWallet;
-        
-        featureSecurityWallet.mutable_map_features_dependencies()->insert({"security-wallet", {}});
-        
-        
-        ListFeatureResponse featureJava;
-        
-        featureJava.mutable_map_features_dependencies()->insert({"Automation", {}});
-        FeatureDependencies dep;
-        dep.add_dependencies("Automation");
-        featureJava.mutable_map_features_dependencies()->insert({"VM",dep});
-        
-        //response global
-        
-        ListFeatureResponse response;
-        
-        response += featureSecurityWallet;
-        response += featureJava;
-        
-        return response;   
-    }
-    
-    
+
     /**
      * Send response on message bus
      * @param msg

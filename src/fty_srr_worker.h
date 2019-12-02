@@ -26,7 +26,7 @@
 
 namespace srr
 {
-    #define FEATURE_SEPARATOR   ","
+    //#define FEATURE_SEPARATOR   ","
 
     class SrrWorker
     {
@@ -45,8 +45,7 @@ namespace srr
             std::map<std::string, std::string> m_parameters;
             std::map<const std::string, std::string> m_featuresToAgent;
             std::map<const std::string, std::string> m_agentToQueue;
-            
-
+   
             void init();
             void buildMapAssociation();
 
