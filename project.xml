@@ -37,7 +37,7 @@
     </target>
     
      <!-- Here we enable c++ -->
-    <classfilename use-cxx = "true" source-extension = "cc" header-extension = "h" use-cxx-gcc-4-9 = "true"
+    <classfilename use-cxx = "true" source-extension = "cc" header-extension = "h"
         pretty-print = "no" keep-tree = "true" />
 
     <include filename = "license.xml" />
@@ -71,8 +71,7 @@
 
     <!-- use protobuf -->
     <use project = "protobuf" header = "google/protobuf/stubs/common.h"
-            repository = "https://github.com/42ity/protobuf.git"
-            />
+            repository = "https://github.com/42ity/protobuf.git"/>
 
     <!-- Project -->
     <header name ="fty_srr_exception">Fty srr exceptions</header>

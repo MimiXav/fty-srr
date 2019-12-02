@@ -9,14 +9,13 @@ set -ex
 # Note: certain zproject scripts that deal with deeper dependencies expect that
 # such checkouts are directly in the same parent directory as "this" project.
 cd "$REPO_DIR/.."
-
 git clone --quiet --depth 1 https://github.com/42ity/fty-common-logging.git fty-common-logging
 git clone --quiet --depth 1 https://github.com/42ity/cxxtools.git cxxtools
 git clone --quiet --depth 1 https://github.com/42ity/fty-common.git fty-common
 git clone --quiet --depth 1 https://github.com/42ity/fty-common-mlm.git fty-common-mlm
 git clone --quiet --depth 1 https://github.com/42ity/fty-common-messagebus.git fty-common-messagebus
 git clone --quiet --depth 1 https://github.com/42ity/fty-common-dto.git fty-common-dto
-
+git clone --quiet --depth 1 https://github.com/42ity/protobuf.git protobuf
 cd -
 
 if ! ((command -v dpkg-query >/dev/null 2>&1 && dpkg-query --list zproject >/dev/null 2>&1) || \

@@ -22,7 +22,7 @@ AM_CPPFLAGS = \
     -D__STDC_FORMAT_MACROS \
     -I$(srcdir)/include
 
-project_libs = ${fty_common_logging_LIBS} ${cxxtools_LIBS} ${fty_common_LIBS} ${fty_common_mlm_LIBS} ${fty_common_messagebus_LIBS} ${fty_common_dto_LIBS}
+project_libs = ${fty_common_logging_LIBS} ${cxxtools_LIBS} ${fty_common_LIBS} ${fty_common_mlm_LIBS} ${fty_common_messagebus_LIBS} ${fty_common_dto_LIBS} ${protobuf_LIBS}
 
 SUBDIRS = doc
 SUBDIRS += include
