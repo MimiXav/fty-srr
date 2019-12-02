@@ -233,7 +233,7 @@
     <!-- Project -->
     <header name ="fty_srr_exception">Fty srr exceptions</header>
     <class name = "fty_srr_manager" private = "1" selftest = "0">Fty srr manager</class>
-    <!--<class name = "fty_srr_worker" private = "1" selftest = "0">Fty srr worker</class>-->
+    <class name = "fty_srr_worker" private = "1" selftest = "0">Fty srr worker</class>
     <main name = "fty-srr" service = "1">Binary</main>
     <main name = "fty-srr-cmd" selftest = "0">Binary</main>
 

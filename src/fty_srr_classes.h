@@ -37,6 +37,10 @@
 typedef struct _fty_srr_manager_t fty_srr_manager_t;
 #define FTY_SRR_MANAGER_T_DEFINED
 #endif
+#ifndef FTY_SRR_WORKER_T_DEFINED
+typedef struct _fty_srr_worker_t fty_srr_worker_t;
+#define FTY_SRR_WORKER_T_DEFINED
+#endif
 
 //  Extra headers
 
@@ -80,6 +84,7 @@ safe_malloc (size_t size, const char *file, unsigned line)
 
 
 #include "fty_srr_manager.h"
+#include "fty_srr_worker.h"
 
 //  *** To avoid double-definitions, only define if building without draft ***
 #ifndef FTY_SRR_BUILD_DRAFT_API
