@@ -416,7 +416,7 @@ fi
 
 
 # Start of recipe for dependency: protobuf
-if ! (command -v dpkg-query >/dev/null 2>&1 && dpkg-query --list protobuf-dev >/dev/null 2>&1) || \
+if ! (command -v dpkg-query >/dev/null 2>&1 && dpkg-query --list libprotobuf-dev >/dev/null 2>&1) || \
        (command -v brew >/dev/null 2>&1 && brew ls --versions protobuf >/dev/null 2>&1) || \
        ([ -e "protobuf" ]) \
 ; then
