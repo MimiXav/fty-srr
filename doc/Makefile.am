@@ -6,7 +6,7 @@
 all-local: doc
 
 # Public programs ("main" tags in project.xml), auto-regenerated:
-MAN1 = fty-srr.1
+MAN1 = fty-srr.1 fty-srr-cmd.1
 # Public classes ("class" tags in project.xml), auto-regenerated:
 MAN3 =
 # Project overview, written by a human after initial skeleton:
@@ -71,6 +71,11 @@ GENERATED_DOCS += fty-srr.txt fty-srr.doc
 fty-srr.txt: $(top_srcdir)/src/fty-srr.cc
 	mkdir -p "$(builddir)/$(@D)"
 	"$(srcdir)/mkman" "fty-srr" "$(builddir)/fty-srr.txt" "$(srcdir)/.."
+
+GENERATED_DOCS += fty-srr-cmd.txt fty-srr-cmd.doc
+fty-srr-cmd.txt: $(top_srcdir)/src/fty-srr-cmd.cc
+	mkdir -p "$(builddir)/$(@D)"
+	"$(srcdir)/mkman" "fty-srr-cmd" "$(builddir)/fty-srr-cmd.txt" "$(srcdir)/.."
 
 
 clean-local:

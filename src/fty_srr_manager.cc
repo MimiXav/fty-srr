@@ -26,6 +26,7 @@
 @end
  */
 
+#include "srr_pb.h"
 #include "fty_srr_classes.h"
 
 using namespace std::placeholders;
@@ -55,14 +56,20 @@ namespace srr
             m_msgBus = std::unique_ptr<messagebus::MessageBus>(messagebus::MlmMessageBus(m_parameters.at(ENDPOINT_KEY), m_parameters.at(AGENT_NAME_KEY)));
             m_msgBus->connect();
             
-            // Create the worker.
+            // Worker creation.
             m_srrworker = std::unique_ptr<srr::SrrWorker>(new srr::SrrWorker(*m_msgBus, m_parameters));
+            
+            // Bind all processor handler.
+            m_processor.listFeatureHandler = std::bind(&SrrWorker::getFeatureListManaged, m_srrworker.get(), _1);
+            //m_processor.listFeatureHandler = std::bind(&SrrManager::getListFeatureHandler, this, _1);
+            m_processor.saveHandler = std::bind(&SrrWorker::saveIpm2Configuration, m_srrworker.get(), _1);
+            m_processor.restoreHandler = std::bind(&SrrWorker::restoreIpm2Configuration, m_srrworker.get(), _1);
+            m_processor.resetHandler = std::bind(&SrrWorker::resetIpm2Configuration, m_srrworker.get(), _1);
             
             // Listen all incoming request
             //messagebus::Message fct = [&](messagebus::Message msg){this->handleRequest(msg);};
             auto fct = std::bind(&SrrManager::handleRequest, this, _1);
             m_msgBus->receive(m_parameters.at(SRR_QUEUE_NAME_KEY), fct);
-            
         }        
         catch (messagebus::MessageBusException& ex)
         {
@@ -83,38 +90,49 @@ namespace srr
      */
     void SrrManager::handleRequest(messagebus::Message msg)
     {
-        log_debug("SRR handleRequest");
+        log_debug("SRR handle request");
         try
         {
             dto::UserData data = msg.userData();
-            dto::srr::SrrQueryDto query;
+            // Get the query
+            Query query;
             data >> query;
-            log_debug("Query action: %s", actionToString(query.action).c_str());
-            
-            switch (query.action)
-            {
-                case (Action::GET_FEATURE_LIST):
-                {
-                    m_srrworker->getFeatureListManaged(msg);
-                    break;
-                }
-                case (Action::SAVE):
-                {
-                    m_srrworker->saveIpm2Configuration(msg, query);
-                    break;
-                }
-                case (Action::RESTORE):
-                {
-                    m_srrworker->restoreIpm2Configuration(msg, query);
-                    break;
-                }
-                default:
-                    log_error("Wrong command '%s'", actionToString(query.action).c_str());
-            }
+            // Process the query
+            Response response = m_processor.processQuery(query);
+            // Send response
+            dto::UserData respData;
+            respData << response;
+            sendResponse(msg, respData);
         }        
         catch (std::exception& ex)
         {
             log_error(ex.what());
+        }
+    }
+
+    /**
+     * Send response on message bus
+     * @param msg
+     * @param userData
+     */
+    void SrrManager::sendResponse(const messagebus::Message& msg, const dto::UserData& userData)
+    {
+        try
+        {
+            messagebus::Message respMsg;
+            respMsg.userData() = userData;
+            respMsg.metaData().emplace(messagebus::Message::SUBJECT, msg.metaData().at(messagebus::Message::SUBJECT));
+            respMsg.metaData().emplace(messagebus::Message::FROM, m_parameters.at(AGENT_NAME_KEY));
+            respMsg.metaData().emplace(messagebus::Message::TO, msg.metaData().find(messagebus::Message::FROM)->second);
+            respMsg.metaData().emplace(messagebus::Message::COORELATION_ID, msg.metaData().find(messagebus::Message::COORELATION_ID)->second);
+            m_msgBus->sendReply(msg.metaData().find(messagebus::Message::REPLY_TO)->second, respMsg);
+        }
+        catch (messagebus::MessageBusException& ex)
+        {
+            throw SrrException(ex.what());
+        } catch (...)
+        {
+            throw SrrException("Unknown error on send response to the message bus");
         }
     }
 }

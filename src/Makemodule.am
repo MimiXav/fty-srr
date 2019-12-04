@@ -60,6 +60,13 @@ systemdsystemunit_DATA += src/fty-srr.service
 endif #WITH_SYSTEMD_UNITS
 endif #ENABLE_FTY_SRR
 
+if ENABLE_FTY_SRR_CMD
+bin_PROGRAMS += src/fty-srr-cmd
+src_fty_srr_cmd_CPPFLAGS = ${AM_CPPFLAGS}
+src_fty_srr_cmd_LDADD = ${program_libs}
+src_fty_srr_cmd_SOURCES = src/fty-srr-cmd.cc
+endif #ENABLE_FTY_SRR_CMD
+
 if ENABLE_FTY_SRR_SELFTEST
 check_PROGRAMS += src/fty_srr_selftest
 noinst_PROGRAMS += src/fty_srr_selftest
@@ -71,6 +78,7 @@ endif #ENABLE_FTY_SRR_SELFTEST
 # define custom target for all products of /src
 src: \
 		src/fty-srr \
+		src/fty-srr-cmd \
 		src/fty_srr_selftest \
 		src/libfty_srr.la
 

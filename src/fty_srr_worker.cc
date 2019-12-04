@@ -30,6 +30,8 @@
 
 #include "fty_srr_classes.h"
 
+using namespace dto::srr;
+
 namespace srr
 {
     // Timeout for Request/Reply in s
@@ -95,34 +97,34 @@ namespace srr
      * @param msg
      * @param subject
      */
-    void SrrWorker::getFeatureListManaged(const messagebus::Message& msg)
+    ListFeatureResponse SrrWorker::getFeatureListManaged(const ListFeatureQuery& query)
     {
         std::map<const std::string, std::string> features = m_featuresToAgent;
-        dto::srr::SrrFeaturesListDto featuresListdto;
+        ListFeatureResponse response;
         
-        // Set automation dependencies
-        std::string automationDependencies;
-        automationDependencies.append(AUTOMATION_SETTINGS);
-        automationDependencies.append(STRING_DELIMITER);
-        automationDependencies.append(VIRTUAL_ASSETS);
-        dto::srr::SrrFeatureDto srrFeatureDto(AUTOMATIONS, automationDependencies);
-        featuresListdto.featuresList.push_back(srrFeatureDto);
+        // Automation with dependencies
+        ListFeatureResponse featureAutomation;
+        FeatureDependencies automationDep;
+        automationDep.add_dependencies(AUTOMATION_SETTINGS);
+        automationDep.add_dependencies(VIRTUAL_ASSETS);
+        featureAutomation.mutable_map_features_dependencies()->insert({AUTOMATIONS, automationDep});
         // Remove it to do not add twice.
         features.erase(AUTOMATIONS);
         features.erase(AUTOMATION_SETTINGS);
         features.erase(VIRTUAL_ASSETS);
         
-        // All remaining entries have not dependencies
+        // Remainoing features
+        ListFeatureResponse otherFeatures;
         for (const auto& feature : features)
         {
-            dto::srr::SrrFeatureDto srrFeatureDto(feature.first);
-            featuresListdto.featuresList.push_back(srrFeatureDto);
+            otherFeatures.mutable_map_features_dependencies()->insert({feature.first, {}});
         }
-
-        // Send Response
-        dto::UserData userData;
-        userData << featuresListdto;
-        sendResponse(msg, userData, dto::srr::Action::GET_FEATURE_LIST);
+        
+        // Features concatenation        
+        response += featureAutomation;
+        response += otherFeatures;
+        
+        return response;
     }
     
     /**
@@ -130,89 +132,39 @@ namespace srr
      * @param msg
      * @param query
      */
-    void SrrWorker::saveIpm2Configuration(const messagebus::Message& msg, const dto::srr::SrrQueryDto& query)
+    SaveResponse SrrWorker::saveIpm2Configuration(const SaveQuery& query)
     {
-        std::string saveResp;
+        SaveResponse response;
         try
         {
-            log_debug("Save IPM2 configuration processing");
-            // Global serialization info.
-            cxxtools::SerializationInfo ipm2ConfSi = buildIpm2ConfigurationStruct();
-            
-            // version check
-            std::string version = m_parameters.at(SRR_VERSION_KEY);
-            log_debug("Payload %s", query.data.c_str());
-            
-            if (query.data.size() > 0)
-            {
-                cxxtools::SerializationInfo si;
-                JSON::readFromString(query.data, si);
-                
-                // Passphrase
-                cxxtools::SerializationInfo siPassPhrase = si.getMember(PASS_PHRASE_NAME);
-                std::string passPhrase = JSON::writeToString(siPassPhrase, false);
-                // Get all feature association to factorize request
-                std::map<const std::string, std::list<std::string>> agentAssoc;
-                factorizationSaveCall(si.getMember(FEATURE_LIST_NAME), agentAssoc);
-                
-                for(auto const& agent: agentAssoc)
-                {
-                    // Get queue name from agent name
-                    std::string agentNameDest = agent.first;
-                    std::string queueNameDest = m_agentToQueue.at(agentNameDest);
-                    
-                    log_debug("Send request at '%s', to queue '%s', from '%s'", agentNameDest.c_str(), queueNameDest.c_str(), 
-                            m_parameters.at(AGENT_NAME_KEY).c_str());
-                    // Build query
-                    dto::srr::ConfigQueryDto configQuery(dto::srr::Action::SAVE, passPhrase, agent.second);
-                    // Build message
-                    messagebus::Message req;
-                    req.userData() << configQuery;
-                    req.metaData().emplace(messagebus::Message::SUBJECT, actionToString(dto::srr::Action::SAVE));
-                    req.metaData().emplace(messagebus::Message::FROM, m_parameters.at(AGENT_NAME_KEY));
-                    req.metaData().emplace(messagebus::Message::TO, agentNameDest);
-                    req.metaData().emplace(messagebus::Message::COORELATION_ID, messagebus::generateUuid());
-                    // Send request
-                    messagebus::Message resp = m_msgBus.request(queueNameDest, req, TIME_OUT);
+          log_debug("Save IPM2 configuration processing");
+          // Try to factorize all call.
+          std::map<std::string, std::set<FeatureName>> agentAssoc = factorizationSaveCall(query);
+          
+          for(auto const& agent: agentAssoc)
+          {
+                // Get queue name from agent name
+                std::string agentNameDest = agent.first;
+                std::string queueNameDest = m_agentToQueue.at(agentNameDest);
 
-                    log_debug("Settings retrieved");
-                    // Response serialization 
-                    dto::srr::ConfigResponseDto configResponse("", dto::srr::Status::FAILED);
-                    if (!resp.userData().empty())
-                    {
-                        resp.userData() >> configResponse;
-                    }
-                    // Get data member
-                    cxxtools::SerializationInfo& si = *(ipm2ConfSi.findMember(DATA_MEMBER));
-                    cxxtools::SerializationInfo siConfigResp;
-                    // Get the serializationInfo from data response
-                    JSON::readFromString (configResponse.data, siConfigResp);
-                    // Iterate on array result
-                    cxxtools::SerializationInfo::Iterator it;
-                    for (it = siConfigResp.begin(); it != siConfigResp.end(); ++it)
-                    {
-                        si.addMember("") <<= (cxxtools::SerializationInfo)*it;
-                    }
-                }
-                saveResp = JSON::writeToString(ipm2ConfSi, false);
-            }
-            else 
-            {
-                throw SrrException("Query data is empty");
-            }
-        }
-        catch (messagebus::MessageBusException& ex)
-        {
-            log_error(ex.what());
+                log_debug("Saving configuration by: %s ", agentNameDest.c_str());
+                // Build query
+                Query saveQuery = createSaveQuery({agent.second}, query.passpharse());
+                // Send message
+                dto::UserData reqData;
+                reqData << saveQuery;
+                messagebus::Message resp = sendRequest(reqData, "save", queueNameDest, agentNameDest);
+                log_debug("Save done by %s: ", agentNameDest.c_str());
+                Response partialResp;
+                resp.userData() >> partialResp;
+                response += partialResp.save();
+          }
         }
         catch (...)
         {
             log_error("Unknown error on save Ipm2 configuration");
         }
-        // Send Response
-        dto::UserData userData;
-        userData.push_back(saveResp);
-        sendResponse(msg, userData, query.action);
+        return response;
     }
     
     /**
@@ -220,108 +172,66 @@ namespace srr
      * @param msg
      * @param query
      */
-    void SrrWorker::restoreIpm2Configuration(const messagebus::Message& msg, const dto::srr::SrrQueryDto& query)
+    RestoreResponse SrrWorker::restoreIpm2Configuration(const RestoreQuery& query)
     {
-        dto::srr::SrrRestoreDtoList respList;
-        respList.status = dto::srr::Status::UNKNOWN;
+        RestoreResponse response;
         try
         {
-            log_debug("Data to set %s", query.data.c_str());
-            // Get the si from the request
-            cxxtools::SerializationInfo si;
-            JSON::readFromString(query.data, si);
-            cxxtools::SerializationInfo siData = si.getMember(DATA_MEMBER);
-            
-            // Passphrase
-            cxxtools::SerializationInfo siPassPhrase = si.getMember(PASS_PHRASE_NAME);
-            std::string passPhrase = JSON::writeToString(siPassPhrase, false);
-            
-            // Test if the data is well formated
-            if (siData.category () != cxxtools::SerializationInfo::Array ) 
-            {
-                throw std::invalid_argument(DATA_MEMBER + std::string(" should be an array"));
-            }
-            // Factorization agent's call.
-            std::map<const std::string, cxxtools::SerializationInfo> agentAssoc;
-            factorizationRestoreCall(siData, agentAssoc);
+            log_debug("Restore IPM2 configuration processing");
+            // Try to factorize all call.
+            std::map<std::string, RestoreQuery> agentAssoc = factorizationRestoreCall(query);
             
             for(auto const& agent: agentAssoc)
             {
-                // Restore serialization
-                cxxtools::SerializationInfo restoreSi = agent.second;
                 // Get queue name from agent name
                 std::string agentNameDest = agent.first;
                 std::string queueNameDest = m_agentToQueue.at(agentNameDest);
                 // Build query
-                dto::srr::ConfigQueryDto configQuery(dto::srr::Action::RESTORE, passPhrase);
-                configQuery.data = "{" + JSON::writeToString(restoreSi, false) + "}";
-                log_debug("Configuration to set %s: by: %s ", configQuery.data.c_str(), agentNameDest.c_str());
-                //Send message
-                messagebus::Message req;
-                req.userData() << configQuery;
-                req.metaData().emplace(messagebus::Message::SUBJECT, actionToString(dto::srr::Action::RESTORE));
-                req.metaData().emplace(messagebus::Message::FROM, m_parameters.at(AGENT_NAME_KEY));
-                req.metaData().emplace(messagebus::Message::TO, agentNameDest);
-                req.metaData().emplace(messagebus::Message::COORELATION_ID, messagebus::generateUuid());
-                messagebus::Message resp = m_msgBus.request(queueNameDest, req, TIME_OUT);
-
-                // Serialize response
-                dto::srr::SrrRestoreDtoList respDto(dto::srr::Status::FAILED);
-                if (!resp.userData().empty())
-                {
-                    resp.userData() >> respDto;
-
-                    if ((respDto.status == dto::srr::Status::FAILED && respList.status == dto::srr::Status::SUCCESS)||
-                        (respDto.status == dto::srr::Status::SUCCESS && respList.status == dto::srr::Status::FAILED))
-                    {
-                        respList.status = dto::srr::Status::PARTIAL_SUCCESS;
-                    }
-                    else 
-                    {
-                        respList.status = respDto.status;
-                    }
-                }
-                respList.responseList.insert(respList.responseList.end(), respDto.responseList.begin(), respDto.responseList.end());
+                Query restoreQuery;
+                *(restoreQuery.mutable_restore()) = agent.second;
+                log_debug("Restoring configuration by: %s ", agentNameDest.c_str());
+                // Send message
+                dto::UserData reqData;
+                reqData << restoreQuery;
+                messagebus::Message resp = sendRequest(reqData, "restore", queueNameDest, agentNameDest);
+                log_debug("Restore done by: %s ", agentNameDest.c_str());
+                Response partialResp;
+                resp.userData() >> partialResp;
+                response += partialResp.restore();
             }
-        } 
-        catch (std::exception& ex)
-        {
-            throw SrrException(ex.what());
         }
         catch (...)
         {
-            throw SrrException("Unknown error on restore Ipm2 configuration");
+            log_error("Unknown error on restore Ipm2 configuration");
         }
-        // Send Response
-        dto::UserData userData;
-        userData << respList;
-        sendResponse(msg, userData, query.action);
+        return response;
     }
 
+    
+    /**
+     * Reset an Ipm2 Configuration
+     * @param msg
+     * @param query
+     */
+    ResetResponse SrrWorker::resetIpm2Configuration(const dto::srr::ResetQuery& query)
+    {
+        throw SrrException("Not implemented yet!");
+    }
+    
     /**
      * Save factorization by agent name.
      * @param siFeatureList
      * @param association
      */
-    void SrrWorker::factorizationSaveCall(const cxxtools::SerializationInfo& siFeatureList, std::map<const std::string, std::list<std::string>>& association)
-    {   
-        for (const auto &feature : siFeatureList)
+    std::map<std::string, std::set<FeatureName>> SrrWorker::factorizationSaveCall(const SaveQuery query)
+    {
+        std::map<std::string, std::set<FeatureName>> assoc;
+        for(const auto& featureName: query.features())
         {
-            std::string featureName = "";
-            feature.getMember(FEATURE_NAME).getValue(featureName);
-
             std::string agentName = m_featuresToAgent[featureName];
-            if (association.count(agentName) == 0)
-            {
-                std::list<std::string> features;
-                features.push_back(featureName);
-                association[agentName] = features;
-            }
-            else
-            {
-                association[agentName].push_back(featureName);
-            }
+            assoc[agentName].insert(featureName);
         }
+        return assoc;
     }
     
     /**
@@ -329,38 +239,19 @@ namespace srr
      * @param siFeatureList
      * @param association
      */
-    void SrrWorker::factorizationRestoreCall(cxxtools::SerializationInfo& siData, std::map<const std::string, cxxtools::SerializationInfo>& association)
+    std::map<std::string, RestoreQuery> SrrWorker::factorizationRestoreCall(const RestoreQuery query)
     {  
-        cxxtools::SerializationInfo::Iterator it;
-        for (it = siData.begin(); it != siData.end(); ++it)
+        std::map<std::string, RestoreQuery> assoc;
+        std::map<FeatureName, Feature> map1(query.map_features_data().begin(), query.map_features_data().end());
+        for(const auto& item:  map1)
         {
-            cxxtools::SerializationInfo siTemp = (cxxtools::SerializationInfo)*it;
-            for (const auto &si : siTemp)
-            {
-                std::string featureName = si.name();
-                std::string agentName = m_featuresToAgent[featureName];
-                if (association.count(agentName) == 0)
-                {
-                    // Create object
-                    cxxtools::SerializationInfo siFeature;
-                    siFeature.addMember("") <<= si;
-                    // First one, create array
-                    cxxtools::SerializationInfo siData;
-                    siData.setCategory(cxxtools::SerializationInfo::Category::Array);
-                    siData.addMember(featureName) <<= siFeature;
-                    siData.setName(DATA_MEMBER);
-                    association[agentName] = siData;
-                }
-                else
-                {
-                    // Create object
-                    cxxtools::SerializationInfo siFeature;
-                    siFeature.addMember("") <<= si;
-                    association[agentName].addMember(featureName) <<= siFeature;
-                }
-            }
+            const std::string & agentName = m_featuresToAgent[item.first];
+            RestoreQuery& request = assoc[agentName];
+            request.set_passpharse(query.passpharse());
+            request.mutable_map_features_data()->insert({item.first, item.second});
+            
         }
-        
+        return assoc;
     }
     
     /**
@@ -369,17 +260,18 @@ namespace srr
      * @param payload
      * @param subject
      */
-    void SrrWorker::sendResponse(const messagebus::Message& msg, const dto::UserData& userData, const dto::srr::Action action)
+    messagebus::Message SrrWorker::sendRequest(const dto::UserData& userData, const std::string& action, const std::string& queueNameDest, const std::string& agentNameDest)
     {
+        messagebus::Message resp;
         try
         {
-            messagebus::Message respMsg;
-            respMsg.userData() = userData;
-            respMsg.metaData().emplace(messagebus::Message::SUBJECT, actionToString(action));
-            respMsg.metaData().emplace(messagebus::Message::FROM, m_parameters.at(AGENT_NAME_KEY));
-            respMsg.metaData().emplace(messagebus::Message::TO, msg.metaData().find(messagebus::Message::FROM)->second);
-            respMsg.metaData().emplace(messagebus::Message::COORELATION_ID, msg.metaData().find(messagebus::Message::COORELATION_ID)->second);
-            m_msgBus.sendReply(msg.metaData().find(messagebus::Message::REPLY_TO)->second, respMsg);
+            messagebus::Message req;
+            req.userData() = userData;
+            req.metaData().emplace(messagebus::Message::SUBJECT, action);
+            req.metaData().emplace(messagebus::Message::FROM, m_parameters.at(AGENT_NAME_KEY));
+            req.metaData().emplace(messagebus::Message::TO, agentNameDest);
+            req.metaData().emplace(messagebus::Message::COORELATION_ID, messagebus::generateUuid());
+            resp = m_msgBus.request(queueNameDest, req, TIME_OUT);
         }
         catch (messagebus::MessageBusException& ex)
         {
@@ -388,31 +280,7 @@ namespace srr
         {
             throw SrrException("Unknown error on send response to the message bus");
         }
-    }
-    
-    /**
-     * Utilitary to build an Ipm2 configuration si
-     * @return 
-     */
-    cxxtools::SerializationInfo SrrWorker::buildIpm2ConfigurationStruct()
-    {
-        cxxtools::SerializationInfo si;
-        si.addMember(SRR_VERSION_KEY) <<= ACTIVE_VERSION;
-        // Data
-        cxxtools::SerializationInfo& siData = si.addMember(DATA_MEMBER);
-        siData.setCategory(cxxtools::SerializationInfo::Category::Array);
-        return si;
-    }
-    
-    /**
-     *  Utilitary to build a response payload.
-     * @return 
-     */
-    void SrrWorker::buildResponsePayload(const std::string& featureName, cxxtools::SerializationInfo& siOutput, cxxtools::SerializationInfo& siInput)
-    {
-        // Data
-        cxxtools::SerializationInfo& si = *(siOutput.findMember(DATA_MEMBER));
-        si.addMember(featureName) = siInput;
+        return resp;
     }
     
 } // namespace srr

@@ -56,13 +56,6 @@ constexpr auto VIRTUAL_ASSETS               = "virtual-assets";
 constexpr auto SECURITY_WALLET              = "security-wallet";
 // Common definition                    
 constexpr auto SRR_VERSION_KEY              = "version";
-constexpr auto SRR_VERSION                  = "version";
 constexpr auto ACTIVE_VERSION               = "1.0";
-constexpr auto PASS_PHRASE_NAME             = "passPhrase";
-constexpr auto FEATURE_LIST_NAME            = "featuresList";
-constexpr auto FEATURE_NAME                 = "name";
-constexpr auto DATA_MEMBER                  = "data";
-// Common definition                    
-constexpr auto STRING_DELIMITER             = ";";
 
 #endif

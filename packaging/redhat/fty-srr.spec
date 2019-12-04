@@ -50,17 +50,14 @@ BuildRequires:  systemd-devel
 BuildRequires:  systemd
 %{?systemd_requires}
 BuildRequires:  xmlto
-# Note that with current implementation of zproject use-cxx-gcc-4-9 option,
-# this effectively hardcodes the use of specifically 4.9, not allowing for
-# "4.9 or newer".
-BuildRequires:  devtoolset-3-gcc devtoolset-3-gcc-c++
-BuildRequires:  gcc-c++ >= 4.9.0
+BuildRequires:  gcc-c++
 BuildRequires:  fty-common-logging-devel
 BuildRequires:  cxxtools-devel
 BuildRequires:  fty-common-devel
 BuildRequires:  fty-common-mlm-devel
 BuildRequires:  fty-common-messagebus-devel
 BuildRequires:  fty-common-dto-devel
+BuildRequires:  protobuf-devel
 BuildRoot:      %{_tmppath}/%{name}-%{version}-build
 
 %description
@@ -101,6 +98,8 @@ find %{buildroot} -name '*.la' | xargs rm -f
 %doc README.md
 %{_bindir}/fty-srr
 %{_mandir}/man1/fty-srr*
+%{_bindir}/fty-srr-cmd
+%{_mandir}/man1/fty-srr-cmd*
 %config(noreplace) %{_sysconfdir}/fty-srr/fty-srr.cfg
 %{SYSTEMD_UNIT_DIR}/fty-srr.service
 %dir %{_sysconfdir}/fty-srr
