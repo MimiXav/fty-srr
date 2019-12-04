@@ -70,7 +70,7 @@
         repository = "https://github.com/42ity/fty-common-dto.git" />
 
     <!-- use protobuf -->
-        <use project = "protobuf" libname = "libprotobuf" header = "google/protobuf/stubs/common.h"
+        <use project = "protobuf" header = "google/protobuf/stubs/common.h"
             repository = "https://github.com/42ity/protobuf.git"/>
 
 

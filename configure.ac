@@ -552,44 +552,44 @@ dnl END of enabled attempts to search for libfty_common_dto
 
 was_protobuf_check_lib_detected=no
 
-search_libprotobuf="yes"
+search_protobuf="yes"
 
-AC_ARG_WITH([libprotobuf],
+AC_ARG_WITH([protobuf],
     [
-        AS_HELP_STRING([--with-libprotobuf],
-        [yes or no. Optionally specify libprotobuf prefix (directory where its include/ and lib/ are located), but that is only used if pkgconfig metadata is not found first])
+        AS_HELP_STRING([--with-protobuf],
+        [yes or no. Optionally specify protobuf prefix (directory where its include/ and lib/ are located), but that is only used if pkgconfig metadata is not found first])
     ],
     [
-        search_libprotobuf="yes"
+        search_protobuf="yes"
     ],
     [
-        search_libprotobuf="yes"
+        search_protobuf="yes"
     ])
-AS_CASE([x"${with_libprotobuf}"],
-    [xyes], [search_libprotobuf="yes"],
-    [xno],  [search_libprotobuf="no"])
+AS_CASE([x"${with_protobuf}"],
+    [xyes], [search_protobuf="yes"],
+    [xno],  [search_protobuf="no"])
 
 dnl We do not abort right now, because the maintainer/developer may have
 dnl something particular in mind, e.g. to build just parts of a project.
-AS_IF([test x"${search_libprotobuf}" = xno],
-    [AC_MSG_WARN([Required dependency on protobuf was explicitly disabled during configuration by '--with-libprotobuf=no'; subsequent full build of fty-srr may fail])])
+AS_IF([test x"${search_protobuf}" = xno],
+    [AC_MSG_WARN([Required dependency on protobuf was explicitly disabled during configuration by '--with-protobuf=no'; subsequent full build of fty-srr may fail])])
 
-AS_IF([test x"${search_libprotobuf}" = xyes], [
+AS_IF([test x"${search_protobuf}" = xyes], [
     # Archive previously detected and supplied flags
     PRE_SEARCH_CFLAGS="${CFLAGS}"
     PRE_SEARCH_LIBS="${LIBS}"
 
     found_pkgconfig=""
-    PKG_CHECK_MODULES([protobuf], [libprotobuf >= 0.0.0],
+    PKG_CHECK_MODULES([protobuf], [protobuf >= 0.0.0],
     [
         was_protobuf_check_lib_detected=pkgcfg
-        found_pkgconfig="libprotobuf"
+        found_pkgconfig="protobuf"
     ],
     [
         AC_MSG_WARN([Attribute 'test' is not set on zproject dependency 'protobuf' - please ensure it is set])
     ])
 
-dnl END of PKG_CHECK_MODULES and/or direct tests for libprotobuf
+dnl END of PKG_CHECK_MODULES and/or direct tests for protobuf
     AS_CASE(["x${was_protobuf_check_lib_detected}"],
         [xpkgcfg], [
                 PKGCFG_NAMES_PRIVATE="$PKGCFG_NAMES_PRIVATE ${found_pkgconfig}"
@@ -605,10 +605,10 @@ dnl END of PKG_CHECK_MODULES and/or direct tests for libprotobuf
                 AC_SUBST([protobuf_LIBS],[${protobuf_synthetic_libs}])
             ],
         [xno], [
-            AC_MSG_ERROR([Cannot find pkg-config metadata for libprotobuf 0.0.0 or higher])
+            AC_MSG_ERROR([Cannot find pkg-config metadata for protobuf 0.0.0 or higher])
     ])
 ])
-dnl END of enabled attempts to search for libprotobuf
+dnl END of enabled attempts to search for protobuf
 
 
 CFLAGS="${PREVIOUS_CFLAGS}"
