@@ -78,7 +78,6 @@ namespace srr
         m_featuresToAgent [AUTOMATION_SETTINGS] = CONFIG_AGENT_NAME;
         m_featuresToAgent [USER_SESSION_FEATURE_NAME] = CONFIG_AGENT_NAME;
         m_featuresToAgent [DISCOVERY] = CONFIG_AGENT_NAME;
-        m_featuresToAgent [GENERAL_CONFIG] = CONFIG_AGENT_NAME;
         m_featuresToAgent [MASS_MANAGEMENT] = CONFIG_AGENT_NAME;
         m_featuresToAgent [NETWORK] = CONFIG_AGENT_NAME;
         // Feature -> Agent (etn-malamute-translator EMC4J)
@@ -123,7 +122,7 @@ namespace srr
         // Features concatenation        
         response += featureAutomation;
         response += otherFeatures;
-        
+        response.set_version(ACTIVE_VERSION);
         return response;
     }
     
@@ -155,6 +154,7 @@ namespace srr
                 reqData << saveQuery;
                 messagebus::Message resp = sendRequest(reqData, "save", queueNameDest, agentNameDest);
                 log_debug("Save done by %s: ", agentNameDest.c_str());
+
                 Response partialResp;
                 resp.userData() >> partialResp;
                 response += partialResp.save();
@@ -164,6 +164,7 @@ namespace srr
         {
             log_error("Unknown error on save Ipm2 configuration");
         }
+        response.set_version(ACTIVE_VERSION);
         return response;
     }
     
