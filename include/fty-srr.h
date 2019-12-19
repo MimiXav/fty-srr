@@ -26,6 +26,7 @@
 #include "fty_srr_library.h"
 
 //  SRR agent configuration
+constexpr auto REQUEST_TIMEOUT_KEY          = "requestTimeOut";
 constexpr auto AGENT_NAME_KEY               = "agentName";
 constexpr auto AGENT_NAME                   = "fty-srr";
 constexpr auto ENDPOINT_KEY                 = "endPoint";

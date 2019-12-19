@@ -33,10 +33,7 @@
 using namespace dto::srr;
 
 namespace srr
-{
-    // Timeout for Request/Reply in s
-    static const int TIME_OUT = 4;
-    
+{    
     /**
      * Constructor
      * @param msgBus
@@ -122,7 +119,7 @@ namespace srr
         // Features concatenation        
         response += featureAutomation;
         response += otherFeatures;
-        response.set_version(ACTIVE_VERSION);
+        response.set_version(m_parameters.at(SRR_VERSION_KEY));
         return response;
     }
     
@@ -164,7 +161,7 @@ namespace srr
         {
             log_error("Unknown error on save Ipm2 configuration");
         }
-        response.set_version(ACTIVE_VERSION);
+        response.set_version(m_parameters.at(SRR_VERSION_KEY));
         return response;
     }
     
@@ -266,13 +263,14 @@ namespace srr
         messagebus::Message resp;
         try
         {
+            int timeout = std::stoi(m_parameters.at(REQUEST_TIMEOUT_KEY));
             messagebus::Message req;
             req.userData() = userData;
             req.metaData().emplace(messagebus::Message::SUBJECT, action);
             req.metaData().emplace(messagebus::Message::FROM, m_parameters.at(AGENT_NAME_KEY));
             req.metaData().emplace(messagebus::Message::TO, agentNameDest);
             req.metaData().emplace(messagebus::Message::COORELATION_ID, messagebus::generateUuid());
-            resp = m_msgBus.request(queueNameDest, req, TIME_OUT);
+            resp = m_msgBus.request(queueNameDest, req, timeout);
         }
         catch (messagebus::MessageBusException& ex)
         {

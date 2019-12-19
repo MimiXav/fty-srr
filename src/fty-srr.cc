@@ -118,6 +118,7 @@ int main(int argc, char *argv [])
     paramsConfig[ENDPOINT_KEY] = DEFAULT_ENDPOINT;
     paramsConfig[SRR_QUEUE_NAME_KEY] = SRR_MSG_QUEUE_NAME;
     paramsConfig[SRR_VERSION_KEY] = ACTIVE_VERSION;
+    paramsConfig[REQUEST_TIMEOUT_KEY] = "20000";
 
     if (config_file)
     {
@@ -125,6 +126,7 @@ int main(int argc, char *argv [])
         mlm::ZConfig config(config_file);
         // verbose mode
         std::istringstream(config.getEntry("server/verbose", "0")) >> verbose;
+        paramsConfig[REQUEST_TIMEOUT_KEY] = config.getEntry("server/timeout", "20000");
         paramsConfig[ENDPOINT_KEY] = config.getEntry("srr-msg-bus/endpoint", DEFAULT_ENDPOINT);
         paramsConfig[AGENT_NAME_KEY] = config.getEntry("srr-msg-bus/address", AGENT_NAME);
         paramsConfig[SRR_QUEUE_NAME_KEY] = config.getEntry("srr-msg-bus/srrQueueName", SRR_MSG_QUEUE_NAME);
