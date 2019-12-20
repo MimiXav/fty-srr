@@ -118,7 +118,7 @@ int main(int argc, char *argv [])
     paramsConfig[ENDPOINT_KEY] = DEFAULT_ENDPOINT;
     paramsConfig[SRR_QUEUE_NAME_KEY] = SRR_MSG_QUEUE_NAME;
     paramsConfig[SRR_VERSION_KEY] = ACTIVE_VERSION;
-    paramsConfig[REQUEST_TIMEOUT_KEY] = "20000";
+    paramsConfig[REQUEST_TIMEOUT_KEY] = "60000";
 
     if (config_file)
     {
