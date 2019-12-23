@@ -207,7 +207,7 @@ namespace srr
             }
             else
             {
-                std::string errorMsg = "Srr version (" + m_srrVersion + ") is not compatible with the restore version request: " + version;
+                std::string errorMsg = TRANSLATE_ME("Srr version (%s) is not compatible with the restore version request: (%s)", m_srrVersion.c_str(), version.c_str());
                 log_error(errorMsg.c_str());
                 
                 std::map<FeatureName, FeatureStatus> mapFeatures;
@@ -216,7 +216,7 @@ namespace srr
                 f.set_error(errorMsg);
                 mapFeatures["SrrProcessing"] = std::move(f);
                 (createRestoreResponse(mapFeatures)).restore();
-                
+                // Set response
                 response += (createRestoreResponse(mapFeatures)).restore();
             }
         }
