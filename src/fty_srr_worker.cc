@@ -33,10 +33,7 @@
 using namespace dto::srr;
 
 namespace srr
-{
-    // Timeout for Request/Reply in s
-    static const int TIME_OUT = 4;
-    
+{    
     /**
      * Constructor
      * @param msgBus
@@ -57,6 +54,8 @@ namespace srr
         {
             // Build map associations.
             buildMapAssociation();
+            // Srr version
+            m_srrVersion = m_parameters.at(SRR_VERSION_KEY);
         }        
         catch (messagebus::MessageBusException& ex)
         {
@@ -122,7 +121,7 @@ namespace srr
         // Features concatenation        
         response += featureAutomation;
         response += otherFeatures;
-        response.set_version(ACTIVE_VERSION);
+        response.set_version(m_srrVersion);
         return response;
     }
     
@@ -164,7 +163,7 @@ namespace srr
         {
             log_error("Unknown error on save Ipm2 configuration");
         }
-        response.set_version(ACTIVE_VERSION);
+        response.set_version(m_srrVersion);
         return response;
     }
     
@@ -179,26 +178,46 @@ namespace srr
         try
         {
             log_debug("Restore IPM2 configuration processing");
-            // Try to factorize all call.
-            std::map<std::string, RestoreQuery> agentAssoc = factorizationRestoreCall(query);
-            
-            for(auto const& agent: agentAssoc)
+            std::string version = query.version();
+            // Test version compatibility.
+            bool compatible = isVerstionCompatible(query.version());
+            if (compatible)
             {
-                // Get queue name from agent name
-                std::string agentNameDest = agent.first;
-                std::string queueNameDest = m_agentToQueue.at(agentNameDest);
-                // Build query
-                Query restoreQuery;
-                *(restoreQuery.mutable_restore()) = agent.second;
-                log_debug("Restoring configuration by: %s ", agentNameDest.c_str());
-                // Send message
-                dto::UserData reqData;
-                reqData << restoreQuery;
-                messagebus::Message resp = sendRequest(reqData, "restore", queueNameDest, agentNameDest);
-                log_debug("Restore done by: %s ", agentNameDest.c_str());
-                Response partialResp;
-                resp.userData() >> partialResp;
-                response += partialResp.restore();
+                // Try to factorize all call.
+                std::map<std::string, RestoreQuery> agentAssoc = factorizationRestoreCall(query);
+
+                for(auto const& agent: agentAssoc)
+                {
+                    // Get queue name from agent name
+                    std::string agentNameDest = agent.first;
+                    std::string queueNameDest = m_agentToQueue.at(agentNameDest);
+                    // Build query
+                    Query restoreQuery;
+                    *(restoreQuery.mutable_restore()) = agent.second;
+                    log_debug("Restoring configuration by: %s ", agentNameDest.c_str());
+                    // Send message
+                    dto::UserData reqData;
+                    reqData << restoreQuery;
+                    messagebus::Message resp = sendRequest(reqData, "restore", queueNameDest, agentNameDest);
+                    log_debug("Restore done by: %s ", agentNameDest.c_str());
+                    Response partialResp;
+                    resp.userData() >> partialResp;
+                    response += partialResp.restore();
+                }
+            }
+            else
+            {
+                std::string errorMsg = TRANSLATE_ME("Srr version (%s) is not compatible with the restore version request: (%s)", m_srrVersion.c_str(), version.c_str());
+                log_error(errorMsg.c_str());
+                
+                std::map<FeatureName, FeatureStatus> mapFeatures;
+                FeatureStatus f;
+                f.set_status(Status::FAILED);
+                f.set_error(errorMsg);
+                mapFeatures["SrrProcessing"] = std::move(f);
+                (createRestoreResponse(mapFeatures)).restore();
+                // Set response
+                response += (createRestoreResponse(mapFeatures)).restore();
             }
         }
         catch (...)
@@ -266,13 +285,14 @@ namespace srr
         messagebus::Message resp;
         try
         {
+            int timeout = std::stoi(m_parameters.at(REQUEST_TIMEOUT_KEY)) / 1000;
             messagebus::Message req;
             req.userData() = userData;
             req.metaData().emplace(messagebus::Message::SUBJECT, action);
             req.metaData().emplace(messagebus::Message::FROM, m_parameters.at(AGENT_NAME_KEY));
             req.metaData().emplace(messagebus::Message::TO, agentNameDest);
             req.metaData().emplace(messagebus::Message::COORELATION_ID, messagebus::generateUuid());
-            resp = m_msgBus.request(queueNameDest, req, TIME_OUT);
+            resp = m_msgBus.request(queueNameDest, req, timeout);
         }
         catch (messagebus::MessageBusException& ex)
         {
@@ -282,6 +302,19 @@ namespace srr
             throw SrrException("Unknown error on send response to the message bus");
         }
         return resp;
+    }
+    
+    bool SrrWorker::isVerstionCompatible(const std::string& version)
+    {
+        bool comptible = false;
+        int srrVersion = std::stoi(m_srrVersion);
+        int requestVersion = std::stoi(version);
+        
+        if (srrVersion >= requestVersion)
+        {
+            comptible = true;
+        }
+        return comptible;
     }
     
 } // namespace srr

@@ -3,7 +3,7 @@
 # You can add hand-written code here.
 
 server
-    timeout = 10000     #   Client connection timeout, msec
+    timeout = 60000     #   Client connection timeout, msec
     background = 0      #   Run as background process
     workdir = .         #   Working directory for daemon
     verbose = 0         #   Do verbose logging of activity?
@@ -15,4 +15,4 @@ srr-msg-bus
 
 
 srr  
-    version = 1.0 # Backup version file.
+    version = 1.0 # Srr version.

@@ -26,8 +26,6 @@
 
 namespace srr
 {
-    //#define FEATURE_SEPARATOR   ","
-
     class SrrWorker
     {
         public:
@@ -43,11 +41,13 @@ namespace srr
         private:
             messagebus::MessageBus& m_msgBus;
             std::map<std::string, std::string> m_parameters;
+            std::string m_srrVersion;
             std::map<const std::string, std::string> m_featuresToAgent;
             std::map<const std::string, std::string> m_agentToQueue;
    
             void init();
             void buildMapAssociation();
+            bool isVerstionCompatible(const std::string& version);
 
             std::map<std::string, std::set<dto::srr::FeatureName>> factorizationSaveCall(const dto::srr::SaveQuery query);
             std::map<std::string, dto::srr::RestoreQuery> factorizationRestoreCall(const dto::srr::RestoreQuery query);

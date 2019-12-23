@@ -75,6 +75,7 @@ void terminateHandler()
  */
 int main(int argc, char *argv [])
 {
+    std::string DefaultTimeOut = "60000";
     using Parameters = std::map<std::string, std::string>;
     Parameters paramsConfig;
     
@@ -118,6 +119,7 @@ int main(int argc, char *argv [])
     paramsConfig[ENDPOINT_KEY] = DEFAULT_ENDPOINT;
     paramsConfig[SRR_QUEUE_NAME_KEY] = SRR_MSG_QUEUE_NAME;
     paramsConfig[SRR_VERSION_KEY] = ACTIVE_VERSION;
+    paramsConfig[REQUEST_TIMEOUT_KEY] = DefaultTimeOut;
 
     if (config_file)
     {
@@ -125,6 +127,7 @@ int main(int argc, char *argv [])
         mlm::ZConfig config(config_file);
         // verbose mode
         std::istringstream(config.getEntry("server/verbose", "0")) >> verbose;
+        paramsConfig[REQUEST_TIMEOUT_KEY] = config.getEntry("server/timeout", DefaultTimeOut);
         paramsConfig[ENDPOINT_KEY] = config.getEntry("srr-msg-bus/endpoint", DEFAULT_ENDPOINT);
         paramsConfig[AGENT_NAME_KEY] = config.getEntry("srr-msg-bus/address", AGENT_NAME);
         paramsConfig[SRR_QUEUE_NAME_KEY] = config.getEntry("srr-msg-bus/srrQueueName", SRR_MSG_QUEUE_NAME);
