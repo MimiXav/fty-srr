@@ -124,7 +124,7 @@ namespace srr
             respMsg.metaData().emplace(messagebus::Message::SUBJECT, msg.metaData().at(messagebus::Message::SUBJECT));
             respMsg.metaData().emplace(messagebus::Message::FROM, m_parameters.at(AGENT_NAME_KEY));
             respMsg.metaData().emplace(messagebus::Message::TO, msg.metaData().find(messagebus::Message::FROM)->second);
-            respMsg.metaData().emplace(messagebus::Message::COORELATION_ID, msg.metaData().find(messagebus::Message::COORELATION_ID)->second);
+            respMsg.metaData().emplace(messagebus::Message::CORRELATION_ID, msg.metaData().find(messagebus::Message::CORRELATION_ID)->second);
             m_msgBus->sendReply(msg.metaData().find(messagebus::Message::REPLY_TO)->second, respMsg);
         }
         catch (messagebus::MessageBusException& ex)

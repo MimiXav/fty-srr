@@ -291,7 +291,7 @@ namespace srr
             req.metaData().emplace(messagebus::Message::SUBJECT, action);
             req.metaData().emplace(messagebus::Message::FROM, m_parameters.at(AGENT_NAME_KEY));
             req.metaData().emplace(messagebus::Message::TO, agentNameDest);
-            req.metaData().emplace(messagebus::Message::COORELATION_ID, messagebus::generateUuid());
+            req.metaData().emplace(messagebus::Message::CORRELATION_ID, messagebus::generateUuid());
             resp = m_msgBus.request(queueNameDest, req, timeout);
         }
         catch (messagebus::MessageBusException& ex)

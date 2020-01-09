@@ -87,7 +87,7 @@ dto::UserData sendRequest(const std::string & action, const dto::UserData& userD
     msg.metaData().emplace(messagebus::Message::SUBJECT, action);
     msg.metaData().emplace(messagebus::Message::FROM, clientId);
     msg.metaData().emplace(messagebus::Message::TO, AGENT_NAME_REQUEST_DESTINATION);
-    msg.metaData().emplace(messagebus::Message::COORELATION_ID, messagebus::generateUuid());
+    msg.metaData().emplace(messagebus::Message::CORRELATION_ID, messagebus::generateUuid());
     // Send request
     messagebus::Message resp = requester->request(MSG_QUEUE_NAME, msg, DEFAULT_TIME_OUT);
     // Return the data response
