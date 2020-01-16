@@ -19,10 +19,11 @@ AM_CPPFLAGS = \
     ${fty_common_messagebus_CFLAGS} \
     ${fty_common_dto_CFLAGS} \
     ${protobuf_CFLAGS} \
+    ${fty_lib_certificate_CFLAGS} \
     -D__STDC_FORMAT_MACROS \
     -I$(srcdir)/include
 
-project_libs = ${fty_common_logging_LIBS} ${cxxtools_LIBS} ${fty_common_LIBS} ${fty_common_mlm_LIBS} ${fty_common_messagebus_LIBS} ${fty_common_dto_LIBS} ${protobuf_LIBS}
+project_libs = ${fty_common_logging_LIBS} ${cxxtools_LIBS} ${fty_common_LIBS} ${fty_common_mlm_LIBS} ${fty_common_messagebus_LIBS} ${fty_common_dto_LIBS} ${protobuf_LIBS} ${fty_lib_certificate_LIBS}
 
 SUBDIRS = doc
 SUBDIRS += include
@@ -50,6 +51,7 @@ EXTRA_DIST += \
     Findfty_common_messagebus.cmake \
     Findfty_common_dto.cmake \
     Findprotobuf.cmake \
+    Findfty_lib_certificate.cmake \
     builds/cmake/Modules/ClangFormat.cmake \
     builds/cmake/clang-format-check.sh.in \
     builds/cmake/Config.cmake.in \
