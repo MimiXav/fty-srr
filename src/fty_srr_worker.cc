@@ -27,6 +27,7 @@
  */
 
 #include <fty_srr_dto.h>
+#include <fty_lib_certificate_library.h>
 
 #include "fty_srr_classes.h"
 
@@ -88,6 +89,18 @@ namespace srr
         m_agentToQueue [CONFIG_AGENT_NAME] = CONFIG_MSG_QUEUE_NAME;
         m_agentToQueue [EMC4J_AGENT_NAME] = EMC4J_MSG_QUEUE_NAME;
         m_agentToQueue [SECU_WALLET_AGENT_NAME] = SECU_WALLET_MSG_QUEUE_NAME;
+        
+        // All Translation KEY
+        TRANSLATE_ME(MONITORING_FEATURE_NAME);
+        TRANSLATE_ME(NOTIFICATION_FEATURE_NAME);
+        TRANSLATE_ME(AUTOMATION_SETTINGS);
+        TRANSLATE_ME(USER_SESSION_FEATURE_NAME);
+        TRANSLATE_ME(DISCOVERY);
+        TRANSLATE_ME(MASS_MANAGEMENT);
+        TRANSLATE_ME(NETWORK);
+        TRANSLATE_ME(AUTOMATIONS);
+        TRANSLATE_ME(VIRTUAL_ASSETS);
+        TRANSLATE_ME(SECURITY_WALLET);
     }
    
     /**
@@ -122,6 +135,7 @@ namespace srr
         response += featureAutomation;
         response += otherFeatures;
         response.set_version(m_srrVersion);
+        response.set_passphrass_definition(fty::getPassphraseFormat());
         return response;
     }
     
@@ -133,37 +147,56 @@ namespace srr
     SaveResponse SrrWorker::saveIpm2Configuration(const SaveQuery& query)
     {
         SaveResponse response;
+        FeatureStatus status;
+        status.set_status(Status::FAILED);
         try
         {
-          log_debug("Save IPM2 configuration processing");
-          // Try to factorize all call.
-          std::map<std::string, std::set<FeatureName>> agentAssoc = factorizationSaveCall(query);
-          
-          for(auto const& agent: agentAssoc)
-          {
-                // Get queue name from agent name
-                std::string agentNameDest = agent.first;
-                std::string queueNameDest = m_agentToQueue.at(agentNameDest);
+            bool checkPassphraseFormat = fty::checkPassphraseFormat(query.passpharse());
+            if (checkPassphraseFormat)
+            {
+                log_debug("Save IPM2 configuration processing");
+                // Try to factorize all call.
+                std::map<std::string, std::set<FeatureName>> agentAssoc = factorizationSaveCall(query);
 
-                log_debug("Saving configuration by: %s ", agentNameDest.c_str());
-                // Build query
-                Query saveQuery = createSaveQuery({agent.second}, query.passpharse());
-                // Send message
-                dto::UserData reqData;
-                reqData << saveQuery;
-                messagebus::Message resp = sendRequest(reqData, "save", queueNameDest, agentNameDest);
-                log_debug("Save done by %s: ", agentNameDest.c_str());
+                for(auto const& agent: agentAssoc)
+                {
+                      // Get queue name from agent name
+                      std::string agentNameDest = agent.first;
+                      std::string queueNameDest = m_agentToQueue.at(agentNameDest);
 
-                Response partialResp;
-                resp.userData() >> partialResp;
-                response += partialResp.save();
-          }
+                      log_debug("Saving configuration by: %s ", agentNameDest.c_str());
+                      // Build query
+                      Query saveQuery = createSaveQuery({agent.second}, query.passpharse());
+                      // Send message
+                      dto::UserData reqData;
+                      reqData << saveQuery;
+                      messagebus::Message resp = sendRequest(reqData, "save", queueNameDest, agentNameDest);
+                      log_debug("Save done by %s: ", agentNameDest.c_str());
+
+                      Response partialResp;
+                      resp.userData() >> partialResp;
+                      response += partialResp.save();
+                }
+                response.set_version(m_srrVersion);
+                status.set_status(Status::SUCCESS);
+                *(response.mutable_status()) = status;
+                response.set_checksum(fty::encrypt(query.passpharse(), query.passpharse()));
+            }
+            else
+            {
+                std::string errorMsg = TRANSLATE_ME("Passphrase must have %s characters", (fty::getPassphraseFormat()).c_str());
+                log_error(errorMsg.c_str());
+                status.set_error(errorMsg);
+                response = (createSaveResponse(m_srrVersion, status)).save();
+            }
         }
-        catch (...)
+        catch (const std::exception& e)
         {
-            log_error("Unknown error on save Ipm2 configuration");
+            std::string errorMsg = TRANSLATE_ME("Exception on save Ipm2 configuration: (%s)", e.what());
+            log_error(errorMsg.c_str());
+            status.set_error(errorMsg);
+            response = (createSaveResponse(m_srrVersion, status)).save();
         }
-        response.set_version(m_srrVersion);
         return response;
     }
     
@@ -175,54 +208,70 @@ namespace srr
     RestoreResponse SrrWorker::restoreIpm2Configuration(const RestoreQuery& query)
     {
         RestoreResponse response;
+        FeatureStatus status;
+        status.set_status(Status::FAILED);
         try
         {
-            log_debug("Restore IPM2 configuration processing");
-            std::string version = query.version();
-            // Test version compatibility.
-            bool compatible = isVerstionCompatible(query.version());
-            if (compatible)
+            // TODO uncomment it when UI will be ready.
+            //std::string decryptedData = fty::decrypt(query.checksum(), query.passpharse());
+            std::string decryptedData = query.passpharse();
+            if (decryptedData.compare(query.passpharse()) == 0)
             {
-                // Try to factorize all call.
-                std::map<std::string, RestoreQuery> agentAssoc = factorizationRestoreCall(query);
-
-                for(auto const& agent: agentAssoc)
+                log_debug("Restore IPM2 configuration processing");
+                std::string version = query.version();
+                // Test version compatibility.
+                bool compatible = isVerstionCompatible(query.version());
+                if (compatible)
                 {
-                    // Get queue name from agent name
-                    std::string agentNameDest = agent.first;
-                    std::string queueNameDest = m_agentToQueue.at(agentNameDest);
-                    // Build query
-                    Query restoreQuery;
-                    *(restoreQuery.mutable_restore()) = agent.second;
-                    log_debug("Restoring configuration by: %s ", agentNameDest.c_str());
-                    // Send message
-                    dto::UserData reqData;
-                    reqData << restoreQuery;
-                    messagebus::Message resp = sendRequest(reqData, "restore", queueNameDest, agentNameDest);
-                    log_debug("Restore done by: %s ", agentNameDest.c_str());
-                    Response partialResp;
-                    resp.userData() >> partialResp;
-                    response += partialResp.restore();
+                    // Try to factorize all call.
+                    std::map<std::string, RestoreQuery> agentAssoc = factorizationRestoreCall(query);
+                    for(auto const& agent: agentAssoc)
+                    {
+                        // Get queue name from agent name
+                        std::string agentNameDest = agent.first;
+                        std::string queueNameDest = m_agentToQueue.at(agentNameDest);
+                        // Build query
+                        Query restoreQuery;
+                        *(restoreQuery.mutable_restore()) = agent.second;
+                        log_debug("Restoring configuration by: %s ", agentNameDest.c_str());
+                        // Send message
+                        dto::UserData reqData;
+                        reqData << restoreQuery;
+                        messagebus::Message resp = sendRequest(reqData, "restore", queueNameDest, agentNameDest);
+                        log_debug("Restore done by: %s ", agentNameDest.c_str());
+                        Response partialResp;
+                        
+                        resp.userData() >> partialResp;
+                        response += partialResp.restore();
+                    }
+                    status.set_status(Status::SUCCESS);
+                    *(response.mutable_status()) = status;
+                }
+                else
+                {
+                    std::string errorMsg = TRANSLATE_ME("Srr version (%s) is not compatible with the restore version request: (%s)", m_srrVersion.c_str(), version.c_str());
+                    log_error(errorMsg.c_str());
+                    status.set_error(errorMsg);
+                    // Set response
+                    response = (createRestoreResponse(status)).restore();
                 }
             }
             else
             {
-                std::string errorMsg = TRANSLATE_ME("Srr version (%s) is not compatible with the restore version request: (%s)", m_srrVersion.c_str(), version.c_str());
+                std::string errorMsg = TRANSLATE_ME("Passphrase does not match");
                 log_error(errorMsg.c_str());
-                
-                std::map<FeatureName, FeatureStatus> mapFeatures;
-                FeatureStatus f;
-                f.set_status(Status::FAILED);
-                f.set_error(errorMsg);
-                mapFeatures["SrrProcessing"] = std::move(f);
-                (createRestoreResponse(mapFeatures)).restore();
+                status.set_error(errorMsg);
                 // Set response
-                response += (createRestoreResponse(mapFeatures)).restore();
+                response = (createRestoreResponse(status)).restore();
             }
         }
-        catch (...)
+        catch (const std::exception& e)
         {
-            log_error("Unknown error on restore Ipm2 configuration");
+            std::string errorMsg = TRANSLATE_ME("Exception on restore Ipm2 configuration: (%s)", e.what());
+            log_error(errorMsg.c_str());
+            std::cout << e.what() << std::endl;
+            status.set_error(errorMsg);
+            response = (createRestoreResponse(status)).restore();
         }
         return response;
     }
