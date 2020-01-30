@@ -57,5 +57,6 @@ constexpr auto SECURITY_WALLET              = "security-wallet";
 // Common definition                    
 constexpr auto SRR_VERSION_KEY              = "version";
 constexpr auto ACTIVE_VERSION               = "1.0";
+constexpr auto SRR_PREFIX_TRANSLATE_KEY     = "srr_";
 
 #endif
