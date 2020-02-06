@@ -156,6 +156,21 @@ check-verbose: src/fty_srr_selftest $(top_builddir)/$(SELFTEST_DIR_RW) $(top_bui
 	$(LIBTOOL) --mode=execute $(builddir)/src/fty_srr_selftest -v
 	$(MAKE) check-empty-selftest-rw
 
+check-fty_srr_manager: src/fty_srr_selftest $(top_builddir)/$(SELFTEST_DIR_RW) $(top_builddir)/$(SELFTEST_DIR_RO)
+	$(LIBTOOL) --mode=execute $(builddir)/src/fty_srr_selftest -t fty_srr_manager
+	$(MAKE) check-empty-selftest-rw
+check-fty_srr_manager-verbose: src/fty_srr_selftest $(top_builddir)/$(SELFTEST_DIR_RW) $(top_builddir)/$(SELFTEST_DIR_RO)
+	$(LIBTOOL) --mode=execute $(builddir)/src/fty_srr_selftest -v -t fty_srr_manager
+	$(MAKE) check-empty-selftest-rw
+
+check-fty_srr_worker: src/fty_srr_selftest $(top_builddir)/$(SELFTEST_DIR_RW) $(top_builddir)/$(SELFTEST_DIR_RO)
+	$(LIBTOOL) --mode=execute $(builddir)/src/fty_srr_selftest -t fty_srr_worker
+	$(MAKE) check-empty-selftest-rw
+check-fty_srr_worker-verbose: src/fty_srr_selftest $(top_builddir)/$(SELFTEST_DIR_RW) $(top_builddir)/$(SELFTEST_DIR_RO)
+	$(LIBTOOL) --mode=execute $(builddir)/src/fty_srr_selftest -v -t fty_srr_worker
+	$(MAKE) check-empty-selftest-rw
+
+
 # Run the selftest binary under valgrind to check for memory leaks
 memcheck: src/fty_srr_selftest $(top_builddir)/$(SELFTEST_DIR_RW) $(top_builddir)/$(SELFTEST_DIR_RO)
 	$(LIBTOOL) --mode=execute valgrind --tool=memcheck \
@@ -173,6 +188,35 @@ memcheck-verbose: src/fty_srr_selftest $(top_builddir)/$(SELFTEST_DIR_RW) $(top_
 		$(builddir)/src/fty_srr_selftest -v
 	$(MAKE) check-empty-selftest-rw
 
+memcheck-fty_srr_manager: src/fty_srr_selftest $(top_builddir)/$(SELFTEST_DIR_RW) $(top_builddir)/$(SELFTEST_DIR_RO)
+	$(LIBTOOL) --mode=execute valgrind --tool=memcheck \
+		--leak-check=full --show-reachable=yes --error-exitcode=1 \
+		--suppressions=$(srcdir)/src/.valgrind.supp \
+		$(VALGRIND_OPTIONS) \
+		$(builddir)/src/fty_srr_selftest -t fty_srr_manager
+	$(MAKE) check-empty-selftest-rw
+memcheck-fty_srr_manager-verbose: src/fty_srr_selftest $(top_builddir)/$(SELFTEST_DIR_RW) $(top_builddir)/$(SELFTEST_DIR_RO)
+	$(LIBTOOL) --mode=execute valgrind --tool=memcheck \
+		--leak-check=full --show-reachable=yes --error-exitcode=1 \
+		--suppressions=$(srcdir)/src/.valgrind.supp \
+		$(VALGRIND_OPTIONS) \
+		$(builddir)/src/fty_srr_selftest -v -t fty_srr_manager
+	$(MAKE) check-empty-selftest-rw
+memcheck-fty_srr_worker: src/fty_srr_selftest $(top_builddir)/$(SELFTEST_DIR_RW) $(top_builddir)/$(SELFTEST_DIR_RO)
+	$(LIBTOOL) --mode=execute valgrind --tool=memcheck \
+		--leak-check=full --show-reachable=yes --error-exitcode=1 \
+		--suppressions=$(srcdir)/src/.valgrind.supp \
+		$(VALGRIND_OPTIONS) \
+		$(builddir)/src/fty_srr_selftest -t fty_srr_worker
+	$(MAKE) check-empty-selftest-rw
+memcheck-fty_srr_worker-verbose: src/fty_srr_selftest $(top_builddir)/$(SELFTEST_DIR_RW) $(top_builddir)/$(SELFTEST_DIR_RO)
+	$(LIBTOOL) --mode=execute valgrind --tool=memcheck \
+		--leak-check=full --show-reachable=yes --error-exitcode=1 \
+		--suppressions=$(srcdir)/src/.valgrind.supp \
+		$(VALGRIND_OPTIONS) \
+		$(builddir)/src/fty_srr_selftest -v -t fty_srr_worker
+	$(MAKE) check-empty-selftest-rw
+
 # Run the selftest binary under valgrind to check for performance leaks
 callcheck: src/fty_srr_selftest $(top_builddir)/$(SELFTEST_DIR_RW) $(top_builddir)/$(SELFTEST_DIR_RO)
 	$(LIBTOOL) --mode=execute valgrind --tool=callgrind \
@@ -186,6 +230,27 @@ callcheck-verbose: src/fty_srr_selftest $(top_builddir)/$(SELFTEST_DIR_RW) $(top
 		$(builddir)/src/fty_srr_selftest -v
 	$(MAKE) check-empty-selftest-rw
 
+callcheck-fty_srr_manager: src/fty_srr_selftest $(top_builddir)/$(SELFTEST_DIR_RW) $(top_builddir)/$(SELFTEST_DIR_RO)
+	$(LIBTOOL) --mode=execute valgrind --tool=callgrind \
+		$(VALGRIND_OPTIONS) \
+		$(builddir)/src/fty_srr_selftest -t fty_srr_manager
+	$(MAKE) check-empty-selftest-rw
+callcheck-fty_srr_manager-verbose: src/fty_srr_selftest $(top_builddir)/$(SELFTEST_DIR_RW) $(top_builddir)/$(SELFTEST_DIR_RO)
+	$(LIBTOOL) --mode=execute valgrind --tool=callgrind \
+		$(VALGRIND_OPTIONS) \
+		$(builddir)/src/fty_srr_selftest -v -t fty_srr_manager
+	$(MAKE) check-empty-selftest-rw
+callcheck-fty_srr_worker: src/fty_srr_selftest $(top_builddir)/$(SELFTEST_DIR_RW) $(top_builddir)/$(SELFTEST_DIR_RO)
+	$(LIBTOOL) --mode=execute valgrind --tool=callgrind \
+		$(VALGRIND_OPTIONS) \
+		$(builddir)/src/fty_srr_selftest -t fty_srr_worker
+	$(MAKE) check-empty-selftest-rw
+callcheck-fty_srr_worker-verbose: src/fty_srr_selftest $(top_builddir)/$(SELFTEST_DIR_RW) $(top_builddir)/$(SELFTEST_DIR_RO)
+	$(LIBTOOL) --mode=execute valgrind --tool=callgrind \
+		$(VALGRIND_OPTIONS) \
+		$(builddir)/src/fty_srr_selftest -v -t fty_srr_worker
+	$(MAKE) check-empty-selftest-rw
+
 # Run the selftest binary under gdb for debugging
 debug: src/fty_srr_selftest $(top_builddir)/$(SELFTEST_DIR_RW) $(top_builddir)/$(SELFTEST_DIR_RO)
 	$(LIBTOOL) --mode=execute gdb -q \
@@ -194,7 +259,24 @@ debug: src/fty_srr_selftest $(top_builddir)/$(SELFTEST_DIR_RW) $(top_builddir)/$
 
 debug-verbose: src/fty_srr_selftest $(top_builddir)/$(SELFTEST_DIR_RW) $(top_builddir)/$(SELFTEST_DIR_RO)
 	$(LIBTOOL) --mode=execute gdb -q \
-		$(builddir)/src/fty_srr_selftest -v
+		--args $(builddir)/src/fty_srr_selftest -v
+	$(MAKE) check-empty-selftest-rw
+
+debug-fty_srr_manager: src/fty_srr_selftest $(top_builddir)/$(SELFTEST_DIR_RW) $(top_builddir)/$(SELFTEST_DIR_RO)
+	$(LIBTOOL) --mode=execute gdb -q \
+		--args $(builddir)/src/fty_srr_selftest -t fty_srr_manager
+	$(MAKE) check-empty-selftest-rw
+debug-fty_srr_manager-verbose: src/fty_srr_selftest $(top_builddir)/$(SELFTEST_DIR_RW) $(top_builddir)/$(SELFTEST_DIR_RO)
+	$(LIBTOOL) --mode=execute gdb -q \
+		--args $(builddir)/src/fty_srr_selftest -v -t fty_srr_manager
+	$(MAKE) check-empty-selftest-rw
+debug-fty_srr_worker: src/fty_srr_selftest $(top_builddir)/$(SELFTEST_DIR_RW) $(top_builddir)/$(SELFTEST_DIR_RO)
+	$(LIBTOOL) --mode=execute gdb -q \
+		--args $(builddir)/src/fty_srr_selftest -t fty_srr_worker
+	$(MAKE) check-empty-selftest-rw
+debug-fty_srr_worker-verbose: src/fty_srr_selftest $(top_builddir)/$(SELFTEST_DIR_RW) $(top_builddir)/$(SELFTEST_DIR_RO)
+	$(LIBTOOL) --mode=execute gdb -q \
+		--args $(builddir)/src/fty_srr_selftest -v -t fty_srr_worker
 	$(MAKE) check-empty-selftest-rw
 
 # Run the selftest binary with verbose switch for tracing
