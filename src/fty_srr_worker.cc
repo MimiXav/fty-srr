@@ -204,9 +204,6 @@ namespace srr
         try
         {
             std::string decryptedData = fty::decrypt(query.checksum(), query.passpharse());
-            log_debug("query.checksum() %s", query.checksum().c_str());
-            log_debug("query.passpharse() %s", query.passpharse().c_str());
-            log_debug("decryptedData %s", decryptedData.c_str());
             if (decryptedData.compare(query.passpharse()) == 0)
             {
                 log_debug("Restore IPM2 configuration processing");
