@@ -29,7 +29,12 @@ namespace srr
     class SrrWorker
     {
         public:
-
+            
+            struct config {
+                std::string agentName;
+                std::string featureDescription;;
+            };
+            
             explicit SrrWorker(messagebus::MessageBus& msgBus, const std::map<std::string, std::string>& parameters);
             ~SrrWorker() = default;
           
@@ -42,7 +47,7 @@ namespace srr
             messagebus::MessageBus& m_msgBus;
             std::map<std::string, std::string> m_parameters;
             std::string m_srrVersion;
-            std::map<const std::string, std::string> m_featuresToAgent;
+            std::map<const std::string, config> m_featuresToAgent;
             std::map<const std::string, std::string> m_agentToQueue;
    
             void init();

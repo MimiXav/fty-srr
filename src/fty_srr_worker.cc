@@ -73,34 +73,22 @@ namespace srr
     void SrrWorker::buildMapAssociation()
     {
         // Feature -> Agent (fty-config)
-        m_featuresToAgent [MONITORING_FEATURE_NAME] = CONFIG_AGENT_NAME;
-        m_featuresToAgent [NOTIFICATION_FEATURE_NAME] = CONFIG_AGENT_NAME;
-        m_featuresToAgent [AUTOMATION_SETTINGS] = CONFIG_AGENT_NAME;
-        m_featuresToAgent [USER_SESSION_FEATURE_NAME] = CONFIG_AGENT_NAME;
-        m_featuresToAgent [DISCOVERY] = CONFIG_AGENT_NAME;
-        m_featuresToAgent [MASS_MANAGEMENT] = CONFIG_AGENT_NAME;
-        m_featuresToAgent [NETWORK] = CONFIG_AGENT_NAME;
+        m_featuresToAgent [MONITORING_FEATURE_NAME] = {CONFIG_AGENT_NAME, TRANSLATE_ME((std::string(SRR_PREFIX_TRANSLATE_KEY) + MONITORING_FEATURE_NAME).c_str())};
+        m_featuresToAgent [NOTIFICATION_FEATURE_NAME] = {CONFIG_AGENT_NAME, TRANSLATE_ME((std::string(SRR_PREFIX_TRANSLATE_KEY) + NOTIFICATION_FEATURE_NAME).c_str())};
+        m_featuresToAgent [AUTOMATION_SETTINGS] = {CONFIG_AGENT_NAME, TRANSLATE_ME((std::string(SRR_PREFIX_TRANSLATE_KEY) + AUTOMATION_SETTINGS).c_str())};
+        m_featuresToAgent [USER_SESSION_FEATURE_NAME] = {CONFIG_AGENT_NAME, TRANSLATE_ME((std::string(SRR_PREFIX_TRANSLATE_KEY) + USER_SESSION_FEATURE_NAME).c_str())};
+        m_featuresToAgent [DISCOVERY] = {CONFIG_AGENT_NAME, TRANSLATE_ME((std::string(SRR_PREFIX_TRANSLATE_KEY) + DISCOVERY).c_str())};
+        m_featuresToAgent [MASS_MANAGEMENT] = {CONFIG_AGENT_NAME, TRANSLATE_ME((std::string(SRR_PREFIX_TRANSLATE_KEY) + MASS_MANAGEMENT).c_str())};
+        m_featuresToAgent [NETWORK] = {CONFIG_AGENT_NAME, TRANSLATE_ME((std::string(SRR_PREFIX_TRANSLATE_KEY) + NETWORK).c_str())};
         // Feature -> Agent (etn-malamute-translator EMC4J)
-        m_featuresToAgent [AUTOMATIONS] = EMC4J_AGENT_NAME;
-        m_featuresToAgent [VIRTUAL_ASSETS] = EMC4J_AGENT_NAME;
+        m_featuresToAgent [AUTOMATIONS] = {EMC4J_AGENT_NAME, TRANSLATE_ME((std::string(SRR_PREFIX_TRANSLATE_KEY) + AUTOMATIONS).c_str())};
+        m_featuresToAgent [VIRTUAL_ASSETS] = {EMC4J_AGENT_NAME, TRANSLATE_ME((std::string(SRR_PREFIX_TRANSLATE_KEY) + VIRTUAL_ASSETS).c_str())};
         // Feature -> Agent (security-wallet)
-        m_featuresToAgent [SECURITY_WALLET] = SECU_WALLET_AGENT_NAME;
+        m_featuresToAgent [SECURITY_WALLET] = {SECU_WALLET_AGENT_NAME, TRANSLATE_ME((std::string(SRR_PREFIX_TRANSLATE_KEY) + SECURITY_WALLET).c_str())};
         // Agent -> Queue
         m_agentToQueue [CONFIG_AGENT_NAME] = CONFIG_MSG_QUEUE_NAME;
         m_agentToQueue [EMC4J_AGENT_NAME] = EMC4J_MSG_QUEUE_NAME;
         m_agentToQueue [SECU_WALLET_AGENT_NAME] = SECU_WALLET_MSG_QUEUE_NAME;
-        
-        // All Translation KEY
-        TRANSLATE_ME(MONITORING_FEATURE_NAME);
-        TRANSLATE_ME(NOTIFICATION_FEATURE_NAME);
-        TRANSLATE_ME(AUTOMATION_SETTINGS);
-        TRANSLATE_ME(USER_SESSION_FEATURE_NAME);
-        TRANSLATE_ME(DISCOVERY);
-        TRANSLATE_ME(MASS_MANAGEMENT);
-        TRANSLATE_ME(NETWORK);
-        TRANSLATE_ME(AUTOMATIONS);
-        TRANSLATE_ME(VIRTUAL_ASSETS);
-        TRANSLATE_ME(SECURITY_WALLET);
     }
    
     /**
@@ -110,25 +98,27 @@ namespace srr
      */
     ListFeatureResponse SrrWorker::getFeatureListManaged(const ListFeatureQuery& query)
     {
-        std::map<const std::string, std::string> features = m_featuresToAgent;
+        std::map<const std::string, config> features = m_featuresToAgent;
         ListFeatureResponse response;
         
         // Automation with dependencies
         ListFeatureResponse featureAutomation;
         FeatureDependencies automationDep;
+        automationDep.set_description(m_featuresToAgent[AUTOMATIONS].featureDescription);
         automationDep.add_dependencies(AUTOMATION_SETTINGS);
         automationDep.add_dependencies(VIRTUAL_ASSETS);
         featureAutomation.mutable_map_features_dependencies()->insert({AUTOMATIONS, automationDep});
+        
         // Remove it to do not add twice.
         features.erase(AUTOMATIONS);
-        features.erase(AUTOMATION_SETTINGS);
-        features.erase(VIRTUAL_ASSETS);
         
-        // Remainoing features
+        // Remaining features
         ListFeatureResponse otherFeatures;
         for (const auto& feature : features)
         {
-            otherFeatures.mutable_map_features_dependencies()->insert({feature.first, {}});
+            FeatureDependencies featDep;
+            featDep.set_description(feature.second.featureDescription);
+            otherFeatures.mutable_map_features_dependencies()->insert({feature.first, featDep});
         }
         
         // Features concatenation        
@@ -136,6 +126,7 @@ namespace srr
         response += otherFeatures;
         response.set_version(m_srrVersion);
         response.set_passphrass_definition(fty::getPassphraseFormat());
+        response.set_passphrass_description(TRANSLATE_ME("Passphrase must have %s characters", (fty::getPassphraseFormat()).c_str()));
         return response;
     }
     
@@ -212,9 +203,7 @@ namespace srr
         status.set_status(Status::FAILED);
         try
         {
-            // TODO uncomment it when UI will be ready.
-            //std::string decryptedData = fty::decrypt(query.checksum(), query.passpharse());
-            std::string decryptedData = query.passpharse();
+            std::string decryptedData = fty::decrypt(query.checksum(), query.passpharse());
             if (decryptedData.compare(query.passpharse()) == 0)
             {
                 log_debug("Restore IPM2 configuration processing");
@@ -297,7 +286,7 @@ namespace srr
         std::map<std::string, std::set<FeatureName>> assoc;
         for(const auto& featureName: query.features())
         {
-            std::string agentName = m_featuresToAgent[featureName];
+            std::string agentName = m_featuresToAgent[featureName].agentName;
             assoc[agentName].insert(featureName);
         }
         return assoc;
@@ -314,7 +303,7 @@ namespace srr
         std::map<FeatureName, Feature> map1(query.map_features_data().begin(), query.map_features_data().end());
         for(const auto& item:  map1)
         {
-            const std::string & agentName = m_featuresToAgent[item.first];
+            const std::string & agentName = m_featuresToAgent[item.first].agentName;
             RestoreQuery& request = assoc[agentName];
             request.set_passpharse(query.passpharse());
             request.mutable_map_features_data()->insert({item.first, item.second});
