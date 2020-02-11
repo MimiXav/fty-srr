@@ -32,7 +32,7 @@ namespace srr
             
             struct config {
                 std::string agentName;
-                std::string featureDescription;;
+                std::string featureDescription;
             };
             
             explicit SrrWorker(messagebus::MessageBus& msgBus, const std::map<std::string, std::string>& parameters);
