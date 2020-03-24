@@ -145,7 +145,7 @@ namespace srr
             bool checkPassphraseFormat = fty::checkPassphraseFormat(query.passpharse());
             if (checkPassphraseFormat)
             {
-                log_debug("Save IPM2 configuration processing");
+                log_info("Save IPM2 configuration processing");
                 // Try to factorize all call.
                 std::map<std::string, std::set<FeatureName>> agentAssoc = factorizationSaveCall(query);
 
@@ -155,7 +155,7 @@ namespace srr
                       std::string agentNameDest = agent.first;
                       std::string queueNameDest = m_agentToQueue.at(agentNameDest);
 
-                      log_debug("Saving configuration by: %s ", agentNameDest.c_str());
+                      log_info("Saving configuration by: %s ", agentNameDest.c_str());
                       // Build query
                       Query saveQuery = createSaveQuery({agent.second}, query.passpharse());
                       // Send message
@@ -165,7 +165,7 @@ namespace srr
                       Response partialResp;
                       resp.userData() >> partialResp;
 
-                      log_debug("Save done by: %s: response: %s ", agentNameDest.c_str(), responseToUiJson(partialResp, false).c_str());
+                      log_info("Save done by: %s: response: %s ", agentNameDest.c_str(), responseToUiJson(partialResp, false).c_str());
                       response += partialResp.save();
                 }
                 response.set_version(m_srrVersion);
@@ -206,7 +206,7 @@ namespace srr
             std::string decryptedData = fty::decrypt(query.checksum(), query.passpharse());
             if (decryptedData.compare(query.passpharse()) == 0)
             {
-                log_debug("Restore IPM2 configuration processing");
+                log_info("Restore IPM2 configuration processing");
                 std::string version = query.version();
                 // Test version compatibility.
                 bool compatible = isVerstionCompatible(query.version());
@@ -222,7 +222,7 @@ namespace srr
                         // Build query
                         Query restoreQuery;
                         *(restoreQuery.mutable_restore()) = agent.second;
-                        log_debug("Restoring configuration by: %s ", agentNameDest.c_str());
+                        log_info("Restoring configuration by: %s ", agentNameDest.c_str());
                         // Send message
                         dto::UserData reqData;
                         reqData << restoreQuery;
@@ -230,7 +230,7 @@ namespace srr
                         Response partialResp;
                         resp.userData() >> partialResp;
                         
-                        log_debug("Restore done by: %s: response: %s ", agentNameDest.c_str(), responseToUiJson(partialResp, false).c_str());
+                        log_info("Restore done by: %s: response: %s ", agentNameDest.c_str(), responseToUiJson(partialResp, false).c_str());
                         response += partialResp.restore();
                     }
                     status.set_status(Status::SUCCESS);
