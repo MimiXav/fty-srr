@@ -162,10 +162,10 @@ namespace srr
                       dto::UserData reqData;
                       reqData << saveQuery;
                       messagebus::Message resp = sendRequest(reqData, "save", queueNameDest, agentNameDest);
-                      log_debug("Save done by %s: ", agentNameDest.c_str());
-
                       Response partialResp;
                       resp.userData() >> partialResp;
+
+                      log_debug("Save done by: %s: response: %s ", agentNameDest.c_str(), responseToUiJson(partialResp, false).c_str());
                       response += partialResp.save();
                 }
                 response.set_version(m_srrVersion);
@@ -227,10 +227,10 @@ namespace srr
                         dto::UserData reqData;
                         reqData << restoreQuery;
                         messagebus::Message resp = sendRequest(reqData, "restore", queueNameDest, agentNameDest);
-                        log_debug("Restore done by: %s ", agentNameDest.c_str());
                         Response partialResp;
-                        
                         resp.userData() >> partialResp;
+                        
+                        log_debug("Restore done by: %s: response: %s ", agentNameDest.c_str(), responseToUiJson(partialResp, false).c_str());
                         response += partialResp.restore();
                     }
                     status.set_status(Status::SUCCESS);
