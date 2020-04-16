@@ -107,7 +107,8 @@ namespace srr
         automationDep.set_description(m_featuresToAgent[AUTOMATIONS].featureDescription);
         automationDep.add_dependencies(AUTOMATION_SETTINGS);
         automationDep.add_dependencies(VIRTUAL_ASSETS);
-        featureAutomation.mutable_map_features_dependencies()->insert({AUTOMATIONS, automationDep});
+        // TODO remove the following comment, when asset UUID will be implemented, and automation could use it.
+        //featureAutomation.mutable_map_features_dependencies()->insert({AUTOMATIONS, automationDep});
         
         // Remove it to do not add twice.
         features.erase(AUTOMATIONS);
