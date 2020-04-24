@@ -75,7 +75,7 @@ void terminateHandler()
  */
 int main(int argc, char *argv [])
 {
-    std::string DefaultTimeOut = "60000";
+    std::string DefaultTimeOut = "120000";
     using Parameters = std::map<std::string, std::string>;
     Parameters paramsConfig;
     
