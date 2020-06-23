@@ -28,6 +28,7 @@
  * \brief Agent srr server
  */
 
+// clang-format off
 namespace srr 
 {
     class SrrManager 
@@ -48,6 +49,8 @@ namespace srr
             void init();
             void handleRequest(messagebus::Message msg);
             void sendResponse(const messagebus::Message& msg, const dto::UserData& userData);
+
+            void msgHandler(const messagebus::Message msg);
     };
     
 } // namespace srr

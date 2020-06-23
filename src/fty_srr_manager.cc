@@ -28,9 +28,13 @@
 
 #include "srr_pb.h"
 #include "fty_srr_classes.h"
+#include <functional>
+#include <thread>
 
 using namespace std::placeholders;
 using namespace dto::srr;
+
+// clang-format off
 
 namespace srr
 {
@@ -82,15 +86,9 @@ namespace srr
         }
     }
 
-    /**
-     * Handle all incoming request
-     * @param sender
-     * @param payloadea
-     * @return 
-     */
-    void SrrManager::handleRequest(messagebus::Message msg)
+    void SrrManager::msgHandler(const messagebus::Message msg)
     {
-        log_debug("SRR handle request");
+        log_debug("msgHandler");
         try
         {
             dto::UserData data = msg.userData();
@@ -108,6 +106,22 @@ namespace srr
         {
             log_error(ex.what());
         }
+    }
+
+    /**
+     * Handle all incoming request
+     * @param sender
+     * @param payloadea
+     * @return 
+     */
+    void SrrManager::handleRequest(messagebus::Message msg)
+    {
+        log_debug("SRR handle request");
+        
+        auto handler = std::bind(&SrrManager::msgHandler, this, msg);
+        std::thread t(handler);
+
+        t.detach();
     }
 
     /**
@@ -136,3 +150,4 @@ namespace srr
         }
     }
 }
+
