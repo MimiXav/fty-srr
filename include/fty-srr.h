@@ -47,6 +47,9 @@ constexpr auto SECU_WALLET_MSG_QUEUE_NAME   = "ETN.Q.IPMCORE.SECUWALLET";
 // Asset agent definition
 constexpr auto ASSET_AGENT_NAME             = "asset-agent-srr";
 constexpr auto ASSET_AGENT_MSG_QUEUE_NAME   = "FTY.Q.ASSET.SRR";
+// Alert agent definition
+constexpr auto ALERT_AGENT_NAME             = "alert-agent-srr";
+constexpr auto ALERT_AGENT_MSG_QUEUE_NAME   = "FTY.Q.ALERT.SRR";
 // Features definition
 constexpr auto MONITORING_FEATURE_NAME      = "monitoring";
 constexpr auto NOTIFICATION_FEATURE_NAME    = "notification";
@@ -59,6 +62,7 @@ constexpr auto AUTOMATIONS                  = "automations";
 constexpr auto VIRTUAL_ASSETS               = "virtual-assets";
 constexpr auto SECURITY_WALLET              = "security-wallet";
 constexpr auto ASSET_AGENT                  = "asset-agent";
+constexpr auto ALERT_AGENT                  = "alert-agent";
 // Common definition                    
 constexpr auto SRR_VERSION_KEY              = "version";
 constexpr auto ACTIVE_VERSION               = "1.0";

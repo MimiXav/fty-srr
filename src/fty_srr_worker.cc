@@ -89,11 +89,14 @@ namespace srr
         m_featuresToAgent [SECURITY_WALLET] = {SECU_WALLET_AGENT_NAME, TRANSLATE_ME((std::string(SRR_PREFIX_TRANSLATE_KEY) + SECURITY_WALLET).c_str())};
         // Feature -> Agent (asset-agent)
         m_featuresToAgent [ASSET_AGENT] = {ASSET_AGENT_NAME, TRANSLATE_ME((std::string(SRR_PREFIX_TRANSLATE_KEY) + ASSET_AGENT).c_str())};
+        // Feature -> Agent (alert-agent)
+        m_featuresToAgent [ALERT_AGENT] = {ALERT_AGENT_NAME, TRANSLATE_ME((std::string(SRR_PREFIX_TRANSLATE_KEY) + ALERT_AGENT).c_str())};
         // Agent -> Queue
         m_agentToQueue [CONFIG_AGENT_NAME] = CONFIG_MSG_QUEUE_NAME;
         m_agentToQueue [EMC4J_AGENT_NAME] = EMC4J_MSG_QUEUE_NAME;
         m_agentToQueue [SECU_WALLET_AGENT_NAME] = SECU_WALLET_MSG_QUEUE_NAME;
         m_agentToQueue [ASSET_AGENT_NAME] = ASSET_AGENT_MSG_QUEUE_NAME;
+        m_agentToQueue [ALERT_AGENT_NAME] = ALERT_AGENT_MSG_QUEUE_NAME;
     }
    
     /**
