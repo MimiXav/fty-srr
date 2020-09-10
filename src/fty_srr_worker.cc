@@ -33,10 +33,32 @@
 
 #include "fty_srr_classes.h"
 
+#include <chrono>
+#include <cstdlib>
+#include <thread>
+#include <unistd.h>
+
+#define SRR_RESTART_DELAY_SEC 5
+
 using namespace dto::srr;
 
 namespace srr
-{    
+{
+    static std::map<std::string, bool> restartAfterRestore = {
+        { ALERT_AGENT               , true },
+        { ASSET_AGENT               , true },
+        { AUTOMATIONS               , true },
+        { AUTOMATION_SETTINGS       , true },
+        { DISCOVERY                 , true },
+        { MASS_MANAGEMENT           , true },
+        { MONITORING_FEATURE_NAME   , true },
+        { NETWORK                   , true },
+        { NOTIFICATION_FEATURE_NAME , true },
+        { SECURITY_WALLET           , true },
+        { USER_SESSION_FEATURE_NAME , true },
+        { VIRTUAL_ASSETS            , true }
+    };
+
     /**
      * Constructor
      * @param msgBus
@@ -209,6 +231,23 @@ namespace srr
         }
         return response;
     }
+
+    static void restartBiosService(const unsigned restartDelay)
+    {
+        for(unsigned i = restartDelay; i > 0; i--) {
+            log_info("Restarting bios.service in %d seconds...", i);
+            std::this_thread::sleep_for(std::chrono::seconds(1));
+        }
+
+        log_info("Restarting bios.service");
+        // write out buffer to disk
+        try{
+            sync();
+            std::system("sudo /bin/systemctl restart bios.service");
+        } catch (std::exception& e) {
+            log_error("failed to restart bios.service : %s", e.what());
+        }
+    }
     
     /**
      * Restore an Ipm2 Configuration
@@ -220,6 +259,9 @@ namespace srr
         RestoreResponse response;
         FeatureStatus status;
         status.set_status(Status::FAILED);
+
+        bool restart = false;
+
         try
         {
             std::string decryptedData = fty::decrypt(query.checksum(), query.passpharse());
@@ -251,6 +293,8 @@ namespace srr
                         
                         resp.userData() >> partialResp;
                         response += partialResp.restore();
+
+                        restart = restart | restartAfterRestore[agentNameDest];
                     }
                     status.set_status(Status::SUCCESS);
                     *(response.mutable_status()) = status;
@@ -281,6 +325,12 @@ namespace srr
             status.set_error(errorMsg);
             response = (createRestoreResponse(status)).restore();
         }
+
+        if(restart) {
+            std::thread restartThread(restartBiosService, SRR_RESTART_DELAY_SEC);
+            restartThread.detach();
+        }
+
         return response;
     }
 
