@@ -12,7 +12,7 @@ PartOf=bios.target
 
 [Service]
 Type=simple
-User=bios
+User=fty-srr
 Restart=always
 EnvironmentFile=-@prefix@/share/bios/etc/default/bios
 EnvironmentFile=-@prefix@/share/bios/etc/default/bios__%n.conf
