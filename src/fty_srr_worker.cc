@@ -235,17 +235,16 @@ namespace srr
     static void restartBiosService(const unsigned restartDelay)
     {
         for(unsigned i = restartDelay; i > 0; i--) {
-            log_info("Restarting bios.service in %d seconds...", i);
+            log_info("Rebooting in %d seconds...", i);
             std::this_thread::sleep_for(std::chrono::seconds(1));
         }
 
-        log_info("Restarting bios.service");
+        log_info("Reboot");
         // write out buffer to disk
-        try{
-            sync();
-            std::system("sudo /bin/systemctl restart bios.service");
-        } catch (std::exception& e) {
-            log_error("failed to restart bios.service : %s", e.what());
+        sync();
+        int ret = std::system("sudo /sbin/reboot");
+        if (ret) {
+            log_error("failed to reboot");
         }
     }
     
