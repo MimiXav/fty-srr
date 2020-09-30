@@ -22,7 +22,13 @@
 #ifndef FTY_SRR_WORKER_H_INCLUDED
 #define FTY_SRR_WORKER_H_INCLUDED
 
+#include <fty_common_dto.h>
 #include <fty_common_messagebus.h>
+#include <fty_userdata_dto.h>
+
+#include <map>
+#include <set>
+#include <string>
 
 namespace srr
 {

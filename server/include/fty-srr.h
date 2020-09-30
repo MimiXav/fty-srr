@@ -22,10 +22,6 @@
 #ifndef FTY_SRR_H_H_INCLUDED
 #define FTY_SRR_H_H_INCLUDED
 
-// clang-format off
-//  Include the project library file
-#include "fty_srr_library.h"
-
 //  SRR agent configuration
 constexpr auto REQUEST_TIMEOUT_KEY          = "requestTimeOut";
 constexpr auto AGENT_NAME_KEY               = "agentName";

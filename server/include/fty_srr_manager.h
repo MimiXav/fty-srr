@@ -22,15 +22,22 @@
 #ifndef FTY_SRR_MANAGER_H_INCLUDED
 #define FTY_SRR_MANAGER_H_INCLUDED
 
-#include "fty_srr_worker.h"
+#include <fty_common_dto.h>
+#include <fty_common_messagebus.h>
+#include <fty_userdata_dto.h>
+
+#include <map>
+#include <memory>
+#include <string>
 
 /**
  * \brief Agent srr server
  */
 
-// clang-format off
 namespace srr 
 {
+    class SrrWorker;
+
     class SrrManager 
     {
         public:

@@ -29,7 +29,10 @@
 #include <csignal>
 #include <mutex>
 
-#include "fty_srr_classes.h"
+#include "fty_srr_exception.h"
+#include "fty_srr_manager.h"
+#include "fty_srr_worker.h"
+#include "fty-srr.h"
 
 #include "fty_common_mlm_library.h"
 

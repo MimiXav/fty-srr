@@ -26,7 +26,9 @@
 @end
 */
 
-#include "fty_srr_classes.h"
+#include <fty_common_dto.h>
+#include <fty_common_messagebus.h>
+#include <fty_log.h>
 
 #include <iostream>
 

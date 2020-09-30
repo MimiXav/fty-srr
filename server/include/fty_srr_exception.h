@@ -22,6 +22,9 @@
 #ifndef FTY_SRR_EXCEPTION_H_INCLUDED
 #define FTY_SRR_EXCEPTION_H_INCLUDED
 
+#include <stdexcept>
+#include <string>
+
 namespace srr {
 
     /**

@@ -26,8 +26,11 @@
 @end
  */
 
-#include "srr_pb.h"
-#include "fty_srr_classes.h"
+#include "fty-srr.h"
+#include "fty_srr_exception.h"
+#include "fty_srr_manager.h"
+#include "fty_srr_worker.h"
+
 #include <functional>
 #include <thread>
 

@@ -28,10 +28,12 @@
 
 // clang-format off
 
-#include <fty_srr_dto.h>
-#include <fty_lib_certificate_library.h>
+#include "fty-srr.h"
+#include "fty_srr_exception.h"
+#include "fty_srr_worker.h"
 
-#include "fty_srr_classes.h"
+#include <fty_common.h>
+#include <fty_lib_certificate_library.h>
 
 #include <chrono>
 #include <cstdlib>
