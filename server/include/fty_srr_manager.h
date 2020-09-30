@@ -38,26 +38,50 @@ namespace srr
 {
     class SrrWorker;
 
+    enum class RequestType {
+        REQ_UNKNOWN,
+        REQ_LIST,
+        REQ_SAVE,
+        REQ_RESTORE,
+        REQ_RESET
+    };
+
+    class SrrRequestProcessor
+    {
+    public:
+        static const std::map<const std::string, RequestType> m_requestType;
+
+        std::function<dto::UserData()>                    listHandler;
+        std::function<dto::UserData(const std::string &)> saveHandler;
+        std::function<dto::UserData(const std::string &)> restoreHandler;
+        std::function<dto::UserData(const std::string &)> resetHandler;
+
+        dto::UserData processRequest(const std::string& operation, const dto::UserData& data);
+    };
+
     class SrrManager 
     {
         public:
             explicit SrrManager(const std::map<std::string, std::string> & parameters);
             ~SrrManager() = default;
             
-            dto::srr::ListFeatureResponse getListFeatureHandler(const dto::srr::ListFeatureQuery& q);
-            
         private:
             std::map<std::string, std::string> m_parameters;
-            std::unique_ptr<messagebus::MessageBus> m_msgBus;
+            // back end bus handles communication with all the agents (can't receive requests)
+            std::unique_ptr<messagebus::MessageBus> m_backEndBus;
+            // UI bus handles incoming requests from UI
+            std::unique_ptr<messagebus::MessageBus> m_uiBus;
             std::unique_ptr<srr::SrrWorker> m_srrworker;
             
-            dto::srr::SrrQueryProcessor m_processor;
+            SrrRequestProcessor m_processor;
 
             void init();
             void handleRequest(messagebus::Message msg);
-            void sendResponse(const messagebus::Message& msg, const dto::UserData& userData);
 
-            void msgHandler(const messagebus::Message msg);
+            void sendResponse(const messagebus::Message& msg, const dto::UserData& userData);
+            void sendUiResponse(const messagebus::Message& msg, const dto::UserData& userData);
+
+            void uiMsgHandler(const messagebus::Message& msg);
     };
     
 } // namespace srr

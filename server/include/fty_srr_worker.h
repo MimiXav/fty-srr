@@ -34,34 +34,26 @@ namespace srr
 {
     class SrrWorker
     {
-        public:
-            
-            struct config {
-                std::string agentName;
-                std::string featureDescription;
-            };
-            
-            explicit SrrWorker(messagebus::MessageBus& msgBus, const std::map<std::string, std::string>& parameters);
+        public:            
+            explicit SrrWorker(messagebus::MessageBus& msgBus, const std::map<std::string, std::string>& parameters, const std::set<std::string> supportedVersions);
             ~SrrWorker() = default;
-          
-            dto::srr::ListFeatureResponse getFeatureListManaged(const dto::srr::ListFeatureQuery& query);
-            dto::srr::SaveResponse saveIpm2Configuration(const dto::srr::SaveQuery& query);
-            dto::srr::RestoreResponse restoreIpm2Configuration(const dto::srr::RestoreQuery& query);
-            dto::srr::ResetResponse resetIpm2Configuration(const dto::srr::ResetQuery& query);
+
+            // UI interface
+            dto::UserData getGroupList();
+            dto::UserData requestSave(const std::string& json);
+            dto::UserData requestRestore(const std::string& json);
+            dto::UserData requestReset(const std::string& json);
 
         private:
             messagebus::MessageBus& m_msgBus;
             std::map<std::string, std::string> m_parameters;
             std::string m_srrVersion;
-            std::map<const std::string, config> m_featuresToAgent;
-            std::map<const std::string, std::string> m_agentToQueue;
+
+            std::set<std::string> m_supportedVersions;
    
             void init();
-            void buildMapAssociation();
+            // void buildMapAssociation();
             bool isVerstionCompatible(const std::string& version);
-
-            std::map<std::string, std::set<dto::srr::FeatureName>> factorizationSaveCall(const dto::srr::SaveQuery query);
-            std::map<std::string, dto::srr::RestoreQuery> factorizationRestoreCall(const dto::srr::RestoreQuery query);
 
             messagebus::Message sendRequest(const dto::UserData& userData, const std::string& action, const std::string& queueNameDest, const std::string& agentNameDest);
     };    

@@ -31,6 +31,7 @@
 #include "fty_srr_manager.h"
 #include "fty_srr_worker.h"
 
+#include <algorithm>
 #include <functional>
 #include <thread>
 
@@ -41,6 +42,51 @@ using namespace dto::srr;
 
 namespace srr
 {
+    
+    const std::map<const std::string, RequestType> SrrRequestProcessor::m_requestType = {
+        {"list"    , RequestType::REQ_LIST},
+        {"save"    , RequestType::REQ_SAVE},
+        {"restore" , RequestType::REQ_RESTORE},
+        {"reset"   , RequestType::REQ_RESET}
+    };
+
+    dto::UserData SrrRequestProcessor::processRequest(const std::string& operation, const dto::UserData& data)
+    {
+        dto::UserData response;
+
+        RequestType op = m_requestType.find(operation) != m_requestType.end() ? m_requestType.at(operation) : RequestType::REQ_UNKNOWN;
+
+        switch(op)
+        {
+            case RequestType::REQ_LIST :
+                if(!listHandler) throw std::runtime_error("No list feature handler!");
+                response = listHandler();
+                break;
+
+            case RequestType::REQ_SAVE :
+                if(!saveHandler) throw std::runtime_error("No save handler!");
+                response = saveHandler(data.front());
+                break;
+
+            case RequestType::REQ_RESTORE :
+                if(!restoreHandler) throw std::runtime_error("No restore handler!");
+                response = restoreHandler(data.front());
+                break;
+            
+            case RequestType::REQ_RESET :
+                if(!resetHandler) throw std::runtime_error("No reset handler!");
+                response = resetHandler(data.front());
+                break;
+            
+            case RequestType::REQ_UNKNOWN:
+            default:
+                throw std::runtime_error("Unknown query!");
+                break;
+        }
+
+        return response;
+    }
+
     /**
      * Constructor
      * @param parameters
@@ -59,24 +105,26 @@ namespace srr
     {
         try
         {
-            // Message bus init
-            m_msgBus = std::unique_ptr<messagebus::MessageBus>(messagebus::MlmMessageBus(m_parameters.at(ENDPOINT_KEY), m_parameters.at(AGENT_NAME_KEY)));
-            m_msgBus->connect();
+            // Back end bus init
+            m_backEndBus = std::unique_ptr<messagebus::MessageBus>(messagebus::MlmMessageBus(m_parameters.at(ENDPOINT_KEY), m_parameters.at(AGENT_NAME_KEY)));
+            m_backEndBus->connect();
+            
+            // UI messagebus bus init
+            m_uiBus = std::unique_ptr<messagebus::MessageBus>(messagebus::MlmMessageBus(m_parameters.at(ENDPOINT_KEY), m_parameters.at(AGENT_NAME_KEY) + "-ui"));
+            m_uiBus->connect();
             
             // Worker creation.
-            m_srrworker = std::unique_ptr<srr::SrrWorker>(new srr::SrrWorker(*m_msgBus, m_parameters));
+            m_srrworker = std::unique_ptr<srr::SrrWorker>(new srr::SrrWorker(*m_backEndBus, m_parameters, {"1.0", "2.0"}));
             
             // Bind all processor handler.
-            m_processor.listFeatureHandler = std::bind(&SrrWorker::getFeatureListManaged, m_srrworker.get(), _1);
-            //m_processor.listFeatureHandler = std::bind(&SrrManager::getListFeatureHandler, this, _1);
-            m_processor.saveHandler = std::bind(&SrrWorker::saveIpm2Configuration, m_srrworker.get(), _1);
-            m_processor.restoreHandler = std::bind(&SrrWorker::restoreIpm2Configuration, m_srrworker.get(), _1);
-            m_processor.resetHandler = std::bind(&SrrWorker::resetIpm2Configuration, m_srrworker.get(), _1);
+            m_processor.listHandler = std::bind(&SrrWorker::getGroupList, m_srrworker.get());
+            m_processor.saveHandler = std::bind(&SrrWorker::requestSave, m_srrworker.get(), _1);
+            m_processor.restoreHandler = std::bind(&SrrWorker::requestRestore, m_srrworker.get(), _1);
+            m_processor.resetHandler = std::bind(&SrrWorker::requestReset, m_srrworker.get(), _1);
             
-            // Listen all incoming request
-            //messagebus::Message fct = [&](messagebus::Message msg){this->handleRequest(msg);};
-            auto fct = std::bind(&SrrManager::handleRequest, this, _1);
-            m_msgBus->receive(m_parameters.at(SRR_QUEUE_NAME_KEY), fct);
+            // Listen all incoming UI requests           
+            auto uiFct = std::bind(&SrrManager::handleRequest, this, _1);
+            m_uiBus->receive(m_parameters.at(SRR_QUEUE_NAME_KEY) + ".UI", uiFct);
         }        
         catch (messagebus::MessageBusException& ex)
         {
@@ -89,39 +137,39 @@ namespace srr
         }
     }
 
-    void SrrManager::msgHandler(const messagebus::Message msg)
+    void SrrManager::uiMsgHandler(const messagebus::Message& msg)
     {
-        log_debug("msgHandler");
+        log_debug("uiMsgHandler");
+
+        dto::UserData response;
+
         try
         {
-            dto::UserData data = msg.userData();
-            // Get the query
-            Query query;
-            data >> query;
-            // Process the query
-            Response response = m_processor.processQuery(query);
+            const std::string& op = msg.metaData().at(messagebus::Message::SUBJECT);
+
+            response = m_processor.processRequest(op, msg.userData());
             // Send response
-            dto::UserData respData;
-            respData << response;
-            sendResponse(msg, respData);
         }        
         catch (std::exception& ex)
         {
+            response.push_back(ex.what());
             log_error(ex.what());
         }
+
+        sendUiResponse(msg, response);
     }
 
     /**
-     * Handle all incoming request
+     * Handle incoming requests from UI
      * @param sender
      * @param payloadea
      * @return 
      */
     void SrrManager::handleRequest(messagebus::Message msg)
     {
-        log_debug("SRR handle request");
+        log_debug("handle request");
         
-        auto handler = std::bind(&SrrManager::msgHandler, this, msg);
+        auto handler = std::bind(&SrrManager::uiMsgHandler, this, msg);
         std::thread t(handler);
 
         t.detach();
@@ -142,7 +190,33 @@ namespace srr
             respMsg.metaData().emplace(messagebus::Message::FROM, m_parameters.at(AGENT_NAME_KEY));
             respMsg.metaData().emplace(messagebus::Message::TO, msg.metaData().find(messagebus::Message::FROM)->second);
             respMsg.metaData().emplace(messagebus::Message::CORRELATION_ID, msg.metaData().find(messagebus::Message::CORRELATION_ID)->second);
-            m_msgBus->sendReply(msg.metaData().find(messagebus::Message::REPLY_TO)->second, respMsg);
+            m_backEndBus->sendReply(msg.metaData().find(messagebus::Message::REPLY_TO)->second, respMsg);
+        }
+        catch (messagebus::MessageBusException& ex)
+        {
+            throw SrrException(ex.what());
+        } catch (...)
+        {
+            throw SrrException("Unknown error on send response to the message bus");
+        }
+    }
+
+    /**
+     * Send response to UI
+     * @param msg
+     * @param userData
+     */
+    void SrrManager::sendUiResponse(const messagebus::Message& msg, const dto::UserData& userData)
+    {
+        try
+        {
+            messagebus::Message respMsg;
+            respMsg.userData() = userData;
+            respMsg.metaData().emplace(messagebus::Message::SUBJECT, msg.metaData().at(messagebus::Message::SUBJECT));
+            respMsg.metaData().emplace(messagebus::Message::FROM, m_parameters.at(AGENT_NAME_KEY));
+            respMsg.metaData().emplace(messagebus::Message::TO, msg.metaData().find(messagebus::Message::FROM)->second);
+            respMsg.metaData().emplace(messagebus::Message::CORRELATION_ID, msg.metaData().find(messagebus::Message::CORRELATION_ID)->second);
+            m_uiBus->sendReply(msg.metaData().find(messagebus::Message::REPLY_TO)->second, respMsg);
         }
         catch (messagebus::MessageBusException& ex)
         {
