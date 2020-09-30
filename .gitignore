@@ -66,10 +66,6 @@ src/test-suite.log
 src/.dirstamp
 
 # CMake cache
-CMakeCache.txt
-CMakeFiles/
-CTestTestfile.cmake
-cmake_install.cmake
 compile_commands.json
 DartConfiguration.tcl
 install_manifest.txt
@@ -132,7 +128,3 @@ nbproject/
 
 # editor backups
 *~
-# CMake in general
-builds/cmake/
-CMake*
-*.cmake
