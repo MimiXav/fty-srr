@@ -14,16 +14,7 @@ PartOf=bios.target
 Type=simple
 User=fty-srr
 Restart=always
-EnvironmentFile=-@prefix@/share/bios/etc/default/bios
-EnvironmentFile=-@prefix@/share/bios/etc/default/bios__%n.conf
-EnvironmentFile=-@prefix@/share/fty/etc/default/fty
-EnvironmentFile=-@prefix@/share/fty/etc/default/fty__%n.conf
-EnvironmentFile=-@sysconfdir@/default/bios
-EnvironmentFile=-@sysconfdir@/default/bios__%n.conf
-EnvironmentFile=-@sysconfdir@/default/fty
-EnvironmentFile=-@sysconfdir@/default/fty__%n.conf
-Environment="prefix=@prefix@"
-ExecStart=@prefix@/bin/fty-srr --config @sysconfdir@/@PACKAGE@/fty-srr.cfg
+ExecStart=@CMAKE_INSTALL_FULL_BINDIR@/fty-srr --config @CMAKE_INSTALL_FULL_SYSCONFDIR@/fty-srr/fty-srr.cfg
 
 [Install]
 WantedBy=bios.target
