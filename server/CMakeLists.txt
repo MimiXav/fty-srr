@@ -35,16 +35,13 @@ etn_target(exe ${PROJECT_NAME}
         pthread
 )
 
-#install config files
-
-configure_file(fty-srr.cfg.in
-  "${PROJECT_BINARY_DIR}/fty-srr.cfg" @ONLY)
+#install files
 
 configure_file(fty-srr.service.in
   "${PROJECT_BINARY_DIR}/fty-srr.service" @ONLY)
 
 install(FILES
-  "${PROJECT_BINARY_DIR}/fty-srr.cfg"
+  "fty-srr.cfg"
   DESTINATION ${CMAKE_INSTALL_SYSCONFDIR}/fty-srr/
 )
 
