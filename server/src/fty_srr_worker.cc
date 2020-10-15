@@ -32,6 +32,9 @@
 #include "fty_srr_exception.h"
 #include "fty_srr_worker.h"
 
+#include "dto/request.h"
+#include "dto/response.h"
+
 #include <fty_common.h>
 #include <fty_lib_certificate_library.h>
 
@@ -58,10 +61,10 @@ namespace srr
         log_info("Reboot");
         // write out buffer to disk
         sync();
-        int ret = std::system("sudo /sbin/reboot");
-        if (ret) {
-            log_error("failed to reboot");
-        }
+        // int ret = std::system("sudo /sbin/reboot");
+        // if (ret) {
+        //     log_error("failed to reboot");
+        // }
     }
 
     static std::map<const std::string, std::vector<std::pair<std::string, unsigned int>>> groupFeatures = {
@@ -195,46 +198,38 @@ namespace srr
     {
         dto::UserData response;
 
-        cxxtools::SerializationInfo si;
+        SrrListResponse listResp;
 
-        si.addMember("version") <<= m_srrVersion;
-        si.addMember("passphrase_description") <<= TRANSLATE_ME("Passphrase must have %s characters", (fty::getPassphraseFormat()).c_str());
-        si.addMember("passphrase_validation") <<= fty::getPassphraseFormat();
-
-        auto& groupsSi = si.addMember("");
+        listResp.m_version = m_srrVersion;
+        listResp.m_passphrase_description = TRANSLATE_ME("Passphrase must have %s characters", (fty::getPassphraseFormat()).c_str());
+        listResp.m_passphrase_validation = fty::getPassphraseFormat();
 
         for (const auto& grp : groupFeatures) {
-            auto& groupSi = groupsSi.addMember("");
-
             const std::string& groupName = grp.first;
             log_debug("- %s", groupName.c_str());
 
-            groupSi.addMember("group_id") <<= "0";
-            groupSi.addMember("group_name") <<= groupName;
-            groupSi.addMember("description") <<= TRANSLATE_ME((std::string(SRR_PREFIX_TRANSLATE_KEY) + groupName).c_str());
-
-            auto& featuresSi = groupSi.addMember("");
+            GroupInfo g;
+            g.m_group_id = "0";
+            g.m_group_name = groupName;
+            g.m_description = TRANSLATE_ME((std::string(SRR_PREFIX_TRANSLATE_KEY) + groupName).c_str());
 
             for (const auto& ft : grp.second) {
                 const std::string& featureName = ft.first;
                 const unsigned int featurePriority = ft.second;
                 log_debug("\t- %s (%d)", featureName.c_str(), featurePriority);
 
-                auto& featureSi = featuresSi.addMember("");
-                featureSi.addMember("name") <<= featureName;
-                featureSi.addMember("description") <<= featureName;
+                FeatureInfo fi;
+                fi.m_name = featureName;
+                fi.m_description = featureDescription[featureName];
 
-                featureSi.setCategory(cxxtools::SerializationInfo::Object);
+                g.m_features.push_back(fi);
             }
 
-            featuresSi.setCategory(cxxtools::SerializationInfo::Array);
-            featuresSi.setName("features");
-
-            groupSi.setCategory(cxxtools::SerializationInfo::Object);
+            listResp.m_groups.push_back(g);
         }
 
-        groupsSi.setCategory(cxxtools::SerializationInfo::Array);
-        groupsSi.setName("groups");
+        cxxtools::SerializationInfo si;
+        si <<= listResp;
 
         response.push_back(dto::srr::serializeJson(si));
 
@@ -245,46 +240,35 @@ namespace srr
 
     dto::UserData SrrWorker::requestSave(const std::string& json)
     {
-        // create json response
-        cxxtools::SerializationInfo responseSi;           
-        
-        responseSi.addMember("version") <<= m_srrVersion;
-        std::string responseStatus = statusToString(Status::FAILED);
-        std::string responseError  = "";
+        SrrSaveResponse srrSaveResp;
+
+        srrSaveResp.m_version = m_srrVersion;     
+        srrSaveResp.m_status = statusToString(Status::FAILED);
 
         try
         {
-            cxxtools::SerializationInfo si;
-            si = dto::srr::deserializeJson(json);
+            cxxtools::SerializationInfo requestSi = dto::srr::deserializeJson(json);
+            SrrSaveRequest req;
 
-            std::string passphrase;
-            si.getMember(PASS_PHRASE) >>= passphrase;
+            requestSi >>= req;
 
-            responseSi.addMember("checksum") <<= fty::encrypt(passphrase, passphrase);
+            // update checksum
+            srrSaveResp.m_checksum = fty::encrypt(req.m_passphrase, req.m_passphrase);
 
-            const cxxtools::SerializationInfo & groupSi = si.getMember(GROUP_LIST);
-            std::list<std::string> groupList;
-            groupSi >>= groupList;
-
-            bool checkPassphraseFormat = fty::checkPassphraseFormat(passphrase);
-
-            if (checkPassphraseFormat)
+            // check passphrase is compliant with requested format
+            if (fty::checkPassphraseFormat(req.m_passphrase))
             {
                 log_debug("Save IPM2 configuration processing");
-                // Try to factorize all call.
-                std::map<std::string, std::set<FeatureName>> assoc;
-                for(const auto& groupName: groupList)
+                // group calls by destination agent
+                std::map<std::string, std::set<FeatureName>> featureAgentMap;
+                for(const auto& groupName: req.m_group_list)
                 {
-                    log_debug("requested group: %s", groupName.c_str());
-
                     try {
                         for (const auto& feature : groupFeatures.at(groupName)) {
                             const std::string& featureName = feature.first;
                             const std::string& agentName = featureToAgent[featureName];
 
-                            log_debug("- saving feature %s", featureName.c_str());
-
-                            assoc[agentName].insert(featureName);
+                            featureAgentMap[agentName].insert(featureName);
                         }
                     } catch (std::out_of_range&){
                         log_warning("group %s not found", groupName.c_str());
@@ -293,71 +277,73 @@ namespace srr
 
                 SaveResponse saveResp;
 
-                for(auto const& agent: assoc)
+                for(auto const& mapEntry: featureAgentMap)
                 {
                     // Get queue name from agent name
-                    std::string agentNameDest = agent.first;
+                    std::string agentNameDest = mapEntry.first;
                     std::string queueNameDest = agentToQueue[agentNameDest];
 
-                    log_debug("Saving configuration by: %s ", agentNameDest.c_str());
-                    // Build query
-                    Query saveQuery = createSaveQuery({agent.second}, passphrase);
-                    // Send message
+                    log_debug("Request save to agent %s ", agentNameDest.c_str());
+                    // Build query with all the features that call the same agent
+                    Query saveQuery = createSaveQuery({mapEntry.second}, req.m_passphrase);
+
                     dto::UserData reqData;
                     reqData << saveQuery;
+                    // Send message to agent
                     messagebus::Message resp = sendRequest(reqData, "save", queueNameDest, agentNameDest);
-                    log_debug("Save done by %s", agentNameDest.c_str());
+                    log_debug("Save done by agent %s", agentNameDest.c_str());
 
                     Response partialResp;
                     resp.userData() >> partialResp;
                     saveResp += partialResp.save();
                 }
 
-                auto& responseData = responseSi.addMember("");
-
+                // convert ProtoBuf save response to UI DTO
                 google::protobuf::Map<std::string, FeatureAndStatus> & mapFeaturesData = *(saveResp.mutable_map_features_data());
 
+                std::map<std::string, Group> savedGroups;
+
                 for (const auto& fs : mapFeaturesData) {
-                    const std::string& featureName = fs.first;
-                    const std::string& featureStatus = statusToString(fs.second.status().status());
-                    const std::string& featureError = fs.second.status().error();
-                    Feature f = fs.second.feature();
+                    SrrFeature f;
+                    f.m_feature_name = fs.first;
+                    f.m_feature_and_status = fs.second;
 
-                    auto& featureEntry = responseData.addMember("");
-                    auto& featureSi = featureEntry.addMember(featureName);
-
-                    featureSi.addMember("version") <<= m_srrVersion;
-                    featureSi.addMember("status") <<= featureStatus;
-                    featureSi.addMember("error") <<= featureError;
-                    featureSi.addMember("data") <<= f;
-
-                    featureEntry.setCategory(cxxtools::SerializationInfo::Object);
-                    featureSi.setCategory(cxxtools::SerializationInfo::Object);
+                    savedGroups[getGroupFromFeature(f.m_feature_name)].m_features.push_back(f);
                 }
 
-                responseData.setName("data");
-                responseData.setCategory(cxxtools::SerializationInfo::Array);
+                // update group info and evaluate data integrity
+                for(auto groupElement : savedGroups) {
+                    const auto& groupName = groupElement.first;
+                    auto& group = groupElement.second;
 
-                responseStatus = statusToString(Status::SUCCESS);
+                    group.m_group_id = groupName;
+                    group.m_group_name = groupName;
+                    //TODO update
+                    group.m_data_integrity = fty::encrypt(groupName, req.m_passphrase);
+
+                    srrSaveResp.m_data.push_back(group);
+                }
+                srrSaveResp.m_status = statusToString(Status::SUCCESS);
             }
             else
             {
                 const std::string error = TRANSLATE_ME("Passphrase must have %s characters", (fty::getPassphraseFormat()).c_str());
-                responseError = error;
+                srrSaveResp.m_error = error;
                 log_error(error.c_str());
             }
         }
         catch (const std::exception& e)
         {
             const std::string error = TRANSLATE_ME("Exception on save Ipm2 configuration: (%s)", e.what());
-            responseError = error;
+            srrSaveResp.m_error = error;
             log_error(error.c_str());
         }
 
-        responseSi.addMember("status") <<= responseStatus;
-        responseSi.addMember("error") <<= responseError;
-
         dto::UserData response;
+
+        cxxtools::SerializationInfo responseSi;
+        responseSi <<= srrSaveResp;
+
         std::string jsonResp = serializeJson(responseSi);
         response.push_back(jsonResp);
 
@@ -368,27 +354,20 @@ namespace srr
     {
         bool restart = false;
 
-        // create json response
-        cxxtools::SerializationInfo responseSi;           
+        SrrRestoreResponse srrRestoreResp;
 
-        std::string responseStatus = statusToString(Status::FAILED);
-        std::string responseError = "";
-
-        std::string passphrase;
-        std::string version;
-        std::string checksum;
+        srrRestoreResp.m_status = statusToString(Status::FAILED);
 
         try
         {
-            cxxtools::SerializationInfo si;
-            si = dto::srr::deserializeJson(json);
-            si.getMember("passphrase") >>= passphrase;
-            si.getMember("version") >>= version;
-            si.getMember(CHECKSUM) >>= checksum;
+            cxxtools::SerializationInfo requestSi = dto::srr::deserializeJson(json);
+            SrrRestoreRequest req;
 
-            std::string decryptedData = fty::decrypt(checksum, passphrase);
+            requestSi >>= req;
 
-            if(decryptedData.compare(passphrase) != 0) {
+            std::string decryptedData = fty::decrypt(req.m_checksum, req.m_passphrase);
+
+            if(decryptedData.compare(req.m_passphrase) != 0) {
                 throw std::runtime_error("Invalid passphrase");
             }
 
@@ -396,48 +375,15 @@ namespace srr
             std::list<FeatureName> featuresToRestore;
             std::set<std::string> requiredGroups;
 
-            const auto& dataSi = si.getMember("data");
+            for(const auto& srrFeature : req.m_data_ptr->getSrrFeatures()) {
+                const auto& featureName = srrFeature.m_feature_name;
+                const auto& feature = srrFeature.m_feature_and_status.feature();
+                featuresToRestore.push_back(featureName);
+                requiredGroups.insert(getGroupFromFeature(featureName));
 
-            // parse different data version
-            if(version == "1.0") {
-                for(const auto& wrapSi : dataSi) {
-                    auto& featureSi = wrapSi.getMember(0);
-
-                    std::string featureName = featureSi.name();
-                    Feature f;
-                    featureSi >>= f;
-                    featuresToRestore.push_back(featureName);
-                    requiredGroups.insert(getGroupFromFeature(featureName));
-
-                    RestoreQuery& request = rq[featureName];
-                    request.set_passpharse(passphrase);
-                    request.mutable_map_features_data()->insert({featureName, f});
-                }
-            } else if(version == "2.0") {
-                for(const auto& entrySi : dataSi) {
-                    std::string dataIntegrity;
-                    entrySi.getMember("data_integrity") >>= dataIntegrity;
-                    std::string groupId;
-                    entrySi.getMember("group_id") >>= groupId;
-                    std::string groupName;
-                    entrySi.getMember("group_name") >>= groupName;
-
-                    const auto& featuresSi = entrySi.getMember("features");
-
-                    for(const auto& featureSi : featuresSi) {
-                        std::string featureName = featureSi.name();
-                        Feature f;
-                        featureSi >>= f;
-                        featuresToRestore.push_back(featureName);
-                        requiredGroups.insert(getGroupFromFeature(featureName));
-
-                        RestoreQuery& request = rq[featureName];
-                        request.set_passpharse(passphrase);
-                        request.mutable_map_features_data()->insert({featureName, f});
-                    }
-                }
-            } else {
-                throw std::runtime_error("Version " + version + " is not supported");
+                RestoreQuery& request = rq[featureName];
+                request.set_passpharse(req.m_passphrase);
+                request.mutable_map_features_data()->insert({featureName, feature});
             }
 
             RestoreResponse response;
@@ -500,34 +446,30 @@ namespace srr
                 }
             }
 
-            responseStatus = statusToString(Status::SUCCESS);
-
-            auto& statusListSi = responseSi.addMember("status_list");
+            srrRestoreResp.m_status = statusToString(Status::SUCCESS);
 
             std::map<std::string, FeatureStatus> rspMap(response.map_features_status().begin(), response.map_features_status().end());
 
             for(const auto& element : rspMap) {
-                auto& elementSi = statusListSi.addMember("");
+                RestoreStatus restoreStatus;
 
-                elementSi.addMember("name") <<= element.first;
-                elementSi.addMember("status") <<= statusToString(element.second.status());
-                elementSi.addMember("error") <<= element.second.error();
+                restoreStatus.m_name = element.first;
+                restoreStatus.m_status = statusToString(element.second.status());
+                restoreStatus.m_error = element.second.error();
 
-                elementSi.setCategory(cxxtools::SerializationInfo::Object);              
+                srrRestoreResp.m_status_list.push_back(restoreStatus);
             }
-
-            statusListSi.setCategory(cxxtools::SerializationInfo::Array);
         }
         catch (const std::exception& e)
         {
             std::string errorMsg = e.what();
-            responseError = errorMsg;
+            srrRestoreResp.m_error = errorMsg;
 
             log_error(errorMsg.c_str());
         }
 
-        responseSi.addMember("status") <<= responseStatus;
-        responseSi.addMember("error") <<= responseError;
+        cxxtools::SerializationInfo responseSi;
+        responseSi <<= srrRestoreResp;
 
         dto::UserData response;
         std::string jsonResp = serializeJson(responseSi);
