@@ -51,10 +51,10 @@ namespace srr
     public:
         static const std::map<const std::string, RequestType> m_requestType;
 
-        std::function<dto::UserData()>                    listHandler;
-        std::function<dto::UserData(const std::string &)> saveHandler;
-        std::function<dto::UserData(const std::string &)> restoreHandler;
-        std::function<dto::UserData(const std::string &)> resetHandler;
+        std::function<dto::UserData()>                          listHandler;
+        std::function<dto::UserData(const std::string &)>       saveHandler;
+        std::function<dto::UserData(const std::string &, bool)> restoreHandler;
+        std::function<dto::UserData(const std::string &)>       resetHandler;
 
         dto::UserData processRequest(const std::string& operation, const dto::UserData& data);
     };

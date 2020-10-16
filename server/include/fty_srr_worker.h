@@ -41,7 +41,7 @@ namespace srr
             // UI interface
             dto::UserData getGroupList();
             dto::UserData requestSave(const std::string& json);
-            dto::UserData requestRestore(const std::string& json);
+            dto::UserData requestRestore(const std::string& json, bool force = false);
             dto::UserData requestReset(const std::string& json);
 
         private:

@@ -29,6 +29,7 @@
 // clang-format off
 
 #include "fty-srr.h"
+#include "fty_srr_groups.h"
 #include "fty_srr_exception.h"
 #include "fty_srr_worker.h"
 
@@ -38,9 +39,9 @@
 #include <fty_common.h>
 #include <fty_lib_certificate_library.h>
 
-#include <algorithm>
 #include <chrono>
 #include <cstdlib>
+#include <numeric>
 #include <vector>
 #include <thread>
 #include <unistd.h>
@@ -51,6 +52,19 @@ using namespace dto::srr;
 
 namespace srr
 {
+    struct SrrIntegrityCheckFailed : public std::exception
+    {
+        SrrIntegrityCheckFailed() {};
+        SrrIntegrityCheckFailed(const std::string& err) : m_err(err) {};
+
+        std::string m_err = "Integrity Check Failed";
+
+        const char * what () const throw ()
+        {
+            return m_err.c_str();
+        }
+    };
+
     static void restartBiosService(const unsigned restartDelay)
     {
         for(unsigned i = restartDelay; i > 0; i--) {
@@ -66,102 +80,6 @@ namespace srr
         //     log_error("failed to reboot");
         // }
     }
-
-    static std::map<const std::string, std::vector<std::pair<std::string, unsigned int>>> groupFeatures = {
-        {
-            G_ASSETS, {
-                { F_ASSET_AGENT    , 1 }/* ,
-                { F_VIRTUAL_ASSETS , 2 } */
-            }
-        },
-        {
-            G_CONFIG, {
-                { F_AUTOMATION_SETTINGS       , 1 },
-                { F_DISCOVERY                 , 2 },
-                { F_MASS_MANAGEMENT           , 2 },
-                { F_MONITORING_FEATURE_NAME   , 3 },
-                { F_NETWORK                   , 4 },
-                { F_NOTIFICATION_FEATURE_NAME , 5 },
-                { F_USER_SESSION_FEATURE_NAME , 6 }
-            }
-        },
-        {
-            G_SECW, {
-                { F_SECURITY_WALLET , 1}
-            }
-        }
-    };
-
-    static std::string getGroupFromFeature(const std::string& featureName)
-    {
-        std::string groupName;
-        for(const auto& group : groupFeatures) {
-            const auto& features = group.second;
-            auto found = std::find_if(features.begin(), features.end(), [&](std::pair<std::string, unsigned int> x) {
-                return (featureName == x.first);
-            });
-
-            if(found != features.end()) {
-                groupName = group.first;
-                break;
-            }
-        }
-
-        return groupName;
-    }
-
-    static std::map<const std::string, const std::string> featureDescription = {
-        { F_ALERT_AGENT               , TRANSLATE_ME((std::string(SRR_PREFIX_TRANSLATE_KEY) + F_ALERT_AGENT).c_str()) },
-        { F_ASSET_AGENT               , TRANSLATE_ME((std::string(SRR_PREFIX_TRANSLATE_KEY) + F_ASSET_AGENT).c_str()) },
-        { F_AUTOMATION_SETTINGS       , TRANSLATE_ME((std::string(SRR_PREFIX_TRANSLATE_KEY) + F_AUTOMATION_SETTINGS).c_str()) },
-        { F_AUTOMATIONS               , TRANSLATE_ME((std::string(SRR_PREFIX_TRANSLATE_KEY) + F_AUTOMATIONS).c_str()) },
-        { F_DISCOVERY                 , TRANSLATE_ME((std::string(SRR_PREFIX_TRANSLATE_KEY) + F_DISCOVERY).c_str()) },
-        { F_MASS_MANAGEMENT           , TRANSLATE_ME((std::string(SRR_PREFIX_TRANSLATE_KEY) + F_MASS_MANAGEMENT).c_str()) },
-        { F_MONITORING_FEATURE_NAME   , TRANSLATE_ME((std::string(SRR_PREFIX_TRANSLATE_KEY) + F_MONITORING_FEATURE_NAME).c_str()) },
-        { F_NOTIFICATION_FEATURE_NAME , TRANSLATE_ME((std::string(SRR_PREFIX_TRANSLATE_KEY) + F_NOTIFICATION_FEATURE_NAME).c_str()) },
-        { F_NETWORK                   , TRANSLATE_ME((std::string(SRR_PREFIX_TRANSLATE_KEY) + F_NETWORK).c_str()) },
-        { F_SECURITY_WALLET           , TRANSLATE_ME((std::string(SRR_PREFIX_TRANSLATE_KEY) + F_SECURITY_WALLET).c_str()) },
-        { F_USER_SESSION_FEATURE_NAME , TRANSLATE_ME((std::string(SRR_PREFIX_TRANSLATE_KEY) + F_USER_SESSION_FEATURE_NAME).c_str()) },
-        { F_VIRTUAL_ASSETS            , TRANSLATE_ME((std::string(SRR_PREFIX_TRANSLATE_KEY) + F_VIRTUAL_ASSETS).c_str()) }
-    };
-
-    static std::map<const std::string, const std::string> featureToAgent = {
-        { F_ALERT_AGENT               , ALERT_AGENT_NAME },
-        { F_ASSET_AGENT               , ASSET_AGENT_NAME },
-        { F_AUTOMATION_SETTINGS       , CONFIG_AGENT_NAME },
-        { F_AUTOMATIONS               , EMC4J_AGENT_NAME },
-        { F_DISCOVERY                 , CONFIG_AGENT_NAME },
-        { F_MASS_MANAGEMENT           , CONFIG_AGENT_NAME },
-        { F_MONITORING_FEATURE_NAME   , CONFIG_AGENT_NAME },
-        { F_NETWORK                   , CONFIG_AGENT_NAME },
-        { F_NOTIFICATION_FEATURE_NAME , CONFIG_AGENT_NAME },
-        { F_SECURITY_WALLET           , SECU_WALLET_AGENT_NAME },
-        { F_USER_SESSION_FEATURE_NAME , CONFIG_AGENT_NAME },
-        { F_VIRTUAL_ASSETS            , EMC4J_AGENT_NAME }
-    };
-
-    static std::map<const std::string, const std::string> agentToQueue = {
-        { ALERT_AGENT_NAME      , ALERT_AGENT_MSG_QUEUE_NAME },
-        { ASSET_AGENT_NAME      , ASSET_AGENT_MSG_QUEUE_NAME },
-        { CONFIG_AGENT_NAME     , CONFIG_MSG_QUEUE_NAME },
-        { EMC4J_AGENT_NAME      , EMC4J_MSG_QUEUE_NAME },
-        { SECU_WALLET_AGENT_NAME, SECU_WALLET_MSG_QUEUE_NAME }
-    };
-
-    static std::map<const std::string, bool> restartAfterRestore = {
-        { F_ALERT_AGENT               , true },
-        { F_ASSET_AGENT               , true },
-        { F_AUTOMATION_SETTINGS       , true },
-        { F_AUTOMATIONS               , true },
-        { F_DISCOVERY                 , true },
-        { F_MASS_MANAGEMENT           , true },
-        { F_MONITORING_FEATURE_NAME   , true },
-        { F_NETWORK                   , true },
-        { F_NOTIFICATION_FEATURE_NAME , true },
-        { F_SECURITY_WALLET           , true },
-        { F_USER_SESSION_FEATURE_NAME , true },
-        { F_VIRTUAL_ASSETS            , true }
-    };
 
     /**
      * Constructor
@@ -204,23 +122,22 @@ namespace srr
         listResp.m_passphrase_description = TRANSLATE_ME("Passphrase must have %s characters", (fty::getPassphraseFormat()).c_str());
         listResp.m_passphrase_validation = fty::getPassphraseFormat();
 
-        for (const auto& grp : groupFeatures) {
-            const std::string& groupName = grp.first;
-            log_debug("- %s", groupName.c_str());
+        for (const auto& grp : SrrGroupMap) {
+            const std::string& groupId = grp.first;
+            const SrrGroupStruct& srrGroup = grp.second;
 
             GroupInfo g;
-            g.m_group_id = "0";
-            g.m_group_name = groupName;
-            g.m_description = TRANSLATE_ME((std::string(SRR_PREFIX_TRANSLATE_KEY) + groupName).c_str());
+            g.m_group_id = groupId;
+            g.m_group_name = srrGroup.m_name;
+            g.m_description = TRANSLATE_ME((std::string(SRR_PREFIX_TRANSLATE_KEY) + srrGroup.m_description).c_str());
 
-            for (const auto& ft : grp.second) {
-                const std::string& featureName = ft.first;
-                const unsigned int featurePriority = ft.second;
-                log_debug("\t- %s (%d)", featureName.c_str(), featurePriority);
+            for (const auto& ft : srrGroup.m_fp) {
+                const std::string& featureId = ft.m_feature;
 
                 FeatureInfo fi;
-                fi.m_name = featureName;
-                fi.m_description = featureDescription[featureName];
+
+                fi.m_name = featureId;
+                fi.m_description = SrrFeatureMap.at(featureId).m_description;
 
                 g.m_features.push_back(fi);
             }
@@ -264,9 +181,9 @@ namespace srr
                 for(const auto& groupName: req.m_group_list)
                 {
                     try {
-                        for (const auto& feature : groupFeatures.at(groupName)) {
-                            const std::string& featureName = feature.first;
-                            const std::string& agentName = featureToAgent[featureName];
+                        for (const auto& feature : SrrGroupMap.at(groupName).m_fp) {
+                            const std::string& featureName = feature.m_feature;
+                            const std::string& agentName = SrrFeatureMap.at(featureName).m_agent;
 
                             featureAgentMap[agentName].insert(featureName);
                         }
@@ -350,9 +267,10 @@ namespace srr
         return response;
     }
 
-    dto::UserData SrrWorker::requestRestore(const std::string& json)
+    dto::UserData SrrWorker::requestRestore(const std::string& json, bool force)
     {
         bool restart = false;
+        bool rollback = false;
 
         SrrRestoreResponse srrRestoreResp;
 
@@ -375,54 +293,83 @@ namespace srr
             std::list<FeatureName> featuresToRestore;
             std::set<std::string> requiredGroups;
 
+            // data integrity check
+            if(!force) {
+                log_info("Implement data integrity check");
+                if(false) {
+                    throw srr::SrrIntegrityCheckFailed("Data integrity check failed");
+                }
+            } else {
+                log_warning("Restore with force option: skipping data integrity check");
+            }
+
             for(const auto& srrFeature : req.m_data_ptr->getSrrFeatures()) {
                 const auto& featureName = srrFeature.m_feature_name;
                 const auto& feature = srrFeature.m_feature_and_status.feature();
                 featuresToRestore.push_back(featureName);
-                requiredGroups.insert(getGroupFromFeature(featureName));
 
-                RestoreQuery& request = rq[featureName];
-                request.set_passpharse(req.m_passphrase);
-                request.mutable_map_features_data()->insert({featureName, feature});
+                std::string group = getGroupFromFeature(featureName);
+                if(!group.empty()) {
+                    requiredGroups.insert(group);
+
+                    RestoreQuery& request = rq[featureName];
+                    request.set_passpharse(req.m_passphrase);
+                    request.mutable_map_features_data()->insert({featureName, feature});
+                } else {
+                    log_warning("Feature %s does not belong to any group - skip", featureName.c_str());
+                }
             }
 
             RestoreResponse response;
+            SaveResponse rollbackSaveReponse;
 
-            // check that all features in a group are preset
             for(const auto& group : requiredGroups) {
-                auto featuresInGroup(groupFeatures[group]);
+                auto featuresInGroup(SrrGroupMap.at(group));
                 log_debug("Restoring group %s", group.c_str());
 
                 std::vector<std::string> missingFeatures;
 
                 // check if all features in the group are available
-                for(const auto& feature : featuresInGroup) {
-                    const auto& featureName = feature.first;
-
-                    log_debug("Checking if feature %s is available", featureName.c_str());
+                for(const auto& fp : featuresInGroup.m_fp) {
+                    const auto& featureName = fp.m_feature;
 
                     auto found = std::find(featuresToRestore.begin(), featuresToRestore.end(), featureName);
                     if(found == featuresToRestore.end()) {
-                        log_error("Group %s cannot be restored: missing feature %s", group.c_str(), featureName.c_str());
+                        log_error("Missing feature %s", featureName.c_str());
                         missingFeatures.push_back(featureName);
                     }
                 }
 
-                // sort features by priority
-                std::sort(featuresInGroup.begin(), featuresInGroup.end(), [&] (std::pair<std::string, unsigned int> l, std::pair<std::string, unsigned int> r) {
-                    return l.second < r.second;
-                });
-
                 // restore features
-                for(const auto& feature : featuresInGroup) {
-                    const FeatureName& featureName = feature.first;
+                if(missingFeatures.empty()) {
+                    // sort features by priority
+                    std::sort(featuresInGroup.m_fp.begin(), featuresInGroup.m_fp.end(), [&] (SrrFeaturePriorityStruct l, SrrFeaturePriorityStruct r) {
+                        return l.m_priority < r.m_priority;
+                    });
 
-                    log_debug("Processing feature %s", featureName.c_str());
+                    for(const auto& fp : featuresInGroup.m_fp) {
+                        const FeatureName& featureName = fp.m_feature;
 
-                    if(missingFeatures.empty()) {
-                        const std::string agentNameDest = featureToAgent[featureName];
+                        log_debug("Processing feature %s", featureName.c_str());
+
+                        const std::string agentNameDest = SrrFeatureMap.at(featureName).m_agent;
                         const std::string queueNameDest = agentToQueue[agentNameDest];
-                        // Build query
+
+                        // Save current status -> rollback in case of error
+                        ////////////////////////////////////////////////////////
+                        Query rollbackSaveQuery = createSaveQuery({featureName}, req.m_passphrase);
+                        dto::UserData rollbackSaveData;
+                        rollbackSaveData << rollbackSaveQuery;
+                        // Send message to agent
+                        messagebus::Message rollbackResp = sendRequest(rollbackSaveData, "save", queueNameDest, agentNameDest);
+                        log_debug("Back up of feature %s", featureName.c_str());
+
+                        Response partialRollbackResp;
+                        rollbackResp.userData() >> partialRollbackResp;
+                        rollbackSaveReponse += partialRollbackResp.save();
+                        ////////////////////////////////////////////////////////
+
+                        // Build restore query
                         Query restoreQuery;
                         *(restoreQuery.mutable_restore()) = rq[featureName];
                         log_debug("Restoring configuration of %s by agent %s ", featureName.c_str(), agentNameDest.c_str());
@@ -436,13 +383,53 @@ namespace srr
                         resp.userData() >> partialResp;
                         response += partialResp.restore();
 
-                        restart = restart | restartAfterRestore[featureName];
-                    } else {
-                        FeatureStatus ftStatus;
-                        ftStatus.set_status(Status::FAILED);
-                        ftStatus.set_error("Missing feature in group " + group);
-                        response += (createRestoreResponse(ftStatus)).restore();
+                        restart = restart | SrrFeatureMap.at(featureName).m_restart;
                     }
+                } else {
+                    RestoreStatus restoreStatus;
+                    restoreStatus.m_name = group;
+                    restoreStatus.m_status = statusToString(Status::FAILED);
+                    restoreStatus.m_error = "Group " + group + " cannot be restored. Missing features: " + std::accumulate(missingFeatures.begin(), missingFeatures.end(), std::string(" "));
+
+                    srrRestoreResp.m_status_list.push_back(restoreStatus);
+
+                    log_error(restoreStatus.m_error.c_str());
+                }
+            }
+
+            if(rollback) {
+                std::map<std::string, FeatureAndStatus> rollbackMap(rollbackSaveReponse.map_features_data().begin(), rollbackSaveReponse.map_features_data().end());
+
+                for(auto entry : rollbackMap) {
+                    const FeatureName& featureName = entry.first;
+                    const dto::srr::Feature& featureData= entry.second.feature();
+
+                    const std::string agentNameDest = SrrFeatureMap.at(featureName).m_agent;
+                    const std::string queueNameDest = agentToQueue[agentNameDest];
+
+                    // Build restore query
+                    RestoreQuery restoreQuery;
+
+                    *(restoreQuery.mutable_version()) = m_srrVersion;
+                    *(restoreQuery.mutable_checksum()) = req.m_checksum;
+                    *(restoreQuery.mutable_passpharse()) = req.m_passphrase;
+                    restoreQuery.mutable_map_features_data()->insert({featureName, featureData});
+
+                    log_debug("Rollback configuration of %s by agent %s ", featureName.c_str(), agentNameDest.c_str());
+                    // Send message
+                    dto::UserData reqData;
+
+                    Query rollbackQuery;
+                    *(rollbackQuery.mutable_restore()) = restoreQuery;
+                    reqData << rollbackQuery;
+                    messagebus::Message resp = sendRequest(reqData, "restore", queueNameDest, agentNameDest);
+                    log_debug("%s rolled back by: %s ", featureName.c_str(), agentNameDest.c_str());
+                    Response partialResp;
+
+                    resp.userData() >> partialResp;
+                    response += partialResp.restore();
+
+                    restart = restart | SrrFeatureMap.at(featureName).m_restart;
                 }
             }
 
@@ -451,6 +438,8 @@ namespace srr
             std::map<std::string, FeatureStatus> rspMap(response.map_features_status().begin(), response.map_features_status().end());
 
             for(const auto& element : rspMap) {
+                log_debug("Restore response from %s", element.first.c_str());
+
                 RestoreStatus restoreStatus;
 
                 restoreStatus.m_name = element.first;

@@ -70,7 +70,7 @@ namespace srr
 
             case RequestType::REQ_RESTORE :
                 if(!restoreHandler) throw std::runtime_error("No restore handler!");
-                response = restoreHandler(data.front());
+                response = restoreHandler(data.front(), data.size() > 1);
                 break;
             
             case RequestType::REQ_RESET :
@@ -119,7 +119,7 @@ namespace srr
             // Bind all processor handler.
             m_processor.listHandler = std::bind(&SrrWorker::getGroupList, m_srrworker.get());
             m_processor.saveHandler = std::bind(&SrrWorker::requestSave, m_srrworker.get(), _1);
-            m_processor.restoreHandler = std::bind(&SrrWorker::requestRestore, m_srrworker.get(), _1);
+            m_processor.restoreHandler = std::bind(&SrrWorker::requestRestore, m_srrworker.get(), _1, _2);
             m_processor.resetHandler = std::bind(&SrrWorker::requestReset, m_srrworker.get(), _1);
             
             // Listen all incoming UI requests           
