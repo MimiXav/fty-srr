@@ -31,6 +31,7 @@ etn_target(exe ${PROJECT_NAME}
         fty_common_messagebus
         fty_common_mlm
         fty_lib_certificate
+        openssl
         protobuf
         pthread
 )

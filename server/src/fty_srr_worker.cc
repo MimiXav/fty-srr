@@ -41,10 +41,13 @@
 
 #include <chrono>
 #include <cstdlib>
+#include <iomanip>
 #include <numeric>
+#include <openssl/sha.h>
 #include <vector>
 #include <thread>
 #include <unistd.h>
+
 
 #define SRR_RESTART_DELAY_SEC 5
 
@@ -150,7 +153,22 @@ namespace srr
         }
     }
 
-    static void evalDataIntegrity(Group& group, const std::string& passphrase)
+    static std::string evalSha256(const std::string& data)
+    {
+        unsigned char result[SHA256_DIGEST_LENGTH];
+        SHA256(const_cast<unsigned char*>(reinterpret_cast<const unsigned char*>(data.c_str())), data.length(), result);
+
+        std::ostringstream sout;
+        sout<<std::hex<<std::setfill('0');
+        for(long long c: result)
+        {
+            sout<<std::setw(2)<<c;
+        }
+
+        return sout.str();
+    }
+
+    static void evalDataIntegrity(Group& group)
     {
         // sort features by priority
         std::sort(group.m_features.begin(), group.m_features.end(), [&] (SrrFeature l, SrrFeature r) {
@@ -162,18 +180,18 @@ namespace srr
         tmpSi <<= group.m_features;
         const std::string data = serializeJson(tmpSi, false);
 
-        group.m_data_integrity = fty::encrypt(data, passphrase);
+        group.m_data_integrity = evalSha256(data);
     }
 
-    static bool checkDataIntegrity(Group& group, const std::string& passphrase)
+    static bool checkDataIntegrity(Group& group)
     {
         cxxtools::SerializationInfo tmpSi;
         tmpSi <<= group.m_features;
         const std::string data = serializeJson(tmpSi, false);
 
-        std::string decryptedData = fty::decrypt(group.m_data_integrity, passphrase);
+        std::string checksum = evalSha256(data);
 
-        return decryptedData == data;
+        return checksum == group.m_data_integrity;
     }
 
     static std::map<std::string, std::set<FeatureName>> groupFeaturesByAgent(const std::list<FeatureName>& features)
@@ -430,7 +448,7 @@ namespace srr
                     group.m_group_name = groupId;
 
                     // evaluate data integrity
-                    evalDataIntegrity(group, srrSaveReq.m_passphrase);
+                    evalDataIntegrity(group);
 
                     srrSaveResp.m_data.push_back(group);
                 }
@@ -529,7 +547,7 @@ namespace srr
 
                     if(!force) {
                         // check data integrity
-                        if(!checkDataIntegrity(group, srrRestoreReq.m_passphrase)) {
+                        if(!checkDataIntegrity(group)) {
                             log_error("Integrity check failed for group %s", group.m_group_id.c_str());
                             groupsIntegrityCheckFailed.push_back(group.m_group_id);
                         }
