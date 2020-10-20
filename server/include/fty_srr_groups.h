@@ -30,6 +30,7 @@
 namespace srr
 {
 std::string getGroupFromFeature(const std::string& featureName);
+unsigned int getPriority(const std::string& featureName);
 
 typedef struct SrrFeatureStruct
 {
@@ -163,7 +164,7 @@ auto initSrrGroups = [&]() {
     tmp[G_ASSETS].m_description = G_ASSETS,
 
     tmp[G_ASSETS].m_fp.push_back(SrrFeaturePriorityStruct(F_ASSET_AGENT, 1));
-    // tmp[G_ASSETS].m_fp.push_bac(((SrrFeaturePriorityStruct)_VIRTUAL_ASSETS, 2));
+    // tmp[G_ASSETS].m_fp.push_back(SrrFeaturePriorityStruct(F_VIRTUAL_ASSETS, 2));
 
     // config-group
     tmp[G_CONFIG];
@@ -175,7 +176,7 @@ auto initSrrGroups = [&]() {
     tmp[G_CONFIG].m_fp.push_back(SrrFeaturePriorityStruct(F_DISCOVERY                 , 2));
     tmp[G_CONFIG].m_fp.push_back(SrrFeaturePriorityStruct(F_MASS_MANAGEMENT           , 2));
     tmp[G_CONFIG].m_fp.push_back(SrrFeaturePriorityStruct(F_MONITORING_FEATURE_NAME   , 3));
-    tmp[G_CONFIG].m_fp.push_back(SrrFeaturePriorityStruct(F_NETWORK                   , 4));
+    // tmp[G_CONFIG].m_fp.push_back(SrrFeaturePriorityStruct(F_NETWORK                   , 4));
     tmp[G_CONFIG].m_fp.push_back(SrrFeaturePriorityStruct(F_NOTIFICATION_FEATURE_NAME , 5));
     tmp[G_CONFIG].m_fp.push_back(SrrFeaturePriorityStruct(F_USER_SESSION_FEATURE_NAME , 6));
 

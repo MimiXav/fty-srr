@@ -25,17 +25,37 @@
 
 namespace srr
 {
+unsigned int getPriority (const std::string &featureName)
+{
+    const std::string groupId = getGroupFromFeature (featureName);
 
-std::string getGroupFromFeature(const std::string& featureName)
+    if (groupId.empty ()) {
+        return 0;
+    }
+    const auto &featurePriority = SrrGroupMap.at (groupId).m_fp;
+    const auto found =
+      std::find_if (featurePriority.begin (), featurePriority.end (),
+                    [&] (const SrrFeaturePriorityStruct &fp) {
+                        return featureName == fp.m_feature;
+                    });
+    if (found != featurePriority.end ()) {
+        return found->m_priority;
+    } else {
+        return 0;
+    }
+}
+
+std::string getGroupFromFeature (const std::string &featureName)
 {
     std::string groupId;
-    for(const auto& group : SrrGroupMap) {
-        const auto& fp = group.second.m_fp;
-        auto found = std::find_if(fp.begin(), fp.end(), [&](SrrFeaturePriorityStruct x) {
-            return (featureName == x.m_feature);
-        });
+    for (const auto &group : SrrGroupMap) {
+        const auto &fp = group.second.m_fp;
+        auto found = std::find_if (fp.begin (), fp.end (),
+                                   [&] (SrrFeaturePriorityStruct x) {
+                                       return (featureName == x.m_feature);
+                                   });
 
-        if(found != fp.end()) {
+        if (found != fp.end ()) {
             groupId = group.first;
             break;
         }

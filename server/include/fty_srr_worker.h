@@ -55,6 +55,12 @@ namespace srr
             // void buildMapAssociation();
             bool isVerstionCompatible(const std::string& version);
 
+            dto::srr::SaveResponse saveFeatures(const std::list<dto::srr::FeatureName>& features, const std::string& passphrase);
+            dto::srr::RestoreResponse restoreFeature(const dto::srr::FeatureName& featureName, const dto::srr::RestoreQuery& query);
+            dto::srr::ResetResponse resetFeature(const dto::srr::FeatureName& featureName);
+
+            bool rollback(const dto::srr::SaveResponse& rollbackSaveReponse, const std::string& passphrase);
+
             messagebus::Message sendRequest(const dto::UserData& userData, const std::string& action, const std::string& queueNameDest, const std::string& agentNameDest);
     };    
 }
