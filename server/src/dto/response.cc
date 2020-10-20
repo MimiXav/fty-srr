@@ -43,7 +43,9 @@ void operator<<= (cxxtools::SerializationInfo &si, const SrrSaveResponse &resp)
 {
     si.addMember (SI_VERSION) <<= resp.m_version;
     si.addMember (SI_STATUS) <<= resp.m_status;
-    si.addMember (SI_ERROR) <<= resp.m_error;
+    if (resp.m_status != dto::srr::statusToString (dto::srr::Status::SUCCESS)) {
+        si.addMember (SI_ERROR) <<= resp.m_error;
+    }
     si.addMember (SI_CHECKSUM) <<= resp.m_checksum;
     si.addMember (SI_DATA) <<= resp.m_data;
 }
@@ -52,7 +54,9 @@ void operator>>= (const cxxtools::SerializationInfo &si, SrrSaveResponse &resp)
 {
     si.getMember (SI_VERSION) >>= resp.m_version;
     si.getMember (SI_STATUS) >>= resp.m_status;
-    si.getMember (SI_ERROR) >>= resp.m_error;
+    if (si.findMember (SI_ERROR) != nullptr) {
+        si.getMember (SI_ERROR) >>= resp.m_error;
+    }
     si.getMember (SI_CHECKSUM) >>= resp.m_checksum;
     si.getMember (SI_DATA) >>= resp.m_data;
 }
@@ -61,7 +65,9 @@ void operator<<= (cxxtools::SerializationInfo &si,
                   const SrrRestoreResponse &resp)
 {
     si.addMember (SI_STATUS) <<= resp.m_status;
-    si.addMember (SI_ERROR) <<= resp.m_error;
+    if (resp.m_status != dto::srr::statusToString (dto::srr::Status::SUCCESS)) {
+        si.addMember (SI_ERROR) <<= resp.m_error;
+    }
     si.addMember (SI_STATUS_LIST) <<= resp.m_status_list;
 }
 
@@ -69,7 +75,9 @@ void operator>>= (const cxxtools::SerializationInfo &si,
                   SrrRestoreResponse &resp)
 {
     si.getMember (SI_STATUS) >>= resp.m_status;
-    si.getMember (SI_ERROR) >>= resp.m_error;
+    if (si.findMember (SI_ERROR) != nullptr) {
+        si.getMember (SI_ERROR) >>= resp.m_error;
+    }
     si.getMember (SI_STATUS_LIST) >>= resp.m_status_list;
 }
 
