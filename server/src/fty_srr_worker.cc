@@ -308,9 +308,11 @@ namespace srr
             const std::string agentNameDest = SrrFeatureMap.at(featureName).m_agent;
             const std::string queueNameDest = agentToQueue[agentNameDest];
 
-            // Reset before restore (do not stop on failure)
+            // Reset before restore (depends in the feature reset flag)
             try{
-                resetFeature(featureName);
+                if(SrrFeatureMap.at(featureName).m_reset) {
+                    resetFeature(featureName);
+                }
             }
             catch (SrrResetFailed& ex) {
                 log_warning(ex.what());
@@ -505,8 +507,14 @@ namespace srr
             if(srrRestoreReq.m_version == "1.0") {
                 const auto& features = srrRestoreReq.m_data_ptr->getSrrFeatures();
 
+                // save group status to perform a rollback in case of error
+                SaveResponse rollbackSaveResponse;
+                bool restoreFailed = false;
+
+                std::string featureName;
+
                 for(const auto& feature : features) {
-                    const auto& featureName = feature.m_feature_name;
+                    featureName = feature.m_feature_name;
                     const auto& dtoFeature = feature.m_feature_and_status.feature();
                     // prepare restore query
                     RestoreQuery query;
@@ -516,6 +524,27 @@ namespace srr
                     RestoreStatus restoreStatus;
                     restoreStatus.m_name = featureName;
 
+                    // save feature in case of rollback
+                    log_debug("Saving feature %s current status", feature.m_feature_name.c_str());
+                    try {
+                        rollbackSaveResponse += saveFeatures({feature.m_feature_name}, srrRestoreReq.m_passphrase);
+                    }
+                    catch (std::exception& ex) {
+                        log_error("Rollback save failed for feature %s", feature.m_feature_name.c_str());
+                    }
+
+                    // reset feature before restore (do not stop on fail -> reset is not supported by every feature yet)
+                    try{
+                        log_debug("Resetting feature %s", featureName.c_str());
+                        if(SrrFeatureMap.at(featureName).m_reset) {
+                            resetFeature(featureName);
+                        }
+                    }
+                    catch (SrrResetFailed& ex) {
+                        log_warning(ex.what());
+                    }
+
+                    // perform restore
                     try {
                         RestoreResponse resp = restoreFeature(featureName, query);
                         restoreStatus.m_status = statusToString(resp.status().status());
@@ -524,9 +553,21 @@ namespace srr
                     catch(SrrRestoreFailed& ex) {
                         restoreStatus.m_status = statusToString(Status::FAILED);
                         restoreStatus.m_error = ex.what();
+
+                        // stop restore and start rollback
+                        restoreFailed = true;
+                        break;
                     }
 
                     srrRestoreResp.m_status_list.push_back(restoreStatus);
+                }
+
+                // if restore failed -> rollback
+                if(restoreFailed) {
+                    log_info("Starting rollback");
+                    restart = restart | rollback(rollbackSaveResponse, srrRestoreReq.m_passphrase);
+
+                    throw SrrRestoreFailed("Restore of feature " + featureName + " failed");
                 }
 
             } else if(srrRestoreReq.m_version == "2.0") {
@@ -535,17 +576,19 @@ namespace srr
                 std::shared_ptr<SrrRestoreRequestDataV2> dataPtr = std::dynamic_pointer_cast<SrrRestoreRequestDataV2>(srrRestoreReq.m_data_ptr);
                 auto& groups = dataPtr->m_data;
 
-                if(force) {
-                    log_warning("Restoring with force option: data integrity check will be skipped");
-                }
-
+                // sort features in each group by priority
                 for(auto& group : groups) {
-                    // sort features by priority
                     std::sort(group.m_features.begin(), group.m_features.end(), [&] (SrrFeature l, SrrFeature r) {
                         return getPriority(l.m_feature_name) > getPriority(r.m_feature_name);
                     });
+                }
 
-                    if(!force) {
+                // data integrity check
+                if(force) {
+                    log_warning("Restoring with force option: data integrity check will be skipped");
+                } else {
+                    // features in each group must be sorted by priority to evaluate correctly the data integrity
+                    for(auto& group : groups) {
                         // check data integrity
                         if(!checkDataIntegrity(group)) {
                             log_error("Integrity check failed for group %s", group.m_group_id.c_str());
@@ -554,14 +597,16 @@ namespace srr
                     }
                 }
 
+                // if force option is not set, verify that all group data is valid
                 if(!force && !groupsIntegrityCheckFailed.empty()) {
                     throw srr::SrrIntegrityCheckFailed(
                         "Data integrity check failed for groups:" + std::accumulate(groupsIntegrityCheckFailed.begin(),groupsIntegrityCheckFailed.end(), std::string(" ")));
                 }
 
+
+                // start restore procedure
                 RestoreResponse response;
 
-                // restore each group
                 for(const auto& group : groups) {
                     const auto& groupId = group.m_group_id;
 
@@ -575,7 +620,8 @@ namespace srr
                         ftMap[feature.m_feature_name] = feature.m_feature_and_status;
                     }
 
-                    // store all restore queries related to the current group
+                    // create all restore queries related to the current group
+                    // it helps to detect at an early stage if there are features missing in the restore payload
                     std::map<FeatureName, RestoreQuery> restoreQueriesMap;
 
                     try {
@@ -603,59 +649,85 @@ namespace srr
                         continue;
                     }
 
+                    // save group status to perform a rollback in case of error
                     SaveResponse rollbackSaveResponse;
+                    for(const auto& feature : group.m_features) {
+                        log_debug("Saving feature %s current status", feature.m_feature_name.c_str());
+                        try {
+                            rollbackSaveResponse += saveFeatures({feature.m_feature_name}, srrRestoreReq.m_passphrase);
+                        }
+                        catch (std::exception& ex) {
+                            log_error("Rollback save failed for feature %s", feature.m_feature_name.c_str());
+                        }
+                    }
 
-                    try{
-                        // loop though all the features in the group
-                        for(const auto& feature : group.m_features) {
-                            const FeatureName& featureName = feature.m_feature_name;
+                    // reset features in reverse order before restore
+                    // WARNING: currently reset is not implemented by all features, hence it will not be mandatory
+                    for(auto revIt = group.m_features.rbegin(); revIt != group.m_features.rend(); revIt++) {
+                        try{
+                            log_debug("Resetting feature %s", revIt->m_feature_name.c_str());
+                            if(SrrFeatureMap.at(revIt->m_feature_name).m_reset) {
+                                resetFeature(revIt->m_feature_name);
+                            }
+                        }
+                        catch (SrrResetFailed& ex) {
+                            log_warning(ex.what());
+                        }
+                    }
 
-                            log_debug("Processing feature %s", featureName.c_str());
+                    bool restoreFailed = false;
 
-                            // Save current status -> rollback in case of error
-                            rollbackSaveResponse += saveFeatures({featureName}, srrRestoreReq.m_passphrase);
+                    RestoreStatus restoreStatus;
+                    restoreStatus.m_name = groupId;
+                    restoreStatus.m_status = statusToString(Status::SUCCESS);
 
+                    // restore features in order
+                    for(const auto& feature : group.m_features) {
+                        const auto& featureName = feature.m_feature_name;
+
+                        try{
                             // Restore feature
                             response += restoreFeature(featureName, restoreQueriesMap[featureName]);
 
                             // update restart flag
                             restart = restart | SrrFeatureMap.at(featureName).m_restart;
                         }
+                        catch (const std::exception& ex) {
+                            // restore failed -> rolling back the whole group
+                            restoreFailed = true;
+
+                            restoreStatus.m_status = statusToString(Status::FAILED);
+                            restoreStatus.m_error = "Restore failed for feature " + featureName + ": " + ex.what();
+
+                            log_error(restoreStatus.m_error.c_str());
+
+                            // stop group restore
+                            break;
+                        }
                     }
-                    catch (const std::exception& ex) {
-                        // group restore failed -> rolling back
-                        RestoreStatus restoreStatus;
-                        restoreStatus.m_name = groupId;
-                        restoreStatus.m_status = statusToString(Status::FAILED);
-                        restoreStatus.m_error = ex.what();
-                        srrRestoreResp.m_status_list.push_back(restoreStatus);
 
-                        log_error(restoreStatus.m_error.c_str());
-
+                    // if restore failed -> rollback
+                    if(restoreFailed) {
                         log_info("Starting group %s rollback", groupId.c_str());
-
                         restart = restart | rollback(rollbackSaveResponse, srrRestoreReq.m_passphrase);
                     }
-                }
 
-                srrRestoreResp.m_status = statusToString(Status::SUCCESS);
-
-                std::map<std::string, FeatureStatus> rspMap(response.map_features_status().begin(), response.map_features_status().end());
-
-                // create restore reply of all features that restored properly
-                for(const auto& element : rspMap) {
-                    RestoreStatus restoreStatus;
-
-                    restoreStatus.m_name = element.first;
-                    restoreStatus.m_status = statusToString(element.second.status());
-                    restoreStatus.m_error = element.second.error();
-
+                    // push group status into restore response
                     srrRestoreResp.m_status_list.push_back(restoreStatus);
                 }
 
+                srrRestoreResp.m_status = statusToString(Status::SUCCESS);
             } else {
                 throw SrrInvalidVersion();
             }
+        }
+        catch (const SrrRestoreFailed& e)
+        {
+            std::string errorMsg = e.what();
+            srrRestoreResp.m_status = statusToString(Status::FAILED);
+            srrRestoreResp.m_error = errorMsg;
+
+            log_error(errorMsg.c_str());
         }
         catch (const SrrIntegrityCheckFailed& e)
         {

@@ -41,6 +41,7 @@ typedef struct SrrFeatureStruct
     std::string m_agent;
 
     bool m_restart;
+    bool m_reset;
 } SrrFeatureStruct;
 
 typedef struct SrrFeaturePriorityStruct
@@ -68,6 +69,7 @@ auto initSrrFeatures = [&]() {
     tmp[F_ALERT_AGENT].m_description = std::string(SRR_PREFIX_TRANSLATE_KEY) + F_ALERT_AGENT;
     tmp[F_ALERT_AGENT].m_agent = ALERT_AGENT_NAME;
     tmp[F_ALERT_AGENT].m_restart = true;
+    tmp[F_ALERT_AGENT].m_reset = false;
 
     tmp[F_ASSET_AGENT];
     tmp[F_ASSET_AGENT].m_id = F_ASSET_AGENT;
@@ -75,6 +77,7 @@ auto initSrrFeatures = [&]() {
     tmp[F_ASSET_AGENT].m_description = std::string(SRR_PREFIX_TRANSLATE_KEY) + F_ASSET_AGENT;
     tmp[F_ASSET_AGENT].m_agent = ASSET_AGENT_NAME;
     tmp[F_ASSET_AGENT].m_restart = true;
+    tmp[F_ASSET_AGENT].m_reset = true;
 
     tmp[F_AUTOMATION_SETTINGS];
     tmp[F_AUTOMATION_SETTINGS].m_id = F_AUTOMATION_SETTINGS;
@@ -82,6 +85,7 @@ auto initSrrFeatures = [&]() {
     tmp[F_AUTOMATION_SETTINGS].m_description = std::string(SRR_PREFIX_TRANSLATE_KEY) + F_AUTOMATION_SETTINGS;
     tmp[F_AUTOMATION_SETTINGS].m_agent = CONFIG_AGENT_NAME;
     tmp[F_AUTOMATION_SETTINGS].m_restart = true;
+    tmp[F_AUTOMATION_SETTINGS].m_reset = false;
 
     tmp[F_AUTOMATIONS];
     tmp[F_AUTOMATIONS].m_id = F_AUTOMATIONS;
@@ -89,6 +93,7 @@ auto initSrrFeatures = [&]() {
     tmp[F_AUTOMATIONS].m_description = std::string(SRR_PREFIX_TRANSLATE_KEY) + F_AUTOMATIONS;
     tmp[F_AUTOMATIONS].m_agent = EMC4J_AGENT_NAME;
     tmp[F_AUTOMATIONS].m_restart = true;
+    tmp[F_AUTOMATIONS].m_reset = false;
 
     tmp[F_DISCOVERY];
     tmp[F_DISCOVERY].m_id = F_DISCOVERY;
@@ -96,6 +101,7 @@ auto initSrrFeatures = [&]() {
     tmp[F_DISCOVERY].m_description = std::string(SRR_PREFIX_TRANSLATE_KEY) + F_DISCOVERY;
     tmp[F_DISCOVERY].m_agent = CONFIG_AGENT_NAME;
     tmp[F_DISCOVERY].m_restart = true;
+    tmp[F_DISCOVERY].m_reset = false;
 
     tmp[F_MASS_MANAGEMENT];
     tmp[F_MASS_MANAGEMENT].m_id = F_MASS_MANAGEMENT;
@@ -103,6 +109,7 @@ auto initSrrFeatures = [&]() {
     tmp[F_MASS_MANAGEMENT].m_description = std::string(SRR_PREFIX_TRANSLATE_KEY) + F_MASS_MANAGEMENT;
     tmp[F_MASS_MANAGEMENT].m_agent = CONFIG_AGENT_NAME;
     tmp[F_MASS_MANAGEMENT].m_restart = true;
+    tmp[F_MASS_MANAGEMENT].m_reset = false;
 
     tmp[F_MONITORING_FEATURE_NAME];
     tmp[F_MONITORING_FEATURE_NAME].m_id = F_MONITORING_FEATURE_NAME;
@@ -110,6 +117,7 @@ auto initSrrFeatures = [&]() {
     tmp[F_MONITORING_FEATURE_NAME].m_description = std::string(SRR_PREFIX_TRANSLATE_KEY) + F_MONITORING_FEATURE_NAME;
     tmp[F_MONITORING_FEATURE_NAME].m_agent = CONFIG_AGENT_NAME;
     tmp[F_MONITORING_FEATURE_NAME].m_restart = true;
+    tmp[F_MONITORING_FEATURE_NAME].m_reset = false;
 
     tmp[F_NETWORK];
     tmp[F_NETWORK].m_id = F_NETWORK;
@@ -117,6 +125,7 @@ auto initSrrFeatures = [&]() {
     tmp[F_NETWORK].m_description = std::string(SRR_PREFIX_TRANSLATE_KEY) + F_NETWORK;
     tmp[F_NETWORK].m_agent = CONFIG_AGENT_NAME;
     tmp[F_NETWORK].m_restart = true;
+    tmp[F_NETWORK].m_reset = false;
 
     tmp[F_NOTIFICATION_FEATURE_NAME];
     tmp[F_NOTIFICATION_FEATURE_NAME].m_id = F_NOTIFICATION_FEATURE_NAME;
@@ -124,6 +133,7 @@ auto initSrrFeatures = [&]() {
     tmp[F_NOTIFICATION_FEATURE_NAME].m_description = std::string(SRR_PREFIX_TRANSLATE_KEY) + F_NOTIFICATION_FEATURE_NAME;
     tmp[F_NOTIFICATION_FEATURE_NAME].m_agent = CONFIG_AGENT_NAME;
     tmp[F_NOTIFICATION_FEATURE_NAME].m_restart = true;
+    tmp[F_NOTIFICATION_FEATURE_NAME].m_reset = false;
 
 
     tmp[F_SECURITY_WALLET];
@@ -132,6 +142,7 @@ auto initSrrFeatures = [&]() {
     tmp[F_SECURITY_WALLET].m_description = std::string(SRR_PREFIX_TRANSLATE_KEY) + F_SECURITY_WALLET;
     tmp[F_SECURITY_WALLET].m_agent = SECU_WALLET_AGENT_NAME;
     tmp[F_SECURITY_WALLET].m_restart = true;
+    tmp[F_SECURITY_WALLET].m_reset = false;
 
     tmp[F_USER_SESSION_FEATURE_NAME];
     tmp[F_USER_SESSION_FEATURE_NAME].m_id = F_USER_SESSION_FEATURE_NAME;
@@ -139,6 +150,7 @@ auto initSrrFeatures = [&]() {
     tmp[F_USER_SESSION_FEATURE_NAME].m_description = std::string(SRR_PREFIX_TRANSLATE_KEY) + F_USER_SESSION_FEATURE_NAME;
     tmp[F_USER_SESSION_FEATURE_NAME].m_agent = CONFIG_AGENT_NAME;
     tmp[F_USER_SESSION_FEATURE_NAME].m_restart = true;
+    tmp[F_USER_SESSION_FEATURE_NAME].m_reset = false;
 
     tmp[F_VIRTUAL_ASSETS];
     tmp[F_VIRTUAL_ASSETS].m_id = F_VIRTUAL_ASSETS;
@@ -146,6 +158,7 @@ auto initSrrFeatures = [&]() {
     tmp[F_VIRTUAL_ASSETS].m_description = std::string(SRR_PREFIX_TRANSLATE_KEY) + F_VIRTUAL_ASSETS;
     tmp[F_VIRTUAL_ASSETS].m_agent = EMC4J_AGENT_NAME;
     tmp[F_VIRTUAL_ASSETS].m_restart = true;
+    tmp[F_VIRTUAL_ASSETS].m_reset = false;
 
     return tmp;
 };
