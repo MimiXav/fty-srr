@@ -50,23 +50,27 @@ constexpr auto ALERT_AGENT_NAME             = "alert-agent-srr";
 constexpr auto ALERT_AGENT_MSG_QUEUE_NAME   = "FTY.Q.ALERT.SRR";
 
 // GROUPS
-constexpr auto G_ASSETS                     = "assets-group";
-constexpr auto G_CONFIG                     = "config-group";
-constexpr auto G_SECW                       = "security-wallet";
+constexpr auto G_ASSETS                     = "group-assets";
+constexpr auto G_DISCOVERY                  = "group-discovery";
+constexpr auto G_MASS_MANAGEMENT            = "group-mass-management";
+constexpr auto G_MONITORING_FEATURE_NAME    = "group-monitoring-feature-name";
+constexpr auto G_NETWORK                    = "group-network";
+constexpr auto G_NOTIFICATION_FEATURE_NAME  = "group-notification-feature-name";
+constexpr auto G_USER_SESSION_FEATURE_NAME  = "group-user-session-feature-name";
 
 // FEATURES
-constexpr auto F_MONITORING_FEATURE_NAME    = "monitoring";
-constexpr auto F_NOTIFICATION_FEATURE_NAME  = "notification";
+constexpr auto F_ALERT_AGENT                = "alert-agent";
+constexpr auto F_ASSET_AGENT                = "asset-agent";
 constexpr auto F_AUTOMATION_SETTINGS        = "automation-settings";
-constexpr auto F_USER_SESSION_FEATURE_NAME  = "user-session";
+constexpr auto F_AUTOMATIONS                = "automations";
 constexpr auto F_DISCOVERY                  = "discovery";
 constexpr auto F_MASS_MANAGEMENT            = "etn-mass-management";
+constexpr auto F_MONITORING_FEATURE_NAME    = "monitoring";
 constexpr auto F_NETWORK                    = "network";
-constexpr auto F_AUTOMATIONS                = "automations";
-constexpr auto F_VIRTUAL_ASSETS             = "virtual-assets";
+constexpr auto F_NOTIFICATION_FEATURE_NAME  = "notification";
 constexpr auto F_SECURITY_WALLET            = "security-wallet";
-constexpr auto F_ASSET_AGENT                = "asset-agent";
-constexpr auto F_ALERT_AGENT                = "alert-agent";
+constexpr auto F_USER_SESSION_FEATURE_NAME  = "user-session";
+constexpr auto F_VIRTUAL_ASSETS             = "virtual-assets";
 // Common definition                    
 constexpr auto SRR_VERSION_KEY              = "version";
 constexpr auto ACTIVE_VERSION               = "2.0";

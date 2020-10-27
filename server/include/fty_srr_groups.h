@@ -169,37 +169,68 @@ auto initSrrGroups = [&]() {
 
     std::map<std::string, SrrGroupStruct> tmp;
 
-    // assets-group
+    // create groups
     tmp[G_ASSETS];
-    
+    tmp[G_DISCOVERY];
+    tmp[G_MASS_MANAGEMENT];
+    tmp[G_MONITORING_FEATURE_NAME];
+    tmp[G_NETWORK];
+    tmp[G_NOTIFICATION_FEATURE_NAME];
+    tmp[G_USER_SESSION_FEATURE_NAME];
+
+    // add features to asset group    
     tmp[G_ASSETS].m_id = G_ASSETS,
     tmp[G_ASSETS].m_name = G_ASSETS,
     tmp[G_ASSETS].m_description = G_ASSETS,
 
-    tmp[G_ASSETS].m_fp.push_back(SrrFeaturePriorityStruct(F_ASSET_AGENT, 1));
-    // tmp[G_ASSETS].m_fp.push_back(SrrFeaturePriorityStruct(F_VIRTUAL_ASSETS, 2));
+    tmp[G_ASSETS].m_fp.push_back(SrrFeaturePriorityStruct(F_SECURITY_WALLET, 1));
+    tmp[G_ASSETS].m_fp.push_back(SrrFeaturePriorityStruct(F_ASSET_AGENT, 2));
+    tmp[G_ASSETS].m_fp.push_back(SrrFeaturePriorityStruct(F_VIRTUAL_ASSETS, 3));
+    tmp[G_ASSETS].m_fp.push_back(SrrFeaturePriorityStruct(F_AUTOMATIONS, 4));
+    tmp[G_ASSETS].m_fp.push_back(SrrFeaturePriorityStruct(F_AUTOMATION_SETTINGS, 5));
+    tmp[G_ASSETS].m_fp.push_back(SrrFeaturePriorityStruct(F_ALERT_AGENT, 6));
 
-    // config-group
-    tmp[G_CONFIG];
-    tmp[G_CONFIG].m_id = G_CONFIG;
-    tmp[G_CONFIG].m_name = G_CONFIG;
-    tmp[G_CONFIG].m_description = G_CONFIG;
+    // add features to discovery group    
+    tmp[G_DISCOVERY].m_id = G_DISCOVERY,
+    tmp[G_DISCOVERY].m_name = G_DISCOVERY,
+    tmp[G_DISCOVERY].m_description = G_DISCOVERY,
 
-    tmp[G_CONFIG].m_fp.push_back(SrrFeaturePriorityStruct(F_AUTOMATION_SETTINGS       , 1));
-    tmp[G_CONFIG].m_fp.push_back(SrrFeaturePriorityStruct(F_DISCOVERY                 , 2));
-    tmp[G_CONFIG].m_fp.push_back(SrrFeaturePriorityStruct(F_MASS_MANAGEMENT           , 2));
-    tmp[G_CONFIG].m_fp.push_back(SrrFeaturePriorityStruct(F_MONITORING_FEATURE_NAME   , 3));
-    // tmp[G_CONFIG].m_fp.push_back(SrrFeaturePriorityStruct(F_NETWORK                   , 4));
-    tmp[G_CONFIG].m_fp.push_back(SrrFeaturePriorityStruct(F_NOTIFICATION_FEATURE_NAME , 5));
-    tmp[G_CONFIG].m_fp.push_back(SrrFeaturePriorityStruct(F_USER_SESSION_FEATURE_NAME , 6));
+    tmp[G_DISCOVERY].m_fp.push_back(SrrFeaturePriorityStruct(F_DISCOVERY, 1));
 
-    // security-wallet
-    tmp[G_SECW];
-    tmp[G_SECW].m_id = G_SECW;
-    tmp[G_SECW].m_name = G_SECW;
-    tmp[G_SECW].m_description = G_SECW;
+    // add features to mass management group    
+    tmp[G_MASS_MANAGEMENT].m_id = G_MASS_MANAGEMENT,
+    tmp[G_MASS_MANAGEMENT].m_name = G_MASS_MANAGEMENT,
+    tmp[G_MASS_MANAGEMENT].m_description = G_MASS_MANAGEMENT,
 
-    tmp[G_SECW].m_fp.push_back(SrrFeaturePriorityStruct(F_SECURITY_WALLET, 1));
+    tmp[G_MASS_MANAGEMENT].m_fp.push_back(SrrFeaturePriorityStruct(F_MASS_MANAGEMENT, 1));
+
+    // add features to monitoring feature group    
+    tmp[G_MONITORING_FEATURE_NAME].m_id = G_MONITORING_FEATURE_NAME,
+    tmp[G_MONITORING_FEATURE_NAME].m_name = G_MONITORING_FEATURE_NAME,
+    tmp[G_MONITORING_FEATURE_NAME].m_description = G_MONITORING_FEATURE_NAME,
+
+    tmp[G_MONITORING_FEATURE_NAME].m_fp.push_back(SrrFeaturePriorityStruct(F_MONITORING_FEATURE_NAME, 1));
+
+    // add features to network group    
+    tmp[G_NETWORK].m_id = G_NETWORK,
+    tmp[G_NETWORK].m_name = G_NETWORK,
+    tmp[G_NETWORK].m_description = G_NETWORK,
+
+    tmp[G_NETWORK].m_fp.push_back(SrrFeaturePriorityStruct(F_NETWORK, 1));
+
+    // add features to notification feature group    
+    tmp[G_NOTIFICATION_FEATURE_NAME].m_id = G_NOTIFICATION_FEATURE_NAME,
+    tmp[G_NOTIFICATION_FEATURE_NAME].m_name = G_NOTIFICATION_FEATURE_NAME,
+    tmp[G_NOTIFICATION_FEATURE_NAME].m_description = G_NOTIFICATION_FEATURE_NAME,
+
+    tmp[G_NOTIFICATION_FEATURE_NAME].m_fp.push_back(SrrFeaturePriorityStruct(F_NOTIFICATION_FEATURE_NAME, 1));
+
+    // add features to user session group    
+    tmp[G_USER_SESSION_FEATURE_NAME].m_id = G_USER_SESSION_FEATURE_NAME,
+    tmp[G_USER_SESSION_FEATURE_NAME].m_name = G_USER_SESSION_FEATURE_NAME,
+    tmp[G_USER_SESSION_FEATURE_NAME].m_description = G_USER_SESSION_FEATURE_NAME,
+
+    tmp[G_USER_SESSION_FEATURE_NAME].m_fp.push_back(SrrFeaturePriorityStruct(F_USER_SESSION_FEATURE_NAME, 1));
 
     return tmp;
 };
