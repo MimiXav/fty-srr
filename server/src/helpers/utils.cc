@@ -43,10 +43,10 @@ void restartBiosService (const unsigned restartDelay)
     log_info ("Reboot");
     // write out buffer to disk
     sync ();
-    // int ret = std::system("sudo /sbin/reboot");
-    // if (ret) {
-    //     log_error("failed to reboot");
-    // }
+    int ret = std::system("sudo /sbin/reboot");
+    if (ret) {
+        log_error("failed to reboot");
+    }
 }
 
 
