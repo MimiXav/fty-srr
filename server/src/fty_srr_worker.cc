@@ -171,22 +171,36 @@ namespace srr
 
         std::map<std::string, FeatureAndStatus> rollbackMap(rollbackSaveResponse.map_features_data().begin(), rollbackSaveResponse.map_features_data().end());
 
-        for(auto entry : rollbackMap) {
-            const FeatureName& featureName = entry.first;
-            const dto::srr::Feature& featureData= entry.second.feature();
+        std::vector<FeatureName> featuresToRestore;
 
-            const std::string agentNameDest = SrrFeatureMap.at(featureName).m_agent;
-            const std::string queueNameDest = agentToQueue[agentNameDest];
+        for(const auto& entry : rollbackMap) {
+            featuresToRestore.push_back(entry.first);
+        }
 
-            // Reset before restore (depends in the feature reset flag)
+        // in version 1.0 sorting has no practical effect, as there is no concept of groups
+        // in version 2.0, a rollbackSaveResponse will contain only features from the same group -> ordering is meaningful
+        std::sort(featuresToRestore.begin(), featuresToRestore.end(), [&] (FeatureName l, FeatureName r) {
+            return getPriority(l) < getPriority(r);
+        });
+
+        // reset features in reverse order
+        for(auto revIt = featuresToRestore.rbegin(); revIt != featuresToRestore.rend(); revIt++) {
             try{
-                if(SrrFeatureMap.at(featureName).m_reset) {
-                    resetFeature(featureName);
+                log_debug("Resetting feature %s", revIt->c_str());
+                if(SrrFeatureMap.at(*revIt).m_reset) {
+                    resetFeature(*revIt);
                 }
             }
             catch (SrrResetFailed& ex) {
                 log_warning(ex.what());
             }
+        }
+
+        for(const auto& featureName : featuresToRestore) {
+            const dto::srr::Feature& featureData= rollbackMap.at(featureName).feature();
+
+            const std::string agentNameDest = SrrFeatureMap.at(featureName).m_agent;
+            const std::string queueNameDest = agentToQueue[agentNameDest];
 
             // Build restore query
             RestoreQuery restoreQuery;
@@ -209,7 +223,6 @@ namespace srr
         }
 
         return restart;
-
     }
 
     // UI interface
@@ -449,7 +462,7 @@ namespace srr
                 // sort features in each group by priority
                 for(auto& group : groups) {
                     std::sort(group.m_features.begin(), group.m_features.end(), [&] (SrrFeature l, SrrFeature r) {
-                        return getPriority(l.m_feature_name) > getPriority(r.m_feature_name);
+                        return getPriority(l.m_feature_name) < getPriority(r.m_feature_name);
                     });
                 }
 

@@ -55,7 +55,7 @@ void evalDataIntegrity (Group &group)
     std::sort (group.m_features.begin (), group.m_features.end (),
                [&] (SrrFeature l, SrrFeature r) {
                    return getPriority (l.m_feature_name)
-                          > getPriority (r.m_feature_name);
+                          < getPriority (r.m_feature_name);
                });
 
     // evaluate data integrity
