@@ -29,25 +29,24 @@
 // clang-format off
 
 #include "fty-srr.h"
-#include "fty_srr_groups.h"
 #include "fty_srr_exception.h"
+#include "fty_srr_groups.h"
 #include "fty_srr_worker.h"
 
 #include "dto/request.h"
 #include "dto/response.h"
+
+#include "helpers/data_integrity.h"
+#include "helpers/utils.h"
 
 #include <fty_common.h>
 #include <fty_lib_certificate_library.h>
 
 #include <chrono>
 #include <cstdlib>
-#include <iomanip>
 #include <numeric>
-#include <openssl/sha.h>
 #include <vector>
 #include <thread>
-#include <unistd.h>
-
 
 #define SRR_RESTART_DELAY_SEC 5
 
@@ -55,74 +54,6 @@ using namespace dto::srr;
 
 namespace srr
 {
-    struct SrrInvalidVersion : public std::exception
-    {
-        SrrInvalidVersion() {};
-        SrrInvalidVersion(const std::string& err) : m_err(err) {};
-
-        std::string m_err = "Invalid SRR version";
-
-        const char * what () const throw ()
-        {
-            return m_err.c_str();
-        }
-    };
-
-    struct SrrIntegrityCheckFailed : public std::exception
-    {
-        SrrIntegrityCheckFailed() {};
-        SrrIntegrityCheckFailed(const std::string& err) : m_err(err) {};
-
-        std::string m_err = "Integrity Check Failed";
-
-        const char * what () const throw ()
-        {
-            return m_err.c_str();
-        }
-    };
-
-    struct SrrRestoreFailed : public std::exception
-    {
-        SrrRestoreFailed() {};
-        SrrRestoreFailed(const std::string& err) : m_err(err) {};
-
-        std::string m_err = "Restore failed";
-
-        const char * what () const throw ()
-        {
-            return m_err.c_str();
-        }
-    };
-
-    struct SrrResetFailed : public std::exception
-    {
-        SrrResetFailed() {};
-        SrrResetFailed(const std::string& err) : m_err(err) {};
-
-        std::string m_err = "Reset failed";
-
-        const char * what () const throw ()
-        {
-            return m_err.c_str();
-        }
-    };
-
-    static void restartBiosService(const unsigned restartDelay)
-    {
-        for(unsigned i = restartDelay; i > 0; i--) {
-            log_info("Rebooting in %d seconds...", i);
-            std::this_thread::sleep_for(std::chrono::seconds(1));
-        }
-
-        log_info("Reboot");
-        // write out buffer to disk
-        sync();
-        // int ret = std::system("sudo /sbin/reboot");
-        // if (ret) {
-        //     log_error("failed to reboot");
-        // }
-    }
-
     /**
      * Constructor
      * @param msgBus
@@ -141,82 +72,21 @@ namespace srr
     {
         try
         {
-            // Srr version
             m_srrVersion = m_parameters.at(SRR_VERSION_KEY);
+            m_sendTimeout = std::stoi (m_parameters.at (REQUEST_TIMEOUT_KEY)) / 1000;
         }        
-        catch (messagebus::MessageBusException& ex)
+        catch (const std::exception & ex)
         {
             throw SrrException(ex.what());
-        } catch (...)
-        {
-            throw SrrException("Unexpected error: unknown");
         }
-    }
-
-    static std::string evalSha256(const std::string& data)
-    {
-        unsigned char result[SHA256_DIGEST_LENGTH];
-        SHA256(const_cast<unsigned char*>(reinterpret_cast<const unsigned char*>(data.c_str())), data.length(), result);
-
-        std::ostringstream sout;
-        sout<<std::hex<<std::setfill('0');
-        for(long long c: result)
-        {
-            sout<<std::setw(2)<<c;
-        }
-
-        return sout.str();
-    }
-
-    static void evalDataIntegrity(Group& group)
-    {
-        // sort features by priority
-        std::sort(group.m_features.begin(), group.m_features.end(), [&] (SrrFeature l, SrrFeature r) {
-            return getPriority(l.m_feature_name) > getPriority(r.m_feature_name);
-        });
-
-        // evaluate data integrity
-        cxxtools::SerializationInfo tmpSi;
-        tmpSi <<= group.m_features;
-        const std::string data = serializeJson(tmpSi, false);
-
-        group.m_data_integrity = evalSha256(data);
-    }
-
-    static bool checkDataIntegrity(Group& group)
-    {
-        cxxtools::SerializationInfo tmpSi;
-        tmpSi <<= group.m_features;
-        const std::string data = serializeJson(tmpSi, false);
-
-        std::string checksum = evalSha256(data);
-
-        return checksum == group.m_data_integrity;
-    }
-
-    static std::map<std::string, std::set<FeatureName>> groupFeaturesByAgent(const std::list<FeatureName>& features)
-    {
-        std::map<std::string, std::set<FeatureName>> map;
-
-        for(const auto& feature : features)
-        {
-            try{
-                const std::string& agentName = SrrFeatureMap.at(feature).m_agent;
-                map[agentName].insert(feature);
-            } catch (std::out_of_range&){
-                log_warning("Feature %s not found", feature.c_str());
-            }
-        }
-
-        return map;
     }
 
     dto::srr::SaveResponse SrrWorker::saveFeatures(const std::list<dto::srr::FeatureName>& features, const std::string& passphrase)
     {
         // group calls by destination agent
-        std::map<std::string, std::set<FeatureName>> featureAgentMap = groupFeaturesByAgent(features);
+        std::map<std::string, std::set<dto::srr::FeatureName>> featureAgentMap = groupFeaturesByAgent(features);
 
-        SaveResponse response;
+        dto::srr::SaveResponse response;
 
         // build save query with all the features that call the same agent
         for(auto const& mapEntry: featureAgentMap)
@@ -228,15 +98,15 @@ namespace srr
 
             log_debug("Request save of features %s to agent %s ", std::accumulate(featuresByAgent.begin(), featuresByAgent.end(), std::string(" ")).c_str(), agentNameDest.c_str());
 
-            Query saveQuery = createSaveQuery({featuresByAgent}, passphrase);
+            dto::srr::Query saveQuery = dto::srr::createSaveQuery({featuresByAgent}, passphrase);
 
             dto::UserData data;
             data << saveQuery;
             // Send message to agent
-            messagebus::Message message = sendRequest(data, "save", queueNameDest, agentNameDest);
+            messagebus::Message message = sendRequest(m_msgBus, data, "save", m_parameters.at (AGENT_NAME_KEY), queueNameDest, agentNameDest);
             log_debug("Save done by agent %s", agentNameDest.c_str());
 
-            Response featureResponse;
+            dto::srr::Response featureResponse;
             message.userData() >> featureResponse;
             // concatenate all the responses from each agent
             response += featureResponse.save();
@@ -257,7 +127,7 @@ namespace srr
         // Send message
         dto::UserData data;
         data << restoreQuery;
-        messagebus::Message message = sendRequest(data, "restore", queueNameDest, agentNameDest);
+        messagebus::Message message = sendRequest(m_msgBus, data, "restore", m_parameters.at (AGENT_NAME_KEY), queueNameDest, agentNameDest, m_sendTimeout);
 
         log_debug("%s restored by: %s ", featureName.c_str(), agentNameDest.c_str());
         Response response;
@@ -284,7 +154,7 @@ namespace srr
 
         dto::UserData data;
         data << query;
-        messagebus::Message message = sendRequest(data, "reset", queueNameDest, agentNameDest);
+        messagebus::Message message = sendRequest(m_msgBus, data, "reset", m_parameters.at (AGENT_NAME_KEY), queueNameDest, agentNameDest, m_sendTimeout);
         Response response;
         message.userData() >> response;
 
@@ -764,36 +634,6 @@ namespace srr
     dto::UserData SrrWorker::requestReset(const std::string& /* json */)
     {
         throw SrrException("Not implemented yet!");
-    }
-    
-    /**
-     * Send a response on the message bus.
-     * @param msg
-     * @param payload
-     * @param subject
-     */
-    messagebus::Message SrrWorker::sendRequest(const dto::UserData& userData, const std::string& action, const std::string& queueNameDest, const std::string& agentNameDest)
-    {
-        messagebus::Message resp;
-        try
-        {
-            int timeout = std::stoi(m_parameters.at(REQUEST_TIMEOUT_KEY)) / 1000;
-            messagebus::Message req;
-            req.userData() = userData;
-            req.metaData().emplace(messagebus::Message::SUBJECT, action);
-            req.metaData().emplace(messagebus::Message::FROM, m_parameters.at(AGENT_NAME_KEY));
-            req.metaData().emplace(messagebus::Message::TO, agentNameDest);
-            req.metaData().emplace(messagebus::Message::CORRELATION_ID, messagebus::generateUuid());
-            resp = m_msgBus.request(queueNameDest, req, timeout);
-        }
-        catch (messagebus::MessageBusException& ex)
-        {
-            throw SrrException(ex.what());
-        } catch (...)
-        {
-            throw SrrException("Unknown error on send response to the message bus");
-        }
-        return resp;
     }
     
     bool SrrWorker::isVerstionCompatible(const std::string& version)

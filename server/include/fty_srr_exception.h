@@ -38,6 +38,58 @@ namespace srr {
         SrrException(const char* what) : std::runtime_error(what) {}
         virtual ~SrrException() = default;
     };
+
+    struct SrrInvalidVersion : public std::exception
+    {
+        SrrInvalidVersion() {};
+        SrrInvalidVersion(const std::string& err) : m_err(err) {};
+
+        std::string m_err = "Invalid SRR version";
+
+        const char * what () const throw ()
+        {
+            return m_err.c_str();
+        }
+    };
+
+    struct SrrIntegrityCheckFailed : public std::exception
+    {
+        SrrIntegrityCheckFailed() {};
+        SrrIntegrityCheckFailed(const std::string& err) : m_err(err) {};
+
+        std::string m_err = "Integrity Check Failed";
+
+        const char * what () const throw ()
+        {
+            return m_err.c_str();
+        }
+    };
+
+    struct SrrRestoreFailed : public std::exception
+    {
+        SrrRestoreFailed() {};
+        SrrRestoreFailed(const std::string& err) : m_err(err) {};
+
+        std::string m_err = "Restore failed";
+
+        const char * what () const throw ()
+        {
+            return m_err.c_str();
+        }
+    };
+
+    struct SrrResetFailed : public std::exception
+    {
+        SrrResetFailed() {};
+        SrrResetFailed(const std::string& err) : m_err(err) {};
+
+        std::string m_err = "Reset failed";
+
+        const char * what () const throw ()
+        {
+            return m_err.c_str();
+        }
+    };
 }
 
 #endif
