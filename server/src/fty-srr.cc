@@ -123,6 +123,7 @@ int main(int argc, char *argv [])
     paramsConfig[SRR_QUEUE_NAME_KEY] = SRR_MSG_QUEUE_NAME;
     paramsConfig[SRR_VERSION_KEY] = ACTIVE_VERSION;
     paramsConfig[REQUEST_TIMEOUT_KEY] = DefaultTimeOut;
+    paramsConfig[ENABLE_REBOOT_KEY] = ENABLE_REBOOT_DEFAULT;
 
     if (config_file)
     {
@@ -135,6 +136,7 @@ int main(int argc, char *argv [])
         paramsConfig[AGENT_NAME_KEY] = config.getEntry("srr-msg-bus/address", AGENT_NAME);
         paramsConfig[SRR_QUEUE_NAME_KEY] = config.getEntry("srr-msg-bus/srrQueueName", SRR_MSG_QUEUE_NAME);
         paramsConfig[SRR_VERSION_KEY] = config.getEntry("srr/version", ACTIVE_VERSION);
+        paramsConfig[ENABLE_REBOOT_KEY] = config.getEntry("srr/enableReboot", ENABLE_REBOOT_DEFAULT);
     }
 
     if (verbose)

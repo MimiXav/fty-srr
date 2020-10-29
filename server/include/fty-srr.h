@@ -31,6 +31,8 @@ constexpr auto DEFAULT_ENDPOINT             = "ipc://@/malamute";
 constexpr auto DEFAULT_LOG_CONFIG           = "/etc/fty/ftylog.cfg";
 constexpr auto SRR_QUEUE_NAME_KEY           = "queueName";
 constexpr auto SRR_MSG_QUEUE_NAME           = "ETN.Q.IPMCORE.SRR";
+constexpr auto ENABLE_REBOOT_KEY            = "enableReboot";
+constexpr auto ENABLE_REBOOT_DEFAULT        = "true";
 
 // AGENTS AND QUEUES
 // Config agent definition  

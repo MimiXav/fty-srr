@@ -129,7 +129,6 @@ namespace srr
         data << restoreQuery;
         messagebus::Message message = sendRequest(m_msgBus, data, "restore", m_parameters.at (AGENT_NAME_KEY), queueNameDest, agentNameDest, m_sendTimeout);
 
-        log_debug("%s restored by: %s ", featureName.c_str(), agentNameDest.c_str());
         Response response;
 
         message.userData() >> response;
@@ -670,8 +669,12 @@ namespace srr
         response.push_back(jsonResp);
 
         if(restart) {
-            std::thread restartThread(restartBiosService, SRR_RESTART_DELAY_SEC);
-            restartThread.detach();
+            if(m_parameters.at(ENABLE_REBOOT_KEY) == "true") {
+                std::thread restartThread(restartBiosService, SRR_RESTART_DELAY_SEC);
+                restartThread.detach();
+            } else {
+                log_warning("Reboot is disabled in current configuration");
+            }
         }
 
         return response;
