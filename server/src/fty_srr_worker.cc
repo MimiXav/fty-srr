@@ -390,9 +390,7 @@ namespace srr
             if(srrRestoreReq.m_version == "1.0") {
                 const auto& features = srrRestoreReq.m_data_ptr->getSrrFeatures();
 
-                // save group status to perform a rollback in case of error
-                SaveResponse rollbackSaveResponse;
-                bool restoreFailed = false;
+                bool allFeaturesRestored = true;
 
                 std::string featureName;
 
@@ -407,13 +405,23 @@ namespace srr
                     RestoreStatus restoreStatus;
                     restoreStatus.m_name = featureName;
 
-                    // save feature in case of rollback
+                    // save feature to perform a rollback in case of error
+                    SaveResponse rollbackSaveResponse;
                     log_debug("Saving feature %s current status", feature.m_feature_name.c_str());
                     try {
                         rollbackSaveResponse += saveFeatures({feature.m_feature_name}, srrRestoreReq.m_passphrase);
                     }
                     catch (std::exception& ex) {
-                        log_error("Rollback save failed for feature %s", feature.m_feature_name.c_str());
+                        allFeaturesRestored = false;
+
+                        restoreStatus.m_status = statusToString(Status::FAILED);
+                        restoreStatus.m_error = "Could not backup feature " + featureName + ". The feature will not be restored";
+
+                        log_error(restoreStatus.m_error.c_str());
+
+                        srrRestoreResp.m_status_list.push_back(restoreStatus);
+
+                        continue;
                     }
 
                     // reset feature before restore (do not stop on fail -> reset is not supported by every feature yet)
@@ -434,25 +442,30 @@ namespace srr
                         restoreStatus.m_error = resp.status().error();
                     }
                     catch(SrrRestoreFailed& ex) {
+                        allFeaturesRestored = false;
+
                         restoreStatus.m_status = statusToString(Status::FAILED);
                         restoreStatus.m_error = ex.what();
 
-                        // stop restore and start rollback
-                        restoreFailed = true;
-                        break;
+                        log_error(restoreStatus.m_error.c_str());
+
+                        srrRestoreResp.m_status_list.push_back(restoreStatus);
+
+                        // start rollback
+                        log_info("Starting rollback of feature %s", feature.m_feature_name.c_str());
+                        restart = restart | rollback(rollbackSaveResponse, srrRestoreReq.m_passphrase);
+
+                        continue;
                     }
 
                     srrRestoreResp.m_status_list.push_back(restoreStatus);
                 }
 
-                // if restore failed -> rollback
-                if(restoreFailed) {
-                    log_info("Starting rollback");
-                    restart = restart | rollback(rollbackSaveResponse, srrRestoreReq.m_passphrase);
-
-                    throw SrrRestoreFailed("Restore of feature " + featureName + " failed");
+                if(allFeaturesRestored) {
+                    srrRestoreResp.m_status = statusToString(Status::SUCCESS);
+                } else {
+                    srrRestoreResp.m_status = statusToString(Status::PARTIAL_SUCCESS);
                 }
-
             } else if(srrRestoreReq.m_version == "2.0") {
                 std::list<std::string> groupsIntegrityCheckFailed;  // stores groups for which integrity check failed
 
@@ -489,12 +502,22 @@ namespace srr
 
                 // start restore procedure
                 RestoreResponse response;
+                bool allGroupsRestored = true;
 
                 for(const auto& group : groups) {
                     const auto& groupId = group.m_group_id;
 
                     if(SrrGroupMap.find(group.m_group_id) == SrrGroupMap.end()) {
-                        log_error("Group %s does not exist, will not be restored", groupId.c_str());
+                        RestoreStatus restoreStatus;
+                        restoreStatus.m_name = groupId;
+                        restoreStatus.m_status = statusToString(Status::FAILED);
+                        restoreStatus.m_error = "Group " + groupId + " is not supported, will not be restored";
+
+                        srrRestoreResp.m_status_list.push_back(restoreStatus);
+
+                        log_error(restoreStatus.m_error.c_str());
+
+                        allGroupsRestored = false;
                         continue;   
                     }
 
@@ -529,19 +552,31 @@ namespace srr
 
                         log_error(restoreStatus.m_error.c_str());
 
+                        allGroupsRestored = false;
                         continue;
                     }
 
                     // save group status to perform a rollback in case of error
                     SaveResponse rollbackSaveResponse;
-                    for(const auto& feature : group.m_features) {
-                        log_debug("Saving feature %s current status", feature.m_feature_name.c_str());
-                        try {
+                    try {
+                        for(const auto& feature : group.m_features) {
+                            log_debug("Saving feature %s current status", feature.m_feature_name.c_str());
+                        
                             rollbackSaveResponse += saveFeatures({feature.m_feature_name}, srrRestoreReq.m_passphrase);
                         }
-                        catch (std::exception& ex) {
-                            log_error("Rollback save failed for feature %s", feature.m_feature_name.c_str());
-                        }
+                    }
+                    catch (std::exception& ex) {
+                        RestoreStatus restoreStatus;
+                        restoreStatus.m_name = groupId;
+                        restoreStatus.m_status = statusToString(Status::FAILED);
+                        restoreStatus.m_error = "Could not backup group " + groupId + ". The group will not be restored";
+
+                        srrRestoreResp.m_status_list.push_back(restoreStatus);
+
+                        log_error(restoreStatus.m_error.c_str());
+
+                        allGroupsRestored = false;
+                        continue;
                     }
 
                     // reset features in reverse order before restore
@@ -582,6 +617,7 @@ namespace srr
                             restoreStatus.m_status = statusToString(Status::FAILED);
                             restoreStatus.m_error = "Restore failed for feature " + featureName + ": " + ex.what();
 
+                            allGroupsRestored = false;
                             log_error(restoreStatus.m_error.c_str());
 
                             // stop group restore
@@ -599,18 +635,14 @@ namespace srr
                     srrRestoreResp.m_status_list.push_back(restoreStatus);
                 }
 
-                srrRestoreResp.m_status = statusToString(Status::SUCCESS);
+                if(allGroupsRestored) {
+                    srrRestoreResp.m_status = statusToString(Status::SUCCESS);
+                } else {
+                    srrRestoreResp.m_status = statusToString(Status::PARTIAL_SUCCESS);
+                }
             } else {
                 throw SrrInvalidVersion();
             }
-        }
-        catch (const SrrRestoreFailed& e)
-        {
-            std::string errorMsg = e.what();
-            srrRestoreResp.m_status = statusToString(Status::FAILED);
-            srrRestoreResp.m_error = errorMsg;
-
-            log_error(errorMsg.c_str());
         }
         catch (const SrrIntegrityCheckFailed& e)
         {
@@ -622,6 +654,7 @@ namespace srr
         }
         catch (const std::exception& e)
         {
+            srrRestoreResp.m_status = statusToString(Status::FAILED);
             std::string errorMsg = e.what();
             srrRestoreResp.m_error = errorMsg;
 
