@@ -65,6 +65,19 @@ namespace srr {
         }
     };
 
+    struct SrrSaveFailed : public std::exception
+    {
+        SrrSaveFailed() {};
+        SrrSaveFailed(const std::string& err) : m_err(err) {};
+
+        std::string m_err = "Save failed";
+
+        const char * what () const throw ()
+        {
+            return m_err.c_str();
+        }
+    };
+
     struct SrrRestoreFailed : public std::exception
     {
         SrrRestoreFailed() {};

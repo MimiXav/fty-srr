@@ -81,36 +81,48 @@ namespace srr
         }
     }
 
-    dto::srr::SaveResponse SrrWorker::saveFeatures(const std::list<dto::srr::FeatureName>& features, const std::string& passphrase)
+    dto::srr::SaveResponse SrrWorker::saveFeature(const dto::srr::FeatureName& featureName, const std::string& passphrase)
     {
-        // group calls by destination agent
-        std::map<std::string, std::set<dto::srr::FeatureName>> featureAgentMap = groupFeaturesByAgent(features);
-
         dto::srr::SaveResponse response;
 
-        // build save query with all the features that call the same agent
-        for(auto const& mapEntry: featureAgentMap)
-        {
-            const std::string& agentNameDest = mapEntry.first;
-            const std::string& queueNameDest = agentToQueue[agentNameDest];
-            
-            const auto& featuresByAgent = mapEntry.second;
+        std::string agentNameDest;
+        std::string queueNameDest;
 
-            log_debug("Request save of features %s to agent %s ", std::accumulate(featuresByAgent.begin(), featuresByAgent.end(), std::string(" ")).c_str(), agentNameDest.c_str());
-
-            dto::srr::Query saveQuery = dto::srr::createSaveQuery({featuresByAgent}, passphrase);
-
-            dto::UserData data;
-            data << saveQuery;
-            // Send message to agent
-            messagebus::Message message = sendRequest(m_msgBus, data, "save", m_parameters.at (AGENT_NAME_KEY), queueNameDest, agentNameDest);
-            log_debug("Save done by agent %s", agentNameDest.c_str());
-
-            dto::srr::Response featureResponse;
-            message.userData() >> featureResponse;
-            // concatenate all the responses from each agent
-            response += featureResponse.save();
+        try {
+            agentNameDest = SrrFeatureMap.at(featureName).m_agent;
+            queueNameDest = agentToQueue.at(agentNameDest);
         }
+        catch (std::exception& ex) {
+            log_error("Feature %s not found", featureName.c_str());
+            throw SrrSaveFailed("Feature " +  featureName + " not found");
+        }
+
+        log_debug("Request save of feature %s to agent %s", featureName.c_str(), agentNameDest.c_str());
+
+        dto::srr::Query saveQuery = dto::srr::createSaveQuery({featureName}, passphrase);
+
+        dto::UserData data;
+        data << saveQuery;
+        // Send message to agent
+        messagebus::Message message = sendRequest(m_msgBus, data, "save", m_parameters.at (AGENT_NAME_KEY), queueNameDest, agentNameDest);
+        log_debug("Save done by agent %s", agentNameDest.c_str());
+
+        dto::srr::Response featureResponse;
+        message.userData() >> featureResponse;
+
+        // check all features in the map of the response. If one failed, the save operation fails
+        bool saveOk = true;
+        for(const auto& f : featureResponse.save().map_features_data()) {
+            if (f.second.status().status() != Status::SUCCESS) {
+                saveOk = false;
+            }
+        }
+
+        if(!saveOk) {
+            throw (SrrSaveFailed("Save failed for feature " + featureName));
+        }
+
+        response = featureResponse.save();
 
         return response;
     }
@@ -274,6 +286,8 @@ namespace srr
         srrSaveResp.m_version = m_srrVersion;     
         srrSaveResp.m_status = statusToString(Status::FAILED);
 
+        bool allGroupsSaved = true;
+
         try
         {
             cxxtools::SerializationInfo requestSi = dto::srr::deserializeJson(json);
@@ -289,37 +303,45 @@ namespace srr
 
                 log_debug("Save IPM2 configuration processing");
 
-                std::list<dto::srr::FeatureName> featuresToSave;
-                
-                for(const auto& groupId : srrSaveReq.m_group_list) {
-                    try {
-                        const auto& group = SrrGroupMap.at(groupId);
-                        for(const auto& fp : group.m_fp) {
-                            featuresToSave.push_back(fp.m_feature);
-                        }
-                    } catch (std::out_of_range&){
-                        log_error("Group %s not found", groupId.c_str());
-                    }
-                }
-
-                SaveResponse saveResp = saveFeatures(featuresToSave, srrSaveReq.m_passphrase);
-
-                // convert ProtoBuf save response to UI DTO
-                const auto& mapFeaturesData = saveResp.map_features_data();
-
                 std::map<std::string, Group> savedGroups;
 
-                for (const auto& fs : mapFeaturesData) {
-                    SrrFeature f;
-                    f.m_feature_name = fs.first;
-                    f.m_feature_and_status = fs.second;
+                // save all the features for each required group
+                for(const auto& groupId : srrSaveReq.m_group_list) {
+                    log_debug("Saving features from group %s ", groupId.c_str());
+                    srr::SrrGroupStruct group;
+                    try {
+                        group = SrrGroupMap.at(groupId);
+                    } catch (std::out_of_range& /* ex */) {
+                        allGroupsSaved = false;
+                        log_error("Group %s not found", groupId.c_str());
 
-                    // save each feature into its group
-                    const std::string groupId = getGroupFromFeature(f.m_feature_name);
-                    if(groupId.empty()) {
-                        log_error("Feature %s is not part of any group. Will not be included in the Save payload", f.m_feature_name.c_str());
-                    } else {
-                        savedGroups[groupId].m_features.push_back(f);
+                        // do not save features from the current group, as it would be incomplete
+                        continue;
+                    }
+
+                    try {
+                        for(const auto& entry : group.m_fp) {
+                            const auto& featureName = entry.m_feature;
+
+                            SaveResponse saveResp = saveFeature(featureName, srrSaveReq.m_passphrase);
+                            // convert ProtoBuf save response to UI DTO
+                            const auto& mapFeaturesData = saveResp.map_features_data();
+
+                            for (const auto& fs : mapFeaturesData) {
+                                SrrFeature f;
+                                f.m_feature_name = fs.first;
+                                f.m_feature_and_status = fs.second;
+
+                                // save each feature into its group
+                                savedGroups[groupId].m_features.push_back(f);
+                            }
+                        }
+                    } catch (std::exception& e) {
+                        allGroupsSaved = false;
+                        log_error("Error while saving group %s. Will not be included in the payload", groupId.c_str());
+                        // delete the current group, as it would be incomplete
+                        savedGroups.erase(groupId);
+                        continue;
                     }
                 }
 
@@ -336,20 +358,23 @@ namespace srr
 
                     srrSaveResp.m_data.push_back(group);
                 }
-                srrSaveResp.m_status = statusToString(Status::SUCCESS);
+
+                if(allGroupsSaved) {
+                    srrSaveResp.m_status = statusToString(Status::SUCCESS);
+                } else {
+                    srrSaveResp.m_status = statusToString(Status::PARTIAL_SUCCESS);
+                }
             }
             else
             {
-                const std::string error = TRANSLATE_ME("Passphrase must have %s characters", (fty::getPassphraseFormat()).c_str());
-                srrSaveResp.m_error = error;
-                log_error(error.c_str());
+                srrSaveResp.m_error = TRANSLATE_ME("Passphrase must have %s characters", (fty::getPassphraseFormat()).c_str());
+                log_error(srrSaveResp.m_error.c_str());
             }
         }
         catch (const std::exception& e)
         {
-            const std::string error = TRANSLATE_ME("Exception on save Ipm2 configuration: (%s)", e.what());
-            srrSaveResp.m_error = error;
-            log_error(error.c_str());
+            srrSaveResp.m_error = TRANSLATE_ME("Exception on save Ipm2 configuration: (%s)", e.what());;
+            log_error(srrSaveResp.m_error.c_str());
         }
 
         dto::UserData response;
@@ -408,13 +433,13 @@ namespace srr
                     SaveResponse rollbackSaveResponse;
                     log_debug("Saving feature %s current status", feature.m_feature_name.c_str());
                     try {
-                        rollbackSaveResponse += saveFeatures({feature.m_feature_name}, srrRestoreReq.m_passphrase);
+                        rollbackSaveResponse += saveFeature(feature.m_feature_name, srrRestoreReq.m_passphrase);
                     }
                     catch (std::exception& ex) {
                         allFeaturesRestored = false;
 
                         restoreStatus.m_status = statusToString(Status::FAILED);
-                        restoreStatus.m_error = "Could not backup feature " + featureName + ". The feature will not be restored";
+                        restoreStatus.m_error = TRANSLATE_ME("Could not backup feature %s. Restore will be skipped", featureName.c_str());
 
                         log_error(restoreStatus.m_error.c_str());
 
@@ -438,13 +463,13 @@ namespace srr
                     try {
                         RestoreResponse resp = restoreFeature(featureName, query);
                         restoreStatus.m_status = statusToString(resp.status().status());
-                        restoreStatus.m_error = resp.status().error();
+                        restoreStatus.m_error = TRANSLATE_ME(resp.status().error().c_str());
                     }
                     catch(SrrRestoreFailed& ex) {
                         allFeaturesRestored = false;
 
                         restoreStatus.m_status = statusToString(Status::FAILED);
-                        restoreStatus.m_error = ex.what();
+                        restoreStatus.m_error = TRANSLATE_ME(ex.what());
 
                         log_error(restoreStatus.m_error.c_str());
 
@@ -510,7 +535,7 @@ namespace srr
                         RestoreStatus restoreStatus;
                         restoreStatus.m_name = groupId;
                         restoreStatus.m_status = statusToString(Status::FAILED);
-                        restoreStatus.m_error = "Group " + groupId + " is not supported, will not be restored";
+                        restoreStatus.m_error = TRANSLATE_ME("Group %s is not supported. Will not be restored", groupId.c_str());
 
                         srrRestoreResp.m_status_list.push_back(restoreStatus);
 
@@ -545,7 +570,7 @@ namespace srr
                         RestoreStatus restoreStatus;
                         restoreStatus.m_name = groupId;
                         restoreStatus.m_status = statusToString(Status::FAILED);
-                        restoreStatus.m_error = "Group " + groupId + " cannot be restored. Missing features";
+                        restoreStatus.m_error = TRANSLATE_ME("Group %s cannot be restored. Missing features", groupId.c_str());
 
                         srrRestoreResp.m_status_list.push_back(restoreStatus);
 
@@ -561,14 +586,14 @@ namespace srr
                         for(const auto& feature : group.m_features) {
                             log_debug("Saving feature %s current status", feature.m_feature_name.c_str());
                         
-                            rollbackSaveResponse += saveFeatures({feature.m_feature_name}, srrRestoreReq.m_passphrase);
+                            rollbackSaveResponse += saveFeature(feature.m_feature_name, srrRestoreReq.m_passphrase);
                         }
                     }
                     catch (std::exception& ex) {
                         RestoreStatus restoreStatus;
                         restoreStatus.m_name = groupId;
                         restoreStatus.m_status = statusToString(Status::FAILED);
-                        restoreStatus.m_error = "Could not backup group " + groupId + ". The group will not be restored";
+                        restoreStatus.m_error = TRANSLATE_ME("Could not backup group %s. The group will not be restored", groupId.c_str());
 
                         srrRestoreResp.m_status_list.push_back(restoreStatus);
 
@@ -614,7 +639,7 @@ namespace srr
                             restoreFailed = true;
 
                             restoreStatus.m_status = statusToString(Status::FAILED);
-                            restoreStatus.m_error = "Restore failed for feature " + featureName + ": " + ex.what();
+                            restoreStatus.m_error = TRANSLATE_ME("Restore failed for feature %s: ", featureName.c_str(), ex.what());
 
                             allGroupsRestored = false;
                             log_error(restoreStatus.m_error.c_str());
@@ -645,19 +670,17 @@ namespace srr
         }
         catch (const SrrIntegrityCheckFailed& e)
         {
-            std::string errorMsg = e.what();
             srrRestoreResp.m_status = statusToString(Status::UNKNOWN);
-            srrRestoreResp.m_error = errorMsg;
+            srrRestoreResp.m_error = TRANSLATE_ME(e.what());
 
-            log_error(errorMsg.c_str());
+            log_error(srrRestoreResp.m_error.c_str());
         }
         catch (const std::exception& e)
         {
             srrRestoreResp.m_status = statusToString(Status::FAILED);
-            std::string errorMsg = e.what();
-            srrRestoreResp.m_error = errorMsg;
+            srrRestoreResp.m_error = TRANSLATE_ME(e.what());
 
-            log_error(errorMsg.c_str());
+            log_error(srrRestoreResp.m_error.c_str());
         }
 
         cxxtools::SerializationInfo responseSi;
