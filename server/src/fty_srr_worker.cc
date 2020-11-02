@@ -104,7 +104,13 @@ namespace srr
         dto::UserData data;
         data << saveQuery;
         // Send message to agent
-        messagebus::Message message = sendRequest(m_msgBus, data, "save", m_parameters.at (AGENT_NAME_KEY), queueNameDest, agentNameDest);
+        messagebus::Message message;
+        try{
+            message = sendRequest(m_msgBus, data, "save", m_parameters.at (AGENT_NAME_KEY), queueNameDest, agentNameDest);
+        }
+        catch (SrrException& ex) {
+            throw (SrrSaveFailed("Request to agent " + agentNameDest + ":" + queueNameDest + " failed: " + ex.what()));
+        }
         log_debug("Save done by agent %s", agentNameDest.c_str());
 
         dto::srr::Response featureResponse;
@@ -134,12 +140,18 @@ namespace srr
 
         Query restoreQuery;
         *(restoreQuery.mutable_restore()) = query;
-        log_debug("Request save of feature %s to agent %s ", featureName.c_str(), agentNameDest.c_str());
+        log_debug("Request restore of feature %s to agent %s ", featureName.c_str(), agentNameDest.c_str());
 
         // Send message
         dto::UserData data;
         data << restoreQuery;
-        messagebus::Message message = sendRequest(m_msgBus, data, "restore", m_parameters.at (AGENT_NAME_KEY), queueNameDest, agentNameDest, m_sendTimeout);
+        messagebus::Message message;
+        try {
+            message = sendRequest(m_msgBus, data, "restore", m_parameters.at (AGENT_NAME_KEY), queueNameDest, agentNameDest, m_sendTimeout);
+        }
+        catch (SrrException& ex) {
+            throw (SrrRestoreFailed("Request to agent " + agentNameDest + ":" + queueNameDest + " failed: " + ex.what()));
+        }
 
         Response response;
         message.userData() >> response;
@@ -174,7 +186,14 @@ namespace srr
 
         dto::UserData data;
         data << query;
-        messagebus::Message message = sendRequest(m_msgBus, data, "reset", m_parameters.at (AGENT_NAME_KEY), queueNameDest, agentNameDest, m_sendTimeout);
+        messagebus::Message message;
+        try {
+            message = sendRequest(m_msgBus, data, "reset", m_parameters.at (AGENT_NAME_KEY), queueNameDest, agentNameDest, m_sendTimeout);
+        }
+        catch (SrrException& ex) {
+            throw (SrrResetFailed("Request to agent " + agentNameDest + ":" + queueNameDest + " failed: " + ex.what()));
+        }
+
         Response response;
         message.userData() >> response;
 
@@ -195,7 +214,7 @@ namespace srr
     {
         bool restart = false;
 
-        log_debug("Starting feature roll back...");
+        log_debug("Starting features roll back...");
 
         std::map<std::string, FeatureAndStatus> rollbackMap(rollbackSaveResponse.map_features_data().begin(), rollbackSaveResponse.map_features_data().end());
 
@@ -259,6 +278,8 @@ namespace srr
     {
         SrrListResponse srrListResp;
 
+        log_debug("SRR group list request");
+
         srrListResp.m_version = m_srrVersion;
         srrListResp.m_passphrase_description = TRANSLATE_ME("Passphrase must have %s characters", (fty::getPassphraseFormat()).c_str());
         srrListResp.m_passphrase_validation = fty::getPassphraseFormat();
@@ -300,6 +321,8 @@ namespace srr
     dto::UserData SrrWorker::requestSave(const std::string& json)
     {
         SrrSaveResponse srrSaveResp;
+
+        log_debug("SRR save request");
 
         srrSaveResp.m_version = m_srrVersion;     
         srrSaveResp.m_status = statusToString(Status::FAILED);
@@ -411,6 +434,8 @@ namespace srr
     dto::UserData SrrWorker::requestRestore(const std::string& json, bool force)
     {
         bool restart = false;
+
+        log_debug("SRR restore request");
 
         SrrRestoreResponse srrRestoreResp;
 
@@ -719,6 +744,7 @@ namespace srr
 
     dto::UserData SrrWorker::requestReset(const std::string& /* json */)
     {
+        log_debug("SRR reset request");
         throw SrrException("Not implemented yet!");
     }
     
