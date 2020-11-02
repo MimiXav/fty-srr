@@ -134,7 +134,7 @@ namespace srr
 
         Query restoreQuery;
         *(restoreQuery.mutable_restore()) = query;
-        log_debug("Restoring configuration of %s by agent %s ", featureName.c_str(), agentNameDest.c_str());
+        log_debug("Request save of feature %s to agent %s ", featureName.c_str(), agentNameDest.c_str());
 
         // Send message
         dto::UserData data;
@@ -142,7 +142,6 @@ namespace srr
         messagebus::Message message = sendRequest(m_msgBus, data, "restore", m_parameters.at (AGENT_NAME_KEY), queueNameDest, agentNameDest, m_sendTimeout);
 
         Response response;
-
         message.userData() >> response;
 
         // restore procedure failed -> rollback
@@ -165,6 +164,8 @@ namespace srr
     {
         const std::string agentNameDest = SrrFeatureMap.at(featureName).m_agent;
         const std::string queueNameDest = agentToQueue[agentNameDest];
+
+        log_debug("Request reset of feature %s to agent %s ", featureName.c_str(), agentNameDest.c_str());
 
         Query query;
         ResetQuery& resetQuery = *(query.mutable_reset());
@@ -194,6 +195,8 @@ namespace srr
     {
         bool restart = false;
 
+        log_debug("Starting feature roll back...");
+
         std::map<std::string, FeatureAndStatus> rollbackMap(rollbackSaveResponse.map_features_data().begin(), rollbackSaveResponse.map_features_data().end());
 
         std::vector<FeatureName> featuresToRestore;
@@ -210,14 +213,13 @@ namespace srr
 
         // reset features in reverse order
         for(auto revIt = featuresToRestore.rbegin(); revIt != featuresToRestore.rend(); revIt++) {
-            try{
-                log_debug("Resetting feature %s", revIt->c_str());
-                if(SrrFeatureMap.at(*revIt).m_reset) {
+            if(SrrFeatureMap.at(*revIt).m_reset) {
+                try{
                     resetFeature(*revIt);
                 }
-            }
-            catch (SrrResetFailed& ex) {
-                log_warning(ex.what());
+                catch (SrrResetFailed& ex) {
+                    log_warning(ex.what());
+                }
             }
         }
 
@@ -246,6 +248,8 @@ namespace srr
             log_debug("%s rolled back by: %s ", featureName.c_str(), agentNameDest.c_str());
             restart = restart | SrrFeatureMap.at(featureName).m_restart;
         }
+
+        log_debug("Roll back completed");
 
         return restart;
     }
@@ -463,14 +467,13 @@ namespace srr
                     }
 
                     // reset feature before restore (do not stop on fail -> reset is not supported by every feature yet)
-                    try{
-                        log_debug("Resetting feature %s", featureName.c_str());
-                        if(SrrFeatureMap.at(featureName).m_reset) {
+                    if(SrrFeatureMap.at(featureName).m_reset) {
+                        try{
                             resetFeature(featureName);
                         }
-                    }
-                    catch (SrrResetFailed& ex) {
-                        log_warning(ex.what());
+                        catch (SrrResetFailed& ex) {
+                            log_warning(ex.what());
+                        }
                     }
 
                     // perform restore
@@ -490,7 +493,6 @@ namespace srr
                         srrRestoreResp.m_status_list.push_back(restoreStatus);
 
                         // start rollback
-                        log_info("Starting rollback of feature %s", feature.m_feature_name.c_str());
                         restart = restart | rollback(rollbackSaveResponse, srrRestoreReq.m_passphrase);
 
                         continue;
@@ -620,14 +622,13 @@ namespace srr
                     // reset features in reverse order before restore
                     // WARNING: currently reset is not implemented by all features, hence it will not be mandatory
                     for(auto revIt = group.m_features.rbegin(); revIt != group.m_features.rend(); revIt++) {
-                        try{
-                            log_debug("Resetting feature %s", revIt->m_feature_name.c_str());
-                            if(SrrFeatureMap.at(revIt->m_feature_name).m_reset) {
+                        if(SrrFeatureMap.at(revIt->m_feature_name).m_reset) {
+                            try{
                                 resetFeature(revIt->m_feature_name);
                             }
-                        }
-                        catch (SrrResetFailed& ex) {
-                            log_warning(ex.what());
+                            catch (SrrResetFailed& ex) {
+                                log_warning(ex.what());
+                            }
                         }
                     }
 
@@ -665,7 +666,6 @@ namespace srr
 
                     // if restore failed -> rollback
                     if(restoreFailed) {
-                        log_info("Starting group %s rollback", groupId.c_str());
                         restart = restart | rollback(rollbackSaveResponse, srrRestoreReq.m_passphrase);
                     }
 
