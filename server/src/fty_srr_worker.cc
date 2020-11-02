@@ -146,7 +146,15 @@ namespace srr
         message.userData() >> response;
 
         // restore procedure failed -> rollback
-        if(response.mutable_restore()->status().status() != Status::SUCCESS) {
+        // check all features in the map of the response. If one failed, the save operation fails
+        bool restoreOk = true;
+        for(const auto& f : response.restore().map_features_status()) {
+            if (f.second.status() != Status::SUCCESS) {
+                restoreOk = false;
+            }
+        }
+
+        if(!restoreOk) {
             throw SrrRestoreFailed("Restore procedure failed for feature " + featureName);
         }
 
@@ -169,7 +177,13 @@ namespace srr
         Response response;
         message.userData() >> response;
 
-        if(response.reset().map_features_status().at(featureName).status() != Status::SUCCESS) {
+        bool resetOk = true;
+        for(const auto& f : response.reset().map_features_status()) {
+            if (f.second.status() != Status::SUCCESS) {
+                resetOk = false;
+            }
+        }
+        if(!resetOk) {
             throw SrrResetFailed("Reset procedure failed for feature " + featureName);
         }
 
