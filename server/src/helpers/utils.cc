@@ -83,6 +83,11 @@ messagebus::Message sendRequest (messagebus::MessageBus &msgbus,
                                  const std::string &agentNameDest,
                                  int timeout)
 {
+    log_debug("Send message from %s to %s:%s with action %s", from.c_str(), agentNameDest.c_str(), queueNameDest.c_str(), action.c_str());
+    // for(const auto& msg : userData) {
+    //     log_debug("data:\n%s\n", msg.c_str());
+    // }
+
     messagebus::Message resp;
     try {
         messagebus::Message req;
@@ -101,6 +106,13 @@ messagebus::Message sendRequest (messagebus::MessageBus &msgbus,
         throw SrrException (
           "Unknown error on send response to the message bus");
     }
+
+    log_debug("Message received from %s with action %s", resp.metaData().at(messagebus::Message::FROM).c_str()
+                                                       , resp.metaData().at(messagebus::Message::SUBJECT).c_str());
+
+    // for(const auto& msg : resp.userData()) {
+    //     log_debug("data:\n%s\n", msg.c_str());
+    // }
     return resp;
 }
 
