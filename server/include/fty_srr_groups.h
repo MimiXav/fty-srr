@@ -69,7 +69,7 @@ auto initSrrFeatures = [&]() {
     tmp[F_ALERT_AGENT].m_description = std::string(SRR_PREFIX_TRANSLATE_KEY) + F_ALERT_AGENT;
     tmp[F_ALERT_AGENT].m_agent = ALERT_AGENT_NAME;
     tmp[F_ALERT_AGENT].m_restart = true;
-    tmp[F_ALERT_AGENT].m_reset = false;
+    tmp[F_ALERT_AGENT].m_reset = true;
 
     tmp[F_ASSET_AGENT];
     tmp[F_ASSET_AGENT].m_id = F_ASSET_AGENT;
@@ -93,7 +93,7 @@ auto initSrrFeatures = [&]() {
     tmp[F_AUTOMATIONS].m_description = std::string(SRR_PREFIX_TRANSLATE_KEY) + F_AUTOMATIONS;
     tmp[F_AUTOMATIONS].m_agent = EMC4J_AGENT_NAME;
     tmp[F_AUTOMATIONS].m_restart = true;
-    tmp[F_AUTOMATIONS].m_reset = false;
+    tmp[F_AUTOMATIONS].m_reset = true;
 
     tmp[F_DISCOVERY];
     tmp[F_DISCOVERY].m_id = F_DISCOVERY;
@@ -158,7 +158,7 @@ auto initSrrFeatures = [&]() {
     tmp[F_VIRTUAL_ASSETS].m_description = std::string(SRR_PREFIX_TRANSLATE_KEY) + F_VIRTUAL_ASSETS;
     tmp[F_VIRTUAL_ASSETS].m_agent = EMC4J_AGENT_NAME;
     tmp[F_VIRTUAL_ASSETS].m_restart = true;
-    tmp[F_VIRTUAL_ASSETS].m_reset = false;
+    tmp[F_VIRTUAL_ASSETS].m_reset = true;
 
     return tmp;
 };
