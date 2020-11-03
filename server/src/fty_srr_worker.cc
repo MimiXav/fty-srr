@@ -313,8 +313,6 @@ namespace srr
         dto::UserData response;
         response.push_back(dto::srr::serializeJson(si));
 
-        log_debug("%s", response.front().c_str());
-
         return response;
     }
 
