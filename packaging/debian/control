@@ -24,6 +24,7 @@ Maintainer:     fty-srr Developers <eatonipcopensource@eaton.com>
 Standards-Version: 4.0.1.0
 Build-Depends: debhelper (>= 9),
     pkg-config,
+    fty-cmake-dev,
     libfty-common-logging-dev,
     libcxxtools-dev,
     libfty-common-dev,
@@ -32,17 +33,11 @@ Build-Depends: debhelper (>= 9),
     libfty-common-dto-dev,
     libprotobuf-dev,
     libfty-lib-certificate-dev,
+    gcc (>= 4.9.0), g++ (>= 4.9.0),
     systemd,
     dh-systemd,
     asciidoc-base | asciidoc, xmlto,
     dh-autoreconf
-
-Package: libfty-srr0
-Architecture: any
-Depends: ${shlibs:Depends}, ${misc:Depends}
-Description: fty-srr shared library
- This package contains shared library for fty-srr:
- save, restore and reset agent for 42ity ecosystem
 
 Package: fty-srr
 Architecture: any
@@ -50,14 +45,3 @@ Depends: ${misc:Depends}, ${shlibs:Depends},
 Description: runnable binaries from fty-srr
  Main package for fty-srr:
  save, restore and reset agent for 42ity ecosystem
-
-Package: fty-srr-dbg
-Architecture: any
-Section: debug
-Priority: optional
-Depends:
-    fty-srr (= ${binary:Version}),
-    ${misc:Depends}
-Description: fty-srr debugging symbols
- This package contains the debugging symbols for fty-srr:
- save, restore and reset agent for 42ity ecosystem.
