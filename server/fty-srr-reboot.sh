@@ -17,4 +17,5 @@
 #   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #   =========================================================================
 #
-/bin/systemctl stop nginx@ipm2.service && /sbin/reboot
+/bin/systemctl stop --no-block nginx@ipm2.service
+/sbin/reboot
