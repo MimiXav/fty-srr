@@ -53,6 +53,12 @@ install(FILES
 )
 
 install(FILES
+  "sudoers/fty_20_srr"
+  PERMISSIONS OWNER_READ GROUP_READ
+  DESTINATION /etc/sudoers.d/
+)
+
+install(FILES
   "${PROJECT_BINARY_DIR}/fty-srr.service"
   DESTINATION "${CMAKE_INSTALL_SYSCONFDIR}/systemd/system/"
 )
