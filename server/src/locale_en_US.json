@@ -14,7 +14,7 @@
 	"srr_monitoring" : "SNMP settings",
 	"srr_group-network" : "Network settings",
 	"srr_network" : "Network settings",
-	"srr_group-notification-feature-name" : "Notifications",
+	"srr_group-notification-feature-name" : "Notification settings",
 	"srr_notification" : "Email settings",
 	"srr_group-user-session-feature-name" : "User session settings",
 	"srr_user-session" : "User session settings"
