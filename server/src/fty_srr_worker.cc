@@ -291,7 +291,7 @@ namespace srr
             GroupInfo groupInfo;
             groupInfo.m_group_id = groupId;
             groupInfo.m_group_name = srrGroup.m_name;
-            groupInfo.m_description = TRANSLATE_ME(srrGroup.m_description.c_str());
+            groupInfo.m_description = srrGroup.m_description;
 
             for (const auto& featureAndPriority : srrGroup.m_fp) {
                 const std::string& featureId = featureAndPriority.m_feature;
@@ -299,7 +299,7 @@ namespace srr
                 FeatureInfo featureInfo;
 
                 featureInfo.m_name = featureId;
-                featureInfo.m_description = TRANSLATE_ME(SrrFeatureMap.at(featureId).m_description.c_str());
+                featureInfo.m_description = SrrFeatureMap.at(featureId).m_description;
 
                 groupInfo.m_features.push_back(featureInfo);
             }
