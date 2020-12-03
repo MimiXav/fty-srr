@@ -1,6 +1,4 @@
 /*  =========================================================================
-    fty_common_messagebus_exception - class description
-
     Copyright (C) 2014 - 2020 Eaton
 
     This program is free software; you can redistribute it and/or modify
@@ -43,9 +41,9 @@ void restartBiosService (const unsigned restartDelay)
     log_info ("Reboot");
     // write out buffer to disk
     sync ();
-    int ret = std::system("sudo /sbin/reboot");
+    int ret = std::system("sudo /usr/sbin/fty-srr-reboot.sh");
     if (ret) {
-        log_error("failed to reboot");
+        log_error("failed to run reboot procedure");
     }
 }
 
