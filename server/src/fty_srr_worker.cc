@@ -48,7 +48,8 @@
 #include <vector>
 #include <thread>
 
-#define SRR_RESTART_DELAY_SEC 5
+#define SRR_RESTART_DELAY_SEC     5
+#define FEATURE_RESTORE_DELAY_SEC 6
 
 using namespace dto::srr;
 
@@ -266,6 +267,8 @@ namespace srr
             }
             log_debug("%s rolled back by: %s ", featureName.c_str(), agentNameDest.c_str());
             restart = restart | SrrFeatureMap.at(featureName).m_restart;
+            // wait to sync feature restore
+            std::this_thread::sleep_for(std::chrono::seconds(FEATURE_RESTORE_DELAY_SEC));
         }
 
         log_debug("Roll back completed");
@@ -522,6 +525,8 @@ namespace srr
                     }
 
                     srrRestoreResp.m_status_list.push_back(restoreStatus);
+                    // wait to sync feature restore
+                    std::this_thread::sleep_for(std::chrono::seconds(FEATURE_RESTORE_DELAY_SEC));
                 }
 
                 if(allFeaturesRestored) {
@@ -685,6 +690,9 @@ namespace srr
                             // stop group restore
                             break;
                         }
+
+                        // wait to sync feature restore
+                        std::this_thread::sleep_for(std::chrono::seconds(FEATURE_RESTORE_DELAY_SEC));
                     }
 
                     // if restore failed -> rollback
