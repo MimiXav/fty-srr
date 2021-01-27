@@ -257,8 +257,10 @@ void opSave(const std::string& passphrase, const std::vector<std::string>& group
 
         respSi >>= resp;
 
+        std::cout << "Request status: " << resp.m_status << std::endl;
+
         if(!resp.m_error.empty()) {
-            std::cout << "Error: " << resp.m_error << std::endl;
+            std::cerr << "Error: " << resp.m_error << std::endl;
         }
 
         os << respData.back() << std::endl;
@@ -314,8 +316,10 @@ void opRestore(const std::string& passphrase, std::istream& is) {
 
         respSi >>= resp;
 
+        std::cout << "Request status: " << resp.m_status << std::endl;
+
         if(!resp.m_error.empty()) {
-            std::cout << "Error: " << resp.m_error << std::endl;
+            std::cerr << "Error: " << resp.m_error << std::endl;
         }
     }
     catch (std::exception &e) {
