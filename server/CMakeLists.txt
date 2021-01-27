@@ -1,24 +1,19 @@
 cmake_minimum_required(VERSION 3.13)
 cmake_policy(VERSION 3.13)
 
-include (GNUInstallDirs)
-
-project(fty-srr
-    VERSION 1.0.0
-)
-
 ##############################################################################################################
-find_package(fty-cmake PATHS ${CMAKE_BINARY_DIR}/fty-cmake)
-##############################################################################################################
-
-
-##############################################################################################################
-
-file(GLOB_RECURSE SOURCES_FILES src/*.cc)
 
 etn_target(exe ${PROJECT_NAME}
     SOURCES
-        ${SOURCES_FILES}
+        src/fty-srr.cc
+        src/fty_srr_groups.cc
+        src/fty_srr_manager.cc
+        src/fty_srr_worker.cc
+        src/dto/common.cc
+        src/dto/request.cc
+        src/dto/response.cc
+        src/helpers/data_integrity.cc
+        src/helpers/utils.cc
 
     INCLUDE_DIRS
         include
@@ -35,6 +30,29 @@ etn_target(exe ${PROJECT_NAME}
         protobuf
         pthread
 )
+
+##############################################################################################################
+
+etn_target(exe ${PROJECT_NAME}-cmd
+    SOURCES
+        src/fty-srr-cmd.cc
+        src/dto/common.cc
+        src/dto/request.cc
+        src/dto/response.cc
+    INCLUDE_DIRS
+        include   
+    USES_PRIVATE
+        cxxtools
+        fty_common
+        fty_common_dto
+        fty_common_logging
+        fty_common_messagebus
+        fty_common_mlm
+        fty-utils
+        protobuf
+)
+
+##############################################################################################################
 
 #install files
 
