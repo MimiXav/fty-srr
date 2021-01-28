@@ -47,7 +47,7 @@
 #define AGENT_NAME "fty-srr-cmd"
 #define AGENT_NAME_REQUEST_DESTINATION "fty-srr-ui"
 #define MSG_QUEUE_NAME "ETN.Q.IPMCORE.SRR.UI"
-#define DEFAULT_TIME_OUT 300
+#define DEFAULT_TIME_OUT 3600
 
 using namespace dto::srr;
 
