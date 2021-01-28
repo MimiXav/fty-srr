@@ -79,23 +79,27 @@ int main (int argc, char **argv)
 
     bool help = false;
 
-    std::string operation;
     std::string fileName;
     std::string groups;
     std::string passphrase;
 
     // clang-format off
-    fty::CommandLine cmd("SRR command line", {
+    fty::CommandLine cmd("### - SRR command line\n      Usage: fty-srr-cmd <list|save|restore|reset> [options]", {
         {"--help|-h", help, "Show this help"},
-        {"--operation|-o", operation, "comment"},
-        {"--passphrase|-p", passphrase, "comment"},
-        {"--groups|-g", groups, "comment"},
-        {"--file|-f", fileName, "comment"}
+        {"--passphrase|-p", passphrase, "Passhphrase to save/restore groups"},
+        {"--groups|-g", groups, "Select groups to save (default to all groups)"},
+        {"--file|-f", fileName, "Path to the JSON file to save/restore. If not specified, standard input/output is used"}
     });
 
-    cmd.option("--operation").setOneOfMany({"list", "save", "restore", "reset"});
+    if(argc < 2) {
+        std::cout << "### - No operation selected" << std::endl;
+        std::cout << cmd.help() << std::endl;
+        return EXIT_FAILURE;
+    }
 
-    if (auto res = cmd.parse(argc, argv); !res) {
+    std::string operation(argv[1]);
+
+    if (auto res = cmd.parse(argc -1, argv + 1); !res) {
         std::cerr << res.error() << std::endl;
         std::cout << std::endl;
         std::cout << cmd.help() << std::endl;
@@ -107,18 +111,11 @@ int main (int argc, char **argv)
         return EXIT_SUCCESS;
     }
 
-    if(operation.empty()) {
-        std::cout << "No operation specified" << std::endl;
-        std::cout << cmd.help() << std::endl;
-        return EXIT_FAILURE;
-    }
-
     if(operation == "list") {
-        auto list = opList();
-        list.clear();
+        opList();
     } else if(operation == "save") {
         if(passphrase.empty()) {
-            std::cerr << "Passphrase is required with save operation" << std::endl;
+            std::cerr << "### - Passphrase is required with save operation" << std::endl;
             std::cout << cmd.help() << std::endl;
             return EXIT_FAILURE;
         }
@@ -127,16 +124,16 @@ int main (int argc, char **argv)
             try{
                 outputFile.open(fileName);
             } catch(const std::exception& e) {
-                std::cerr << "Can't open output file: " << e.what() << std::endl;
+                std::cerr << "### - Can't open output file: " << e.what() << std::endl;
                 return EXIT_FAILURE;
             }
         }
         std::vector<std::string> groupList;
         if(!groups.empty()) {
             groupList = fty::split(groups, ",", fty::SplitOption::Trim);
-            std::cout << "Saving groups: " << groupList << std::endl;
+            std::cout << "### - Saving groups: " << groupList << std::endl;
         } else {
-            std::cout << "No group option specified\nSaving all groups" << std::endl;
+            std::cout << "### - No group option specified\nSaving all groups" << std::endl;
             groupList = opList();
         }
         opSave(passphrase, groupList, outputFile.is_open() ? outputFile : std::cout);
@@ -145,7 +142,7 @@ int main (int argc, char **argv)
         }
     } else if(operation == "restore") {
         if(passphrase.empty()) {
-            std::cerr << "Passphrase is required with restore operation" << std::endl;
+            std::cerr << "### - Passphrase is required with restore operation" << std::endl;
             std::cout << cmd.help() << std::endl;
             return EXIT_FAILURE;
         }
@@ -154,7 +151,7 @@ int main (int argc, char **argv)
             try{
                 inputFile.open(fileName);
             } catch(const std::exception& e) {
-                std::cerr << "Can't open input file: " << e.what() << std::endl;
+                std::cerr << "### - Can't open input file: " << e.what() << std::endl;
                 return EXIT_FAILURE;
             }
         }
@@ -165,7 +162,10 @@ int main (int argc, char **argv)
     } else if(operation == "reset") {
         opReset();
     } else {
-        std::cout << "unknown" << std::endl;
+        std::cout << "### - Unknown operation" << std::endl;
+        std::cout << std::endl;
+        std::cout << cmd.help() << std::endl;
+        return EXIT_FAILURE;
     }
 
     return EXIT_SUCCESS;
@@ -217,14 +217,14 @@ std::vector<std::string> opList() {
 
         si >>= resp;
 
-        std::cout << " Groups available:" << std::endl;
+        std::cout << "### Groups available:" << std::endl;
         for(auto g : resp.m_groups) {
             std::cout << " - " << g.m_group_id << std::endl;
             groupList.push_back(g.m_group_id);
         }
     }
     catch (std::exception &e) {
-        std::cerr << e.what () << std::endl;
+        std::cerr << "### - Error: " << e.what () << std::endl;
     }
 
     return groupList;
@@ -266,7 +266,7 @@ void opSave(const std::string& passphrase, const std::vector<std::string>& group
         os << respData.back() << std::endl;
     }
     catch (std::exception &e) {
-        std::cerr << e.what () << std::endl;
+        std::cerr << "### - Error: " << e.what () << std::endl;
     }
 }
 
@@ -291,7 +291,7 @@ void opRestore(const std::string& passphrase, std::istream& is) {
         siJson.getMember("data") >>= reqData.m_data;
         req.m_data_ptr = std::shared_ptr<srr::SrrRestoreRequestData>(new srr::SrrRestoreRequestDataV2(reqData));
     } else {
-        std::cerr << "Invalid SRR version" << std::endl;
+        std::cerr << "### - Invalid SRR version" << std::endl;
         return;
     }
 
@@ -319,11 +319,11 @@ void opRestore(const std::string& passphrase, std::istream& is) {
         std::cout << "Request status: " << resp.m_status << std::endl;
 
         if(!resp.m_error.empty()) {
-            std::cerr << "Error: " << resp.m_error << std::endl;
+            std::cerr << "### - Error: " << resp.m_error << std::endl;
         }
     }
     catch (std::exception &e) {
-        std::cerr << e.what () << std::endl;
+        std::cerr << "### - Error: " << e.what () << std::endl;
     }
 }
 
