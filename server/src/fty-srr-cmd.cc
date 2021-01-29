@@ -70,7 +70,7 @@ std::vector<std::string> opList (void);
 void opSave (const std::string &passphrase,
              const std::vector<std::string> &groupList,
              std::ostream &os);
-void opRestore (const std::string &passphrase, std::istream &is);
+void opRestore (const std::string &passphrase, std::istream &is, bool force);
 void opReset (void);
 
 int main (int argc, char **argv)
@@ -78,6 +78,7 @@ int main (int argc, char **argv)
     GOOGLE_PROTOBUF_VERIFY_VERSION;
 
     bool help = false;
+    bool force = false;
 
     std::string fileName;
     std::string groups;
@@ -88,7 +89,8 @@ int main (int argc, char **argv)
         {"--help|-h", help, "Show this help"},
         {"--passphrase|-p", passphrase, "Passhphrase to save/restore groups"},
         {"--groups|-g", groups, "Select groups to save (default to all groups)"},
-        {"--file|-f", fileName, "Path to the JSON file to save/restore. If not specified, standard input/output is used"}
+        {"--file|-f", fileName, "Path to the JSON file to save/restore. If not specified, standard input/output is used"},
+        {"--force|-F", force, "Force restore (discards data integrity check)"}
     });
 
     if(argc < 2) {
@@ -155,7 +157,7 @@ int main (int argc, char **argv)
                 return EXIT_FAILURE;
             }
         }
-        opRestore(passphrase, inputFile.is_open() ? inputFile : std::cin);
+        opRestore(passphrase, inputFile.is_open() ? inputFile : std::cin, force);
         if(inputFile.is_open()) {
             inputFile.close();
         }
@@ -270,7 +272,7 @@ void opSave(const std::string& passphrase, const std::vector<std::string>& group
     }
 }
 
-void opRestore(const std::string& passphrase, std::istream& is) {
+void opRestore(const std::string& passphrase, std::istream& is, bool force) {
     std::string reqJson;
     is >> reqJson;
     
@@ -301,6 +303,11 @@ void opRestore(const std::string& passphrase, std::istream& is) {
     try {
         dto::UserData reqData;
         reqData.push_back(JSON::writeToString(reqSi, false));
+
+        if(force) {
+            std::cout << "### - Restoring with force option" << std::endl;
+            reqData.push_back("force");
+        }
 
         // Send request
         dto::UserData respData = sendRequest ("restore", reqData);
