@@ -61,7 +61,7 @@ typedef struct SrrGroupStruct
     std::vector<SrrFeaturePriorityStruct> m_fp;
 } SrrGroupStruct;
 
-auto initSrrFeatures = [&]() {
+auto initSrrFeatures = []() {
     std::map<std::string, SrrFeatureStruct> tmp;
 
     tmp[F_ALERT_AGENT];
@@ -166,7 +166,7 @@ auto initSrrFeatures = [&]() {
 
 static const std::map<std::string, SrrFeatureStruct> SrrFeatureMap = initSrrFeatures();
 
-auto initSrrGroups = [&]() {
+auto initSrrGroups = []() {
 
     std::map<std::string, SrrGroupStruct> tmp;
 
@@ -179,7 +179,7 @@ auto initSrrGroups = [&]() {
     tmp[G_NOTIFICATION_FEATURE_NAME];
     tmp[G_USER_SESSION_FEATURE_NAME];
 
-    // add features to asset group    
+    // add features to asset group
     tmp[G_ASSETS].m_id = G_ASSETS,
     tmp[G_ASSETS].m_name = G_ASSETS,
     tmp[G_ASSETS].m_description = TRANSLATE_ME("srr_group-assets");
@@ -191,42 +191,42 @@ auto initSrrGroups = [&]() {
     tmp[G_ASSETS].m_fp.push_back(SrrFeaturePriorityStruct(F_AUTOMATION_SETTINGS, 5));
     tmp[G_ASSETS].m_fp.push_back(SrrFeaturePriorityStruct(F_AUTOMATIONS, 6));
 
-    // add features to discovery group    
+    // add features to discovery group
     tmp[G_DISCOVERY].m_id = G_DISCOVERY,
     tmp[G_DISCOVERY].m_name = G_DISCOVERY,
     tmp[G_DISCOVERY].m_description = TRANSLATE_ME("srr_group-discovery");
 
     tmp[G_DISCOVERY].m_fp.push_back(SrrFeaturePriorityStruct(F_DISCOVERY, 1));
 
-    // add features to mass management group    
+    // add features to mass management group
     tmp[G_MASS_MANAGEMENT].m_id = G_MASS_MANAGEMENT;
     tmp[G_MASS_MANAGEMENT].m_name = G_MASS_MANAGEMENT;
     tmp[G_MASS_MANAGEMENT].m_description = TRANSLATE_ME("srr_group-mass-management");
 
     tmp[G_MASS_MANAGEMENT].m_fp.push_back(SrrFeaturePriorityStruct(F_MASS_MANAGEMENT, 1));
 
-    // add features to monitoring feature group    
+    // add features to monitoring feature group
     tmp[G_MONITORING_FEATURE_NAME].m_id = G_MONITORING_FEATURE_NAME;
     tmp[G_MONITORING_FEATURE_NAME].m_name = G_MONITORING_FEATURE_NAME;
     tmp[G_MONITORING_FEATURE_NAME].m_description = TRANSLATE_ME("srr_group-monitoring-feature-name");
 
     tmp[G_MONITORING_FEATURE_NAME].m_fp.push_back(SrrFeaturePriorityStruct(F_MONITORING_FEATURE_NAME, 1));
 
-    // add features to network group    
+    // add features to network group
     tmp[G_NETWORK].m_id = G_NETWORK;
     tmp[G_NETWORK].m_name = G_NETWORK;
     tmp[G_NETWORK].m_description = TRANSLATE_ME("srr_group-network");
 
     tmp[G_NETWORK].m_fp.push_back(SrrFeaturePriorityStruct(F_NETWORK, 1));
 
-    // add features to notification feature group    
+    // add features to notification feature group
     tmp[G_NOTIFICATION_FEATURE_NAME].m_id = G_NOTIFICATION_FEATURE_NAME;
     tmp[G_NOTIFICATION_FEATURE_NAME].m_name = G_NOTIFICATION_FEATURE_NAME;
     tmp[G_NOTIFICATION_FEATURE_NAME].m_description = TRANSLATE_ME("srr_group-notification-feature-name");
 
     tmp[G_NOTIFICATION_FEATURE_NAME].m_fp.push_back(SrrFeaturePriorityStruct(F_NOTIFICATION_FEATURE_NAME, 1));
 
-    // add features to user session group    
+    // add features to user session group
     tmp[G_USER_SESSION_FEATURE_NAME].m_id = G_USER_SESSION_FEATURE_NAME;
     tmp[G_USER_SESSION_FEATURE_NAME].m_name = G_USER_SESSION_FEATURE_NAME;
     tmp[G_USER_SESSION_FEATURE_NAME].m_description = TRANSLATE_ME("srr_group-user-session-feature-name");
