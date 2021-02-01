@@ -90,8 +90,8 @@ namespace srr
         std::string queueNameDest;
 
         try {
-            agentNameDest = SrrFeatureMap.at(featureName).m_agent;
-            queueNameDest = agentToQueue.at(agentNameDest);
+            agentNameDest = g_srrFeatureMap.at(featureName).m_agent;
+            queueNameDest = g_agentToQueue.at(agentNameDest);
         }
         catch (std::exception& ex) {
             log_error("Feature %s not found", featureName.c_str());
@@ -136,8 +136,8 @@ namespace srr
 
     dto::srr::RestoreResponse SrrWorker::restoreFeature(const dto::srr::FeatureName& featureName, const dto::srr::RestoreQuery& query)
     {
-        const std::string agentNameDest = SrrFeatureMap.at(featureName).m_agent;
-        const std::string queueNameDest = agentToQueue[agentNameDest];
+        const std::string agentNameDest = g_srrFeatureMap.at(featureName).m_agent;
+        const std::string queueNameDest = g_agentToQueue.at(agentNameDest);
 
         Query restoreQuery;
         *(restoreQuery.mutable_restore()) = query;
@@ -175,8 +175,8 @@ namespace srr
 
     dto::srr::ResetResponse SrrWorker::resetFeature(const dto::srr::FeatureName& featureName)
     {
-        const std::string agentNameDest = SrrFeatureMap.at(featureName).m_agent;
-        const std::string queueNameDest = agentToQueue[agentNameDest];
+        const std::string agentNameDest = g_srrFeatureMap.at(featureName).m_agent;
+        const std::string queueNameDest = g_agentToQueue.at(agentNameDest);
 
         log_debug("Request reset of feature %s to agent %s ", featureName.c_str(), agentNameDest.c_str());
 
@@ -233,7 +233,7 @@ namespace srr
 
         // reset features in reverse order
         for(auto revIt = featuresToRestore.rbegin(); revIt != featuresToRestore.rend(); revIt++) {
-            if(SrrFeatureMap.at(*revIt).m_reset) {
+            if(g_srrFeatureMap.at(*revIt).m_reset) {
                 try{
                     resetFeature(*revIt);
                 }
@@ -246,8 +246,8 @@ namespace srr
         for(const auto& featureName : featuresToRestore) {
             const dto::srr::Feature& featureData= rollbackMap.at(featureName).feature();
 
-            const std::string agentNameDest = SrrFeatureMap.at(featureName).m_agent;
-            const std::string queueNameDest = agentToQueue[agentNameDest];
+            const std::string agentNameDest = g_srrFeatureMap.at(featureName).m_agent;
+            const std::string queueNameDest = g_agentToQueue.at(agentNameDest);
 
             // Build restore query
             RestoreQuery restoreQuery;
@@ -266,7 +266,7 @@ namespace srr
                 log_error("Feature %s is unrecoverable. May be in undefined state", featureName.c_str());
             }
             log_debug("%s rolled back by: %s ", featureName.c_str(), agentNameDest.c_str());
-            restart = restart | SrrFeatureMap.at(featureName).m_restart;
+            restart = restart | g_srrFeatureMap.at(featureName).m_restart;
             // wait to sync feature restore
             std::this_thread::sleep_for(std::chrono::seconds(FEATURE_RESTORE_DELAY_SEC));
         }
@@ -287,7 +287,7 @@ namespace srr
         srrListResp.m_passphrase_description = TRANSLATE_ME("Passphrase must have %s characters", (fty::getPassphraseFormat()).c_str());
         srrListResp.m_passphrase_validation = fty::getPassphraseFormat();
 
-        for (const auto& mapEntry : SrrGroupMap) {
+        for (const auto& mapEntry : g_srrGroupMap) {
             const std::string& groupId = mapEntry.first;
             const SrrGroupStruct& srrGroup = mapEntry.second;
 
@@ -302,7 +302,7 @@ namespace srr
                 FeatureInfo featureInfo;
 
                 featureInfo.m_name = featureId;
-                featureInfo.m_description = SrrFeatureMap.at(featureId).m_description;
+                featureInfo.m_description = g_srrFeatureMap.at(featureId).m_description;
 
                 groupInfo.m_features.push_back(featureInfo);
             }
@@ -352,7 +352,7 @@ namespace srr
                     log_debug("Saving features from group %s ", groupId.c_str());
                     srr::SrrGroupStruct group;
                     try {
-                        group = SrrGroupMap.at(groupId);
+                        group = g_srrGroupMap.at(groupId);
                     } catch (std::out_of_range& /* ex */) {
                         allGroupsSaved = false;
                         log_error("Group %s not found", groupId.c_str());
@@ -493,7 +493,7 @@ namespace srr
                     }
 
                     // reset feature before restore (do not stop on fail -> reset is not supported by every feature yet)
-                    if(SrrFeatureMap.at(featureName).m_reset) {
+                    if(g_srrFeatureMap.at(featureName).m_reset) {
                         try{
                             resetFeature(featureName);
                         }
@@ -575,7 +575,7 @@ namespace srr
                 for(const auto& group : groups) {
                     const auto& groupId = group.m_group_id;
 
-                    if(SrrGroupMap.find(group.m_group_id) == SrrGroupMap.end()) {
+                    if(g_srrGroupMap.find(group.m_group_id) == g_srrGroupMap.end()) {
                         RestoreStatus restoreStatus;
                         restoreStatus.m_name = groupId;
                         restoreStatus.m_status = statusToString(Status::FAILED);
@@ -600,7 +600,7 @@ namespace srr
 
                     try {
                         // loop through all required features to create the restore queries
-                        for (const auto& feature : SrrGroupMap.at(groupId).m_fp) {
+                        for (const auto& feature : g_srrGroupMap.at(groupId).m_fp) {
                             const auto& featureName = feature.m_feature;
                             const auto& dtoFeature = ftMap.at(featureName).feature();
 
@@ -650,7 +650,7 @@ namespace srr
                     // reset features in reverse order before restore
                     // WARNING: currently reset is not implemented by all features, hence it will not be mandatory
                     for(auto revIt = group.m_features.rbegin(); revIt != group.m_features.rend(); revIt++) {
-                        if(SrrFeatureMap.at(revIt->m_feature_name).m_reset) {
+                        if(g_srrFeatureMap.at(revIt->m_feature_name).m_reset) {
                             try{
                                 resetFeature(revIt->m_feature_name);
                             }
@@ -675,7 +675,7 @@ namespace srr
                             response += restoreFeature(featureName, restoreQueriesMap[featureName]);
 
                             // update restart flag
-                            restart = restart | SrrFeatureMap.at(featureName).m_restart;
+                            restart = restart | g_srrFeatureMap.at(featureName).m_restart;
                         }
                         catch (const std::exception& ex) {
                             // restore failed -> rolling back the whole group
