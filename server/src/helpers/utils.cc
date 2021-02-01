@@ -56,7 +56,7 @@ groupFeaturesByAgent (const std::list<dto::srr::FeatureName> &features)
 
     for (const auto &feature : features) {
         try {
-            const std::string &agentName = SrrFeatureMap.at (feature).m_agent;
+            const std::string &agentName = g_srrFeatureMap.at (feature).m_agent;
             map[agentName].insert (feature);
         }
         catch (std::out_of_range &) {
