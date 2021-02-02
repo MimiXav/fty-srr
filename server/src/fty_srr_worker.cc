@@ -65,7 +65,7 @@ namespace srr
     {
         init();
     }
-    
+
     /**
      * Init srr worker
      */
@@ -75,14 +75,14 @@ namespace srr
         {
             m_srrVersion = m_parameters.at(SRR_VERSION_KEY);
             m_sendTimeout = std::stoi (m_parameters.at (REQUEST_TIMEOUT_KEY)) / 1000;
-        }        
+        }
         catch (const std::exception & ex)
         {
             throw SrrException(ex.what());
         }
     }
 
-    dto::srr::SaveResponse SrrWorker::saveFeature(const dto::srr::FeatureName& featureName, const std::string& passphrase)
+    dto::srr::SaveResponse SrrWorker::saveFeature(const dto::srr::FeatureName& featureName, const std::string& passphrase, const std::string& sessionToken)
     {
         dto::srr::SaveResponse response;
 
@@ -100,7 +100,7 @@ namespace srr
 
         log_debug("Request save of feature %s to agent %s", featureName.c_str(), agentNameDest.c_str());
 
-        dto::srr::Query saveQuery = dto::srr::createSaveQuery({featureName}, passphrase);
+        dto::srr::Query saveQuery = dto::srr::createSaveQuery({featureName}, passphrase, sessionToken);
 
         dto::UserData data;
         data << saveQuery;
@@ -325,7 +325,7 @@ namespace srr
 
         log_debug("SRR save request");
 
-        srrSaveResp.m_version = m_srrVersion;     
+        srrSaveResp.m_version = m_srrVersion;
         srrSaveResp.m_status = statusToString(Status::FAILED);
 
         bool allGroupsSaved = true;
@@ -365,7 +365,7 @@ namespace srr
                         for(const auto& entry : group.m_fp) {
                             const auto& featureName = entry.m_feature;
 
-                            SaveResponse saveResp = saveFeature(featureName, srrSaveReq.m_passphrase);
+                            SaveResponse saveResp = saveFeature(featureName, srrSaveReq.m_passphrase, srrSaveReq.m_sessionToken);
                             // convert ProtoBuf save response to UI DTO
                             const auto& mapFeaturesData = saveResp.map_features_data();
 
@@ -468,6 +468,7 @@ namespace srr
                     // prepare restore query
                     RestoreQuery query;
                     query.set_passpharse(srrRestoreReq.m_passphrase);
+                    query.set_session_token(srrRestoreReq.m_sessionToken);
                     query.mutable_map_features_data()->insert({featureName, dtoFeature});
 
                     RestoreStatus restoreStatus;
@@ -477,7 +478,7 @@ namespace srr
                     SaveResponse rollbackSaveResponse;
                     log_debug("Saving feature %s current status", feature.m_feature_name.c_str());
                     try {
-                        rollbackSaveResponse += saveFeature(feature.m_feature_name, srrRestoreReq.m_passphrase);
+                        rollbackSaveResponse += saveFeature(feature.m_feature_name, srrRestoreReq.m_passphrase, srrRestoreReq.m_sessionToken);
                     }
                     catch (std::exception& ex) {
                         allFeaturesRestored = false;
@@ -586,7 +587,7 @@ namespace srr
                         log_error(restoreStatus.m_error.c_str());
 
                         allGroupsRestored = false;
-                        continue;   
+                        continue;
                     }
 
                     std::map<std::string, dto::srr::FeatureAndStatus> ftMap;
@@ -629,8 +630,8 @@ namespace srr
                     try {
                         for(const auto& feature : group.m_features) {
                             log_debug("Saving feature %s current status", feature.m_feature_name.c_str());
-                        
-                            rollbackSaveResponse += saveFeature(feature.m_feature_name, srrRestoreReq.m_passphrase);
+
+                            rollbackSaveResponse += saveFeature(feature.m_feature_name, srrRestoreReq.m_passphrase, srrRestoreReq.m_sessionToken);
                         }
                     }
                     catch (std::exception& ex) {
@@ -753,10 +754,10 @@ namespace srr
         log_debug("SRR reset request");
         throw SrrException("Not implemented yet!");
     }
-    
+
     bool SrrWorker::isVerstionCompatible(const std::string& version)
     {
         return m_supportedVersions.find(version) != m_supportedVersions.end();
     }
-    
+
 } // namespace srr
