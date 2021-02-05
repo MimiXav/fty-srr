@@ -111,8 +111,6 @@ int main (int argc, char **argv)
 
     std::string operation(argv[1]);
 
-    std::cout << "Session Token: " << sessionToken << '\n';
-
     if (auto res = cmd.parse(argc -1, argv + 1); !res) {
         std::cerr << res.error() << std::endl;
         std::cout << std::endl;
