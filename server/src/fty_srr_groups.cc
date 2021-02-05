@@ -246,7 +246,8 @@ const std::map<const std::string, const std::string> g_agentToQueue = {
     { ASSET_AGENT_NAME      , ASSET_AGENT_MSG_QUEUE_NAME },
     { CONFIG_AGENT_NAME     , CONFIG_MSG_QUEUE_NAME },
     { EMC4J_AGENT_NAME      , EMC4J_MSG_QUEUE_NAME },
-    { SECU_WALLET_AGENT_NAME, SECU_WALLET_MSG_QUEUE_NAME }
+    { SECU_WALLET_AGENT_NAME, SECU_WALLET_MSG_QUEUE_NAME },
+    { USM_AGENT_NAME        , USM_AGENT_MSG_QUEUE_NAME }
 };
 
 }
