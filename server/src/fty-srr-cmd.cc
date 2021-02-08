@@ -73,7 +73,10 @@ void opSave (const std::string &passphrase,
              const std::string &sessionToken,
              const std::vector<std::string> &groupList,
              std::ostream &os);
-void opRestore (const std::string &passphrase, std::istream &is, bool force);
+void opRestore (const std::string &passphrase,
+                const std::string &sessionToken,
+                std::istream &is,
+                bool force);
 void opReset (void);
 
 int main (int argc, char **argv)
@@ -167,7 +170,7 @@ int main (int argc, char **argv)
                 return EXIT_FAILURE;
             }
         }
-        opRestore(passphrase, inputFile.is_open() ? inputFile : std::cin, force);
+        opRestore(passphrase, sessionToken, inputFile.is_open() ? inputFile : std::cin, force);
         if(inputFile.is_open()) {
             inputFile.close();
         }
@@ -283,7 +286,7 @@ void opSave(const std::string& passphrase, const std::string& sessionToken, cons
     }
 }
 
-void opRestore(const std::string& passphrase, std::istream& is, bool force) {
+void opRestore(const std::string& passphrase, const std::string& sessionToken, std::istream& is, bool force) {
     std::string reqJson;
     is >> reqJson;
 
@@ -292,6 +295,7 @@ void opRestore(const std::string& passphrase, std::istream& is, bool force) {
 
     srr::SrrRestoreRequest req;
     req.m_passphrase = passphrase;
+    req.m_sessionToken = sessionToken;
     siJson.getMember("version") >>= req.m_version;
     siJson.getMember("checksum") >>= req.m_checksum;
 
@@ -324,7 +328,7 @@ void opRestore(const std::string& passphrase, std::istream& is, bool force) {
         dto::UserData respData = sendRequest ("restore", reqData);
         if (respData.empty ()) {
             throw std::runtime_error (
-              "Impossible to save requested features");
+              "Impossible to restore requested features");
         }
 
         srr::SrrRestoreResponse resp;
