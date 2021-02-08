@@ -449,6 +449,8 @@ namespace srr
 
             requestSi >>= srrRestoreReq;
 
+
+
             std::string passphrase = fty::decrypt(srrRestoreReq.m_checksum, srrRestoreReq.m_passphrase);
 
             if(passphrase.compare(srrRestoreReq.m_passphrase) != 0) {
@@ -608,6 +610,7 @@ namespace srr
                             // prepare restore queries
                             RestoreQuery& request = restoreQueriesMap[featureName];
                             request.set_passpharse(srrRestoreReq.m_passphrase);
+                            request.set_session_token(srrRestoreReq.m_sessionToken);
                             request.mutable_map_features_data()->insert({featureName, dtoFeature});
                         }
                     }   // if one feature is missing, set the error for the whole group and skip the group
