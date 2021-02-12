@@ -156,6 +156,8 @@ int main (int argc, char **argv)
                 std::cerr << "### - Can't open input file: " << e.what() << std::endl;
                 return EXIT_FAILURE;
             }
+        } else {
+            std::cout << "### - No input file specified, waiting for input from stdin" << std::endl;
         }
         opRestore(passphrase, inputFile.is_open() ? inputFile : std::cin, force);
         if(inputFile.is_open()) {
