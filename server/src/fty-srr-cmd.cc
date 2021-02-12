@@ -274,10 +274,18 @@ void opSave(const std::string& passphrase, const std::vector<std::string>& group
 
 void opRestore(const std::string& passphrase, std::istream& is, bool force) {
     std::string reqJson;
-    is >> reqJson;
-    
+
+    while(!is.eof()) {
+        reqJson += is.get();
+    }
+
     cxxtools::SerializationInfo siJson;
-    JSON::readFromString(reqJson, siJson);
+    try{
+        JSON::readFromString(reqJson, siJson);
+    } catch(const std::exception& e) {
+        std::cerr << "### - Error: " << e.what () << std::endl;
+        return;
+    }
 
     srr::SrrRestoreRequest req;
     req.m_passphrase = passphrase;
