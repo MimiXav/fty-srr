@@ -101,7 +101,7 @@ int main (int argc, char **argv)
 
     std::string operation(argv[1]);
 
-    if (auto res = cmd.parse(argc -1, argv + 1); !res) {
+    if (auto res = cmd.parse(argc, argv); !res) {
         std::cerr << res.error() << std::endl;
         std::cout << std::endl;
         std::cout << cmd.help() << std::endl;
@@ -276,7 +276,7 @@ void opRestore(const std::string& passphrase, std::istream& is, bool force) {
     std::string reqJson;
 
     while(!is.eof()) {
-        reqJson += is.get();
+        reqJson += static_cast<char>(is.get());
     }
 
     cxxtools::SerializationInfo siJson;
