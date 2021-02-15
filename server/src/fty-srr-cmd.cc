@@ -42,6 +42,9 @@
 #include <iostream>
 #include <string>
 #include <vector>
+#include <memory>
+
+#include <cstdio>
 
 #define END_POINT "ipc://@/malamute"
 #define AGENT_NAME "fty-srr-cmd"
@@ -76,6 +79,13 @@ void opReset (void);
 int main (int argc, char **argv)
 {
     GOOGLE_PROTOBUF_VERIFY_VERSION;
+
+    //remove the zmq logs
+    std::shared_ptr<FILE> stdNull(fopen("/dev/null", "w"), &fclose);
+    zsys_set_logstream (stdNull.get());
+
+    //remove log from fty-log
+    ftylog_setLogLevelError(ftylog_getInstance());
 
     bool help = false;
     bool force = false;
