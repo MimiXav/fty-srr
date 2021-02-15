@@ -101,7 +101,7 @@ int main (int argc, char **argv)
 
     std::string operation(argv[1]);
 
-    if (auto res = cmd.parse(argc -1, argv + 1); !res) {
+    if (auto res = cmd.parse(argc, argv); !res) {
         std::cerr << res.error() << std::endl;
         std::cout << std::endl;
         std::cout << cmd.help() << std::endl;
@@ -156,6 +156,8 @@ int main (int argc, char **argv)
                 std::cerr << "### - Can't open input file: " << e.what() << std::endl;
                 return EXIT_FAILURE;
             }
+        } else {
+            std::cout << "### - No input file specified, waiting for input from stdin" << std::endl;
         }
         opRestore(passphrase, inputFile.is_open() ? inputFile : std::cin, force);
         if(inputFile.is_open()) {
@@ -276,7 +278,7 @@ void opRestore(const std::string& passphrase, std::istream& is, bool force) {
     std::string reqJson;
 
     while(!is.eof()) {
-        reqJson += is.get();
+        reqJson += static_cast<char>(is.get());
     }
 
     cxxtools::SerializationInfo siJson;
