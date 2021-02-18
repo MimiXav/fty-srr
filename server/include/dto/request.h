@@ -30,59 +30,61 @@
 
 namespace srr
 {
-// si save request fields
-static constexpr const char *SI_GROUP_LIST = "group_list";
+  // si save request fields
+  static constexpr const char *SI_GROUP_LIST = "group_list";
 
-class SrrSaveRequest
-{
-  public:
-    SrrSaveRequest (){};
+  class SrrSaveRequest
+  {
+    public:
+      SrrSaveRequest() = default;
 
-    std::string m_passphrase;
-    std::vector<std::string> m_group_list;
-};
+      std::string m_passphrase;
+      std::string m_sessionToken;
+      std::vector<std::string> m_group_list;
+  };
 
-void operator<<= (cxxtools::SerializationInfo &si, const SrrSaveRequest &req);
-void operator>>= (const cxxtools::SerializationInfo &si, SrrSaveRequest &req);
+  void operator<<= (cxxtools::SerializationInfo &si, const SrrSaveRequest &req);
+  void operator>>= (const cxxtools::SerializationInfo &si, SrrSaveRequest &req);
 
-class SrrRestoreRequestData
-{
-  public:
-    virtual ~SrrRestoreRequestData () = 0;
-    virtual const std::vector<SrrFeature> getSrrFeatures () const = 0;
-};
+  class SrrRestoreRequestData
+  {
+    public:
+      virtual ~SrrRestoreRequestData () = 0;
+      virtual const std::vector<SrrFeature> getSrrFeatures () const = 0;
+  };
 
-class SrrRestoreRequestDataV1 : public SrrRestoreRequestData
-{
-  public:
-    ~SrrRestoreRequestDataV1 (){};
-    std::vector<SrrFeature> m_data;
-    const std::vector<SrrFeature> getSrrFeatures () const override;
-};
+  class SrrRestoreRequestDataV1 : public SrrRestoreRequestData
+  {
+    public:
+      ~SrrRestoreRequestDataV1 (){};
+      std::vector<SrrFeature> m_data;
+      const std::vector<SrrFeature> getSrrFeatures () const override;
+  };
 
-class SrrRestoreRequestDataV2 : public SrrRestoreRequestData
-{
-  public:
-    ~SrrRestoreRequestDataV2 (){};
-    std::vector<Group> m_data;
-    const std::vector<SrrFeature> getSrrFeatures () const override;
-};
+  class SrrRestoreRequestDataV2 : public SrrRestoreRequestData
+  {
+    public:
+      ~SrrRestoreRequestDataV2 (){};
+      std::vector<Group> m_data;
+      const std::vector<SrrFeature> getSrrFeatures () const override;
+  };
 
-using SrrRestoreRequestDataPtr = std::shared_ptr<SrrRestoreRequestData>;
+  using SrrRestoreRequestDataPtr = std::shared_ptr<SrrRestoreRequestData>;
 
-class SrrRestoreRequest
-{
-  public:
-    SrrRestoreRequest (){};
-    std::string m_version;
-    std::string m_passphrase;
-    std::string m_checksum;
-    SrrRestoreRequestDataPtr m_data_ptr;
-};
+  class SrrRestoreRequest
+  {
+    public:
+      SrrRestoreRequest() = default;
+      std::string m_version;
+      std::string m_passphrase;
+      std::string m_sessionToken;
+      std::string m_checksum;
+      SrrRestoreRequestDataPtr m_data_ptr;
+  };
 
-void operator<<= (cxxtools::SerializationInfo &si,
-                  const SrrRestoreRequest &req);
-void operator>>= (const cxxtools::SerializationInfo &si,
-                  SrrRestoreRequest &req);
+  void operator<<= (cxxtools::SerializationInfo &si,
+                    const SrrRestoreRequest &req);
+  void operator>>= (const cxxtools::SerializationInfo &si,
+                    SrrRestoreRequest &req);
 
 }

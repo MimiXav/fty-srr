@@ -51,6 +51,8 @@
 #define AGENT_NAME_REQUEST_DESTINATION "fty-srr-ui"
 #define MSG_QUEUE_NAME "ETN.Q.IPMCORE.SRR.UI"
 #define DEFAULT_TIME_OUT 3600
+#define SESSION_TOKEN_ENV_VAR "USM_BEARER"
+
 
 using namespace dto::srr;
 
@@ -71,9 +73,13 @@ dto::UserData sendRequest (const std::string &action,
 // operations
 std::vector<std::string> opList (void);
 void opSave (const std::string &passphrase,
+             const std::string &sessionToken,
              const std::vector<std::string> &groupList,
              std::ostream &os);
-void opRestore (const std::string &passphrase, std::istream &is, bool force);
+void opRestore (const std::string &passphrase,
+                const std::string &sessionToken,
+                std::istream &is,
+                bool force);
 void opReset (void);
 
 int main (int argc, char **argv)
@@ -93,11 +99,18 @@ int main (int argc, char **argv)
     std::string fileName;
     std::string groups;
     std::string passphrase;
+    std::string sessionToken{};
+
+    if(std::getenv(SESSION_TOKEN_ENV_VAR))
+    {
+      sessionToken = std::getenv(SESSION_TOKEN_ENV_VAR);
+    }
 
     // clang-format off
     fty::CommandLine cmd("### - SRR command line\n      Usage: fty-srr-cmd <list|save|restore|reset> [options]", {
         {"--help|-h", help, "Show this help"},
         {"--passphrase|-p", passphrase, "Passhphrase to save/restore groups"},
+        {"--token|-t", sessionToken, "Session token to save/restore groups if needed"},
         {"--groups|-g", groups, "Select groups to save (default to all groups)"},
         {"--file|-f", fileName, "Path to the JSON file to save/restore. If not specified, standard input/output is used"},
         {"--force|-F", force, "Force restore (discards data integrity check)"}
@@ -148,7 +161,7 @@ int main (int argc, char **argv)
             std::cout << "### - No group option specified\nSaving all groups" << std::endl;
             groupList = opList();
         }
-        opSave(passphrase, groupList, outputFile.is_open() ? outputFile : std::cout);
+        opSave(passphrase, sessionToken, groupList, outputFile.is_open() ? outputFile : std::cout);
         if(outputFile.is_open()) {
             outputFile.close();
         }
@@ -169,7 +182,7 @@ int main (int argc, char **argv)
         } else {
             std::cout << "### - No input file specified, waiting for input from stdin" << std::endl;
         }
-        opRestore(passphrase, inputFile.is_open() ? inputFile : std::cin, force);
+        opRestore(passphrase, sessionToken, inputFile.is_open() ? inputFile : std::cin, force);
         if(inputFile.is_open()) {
             inputFile.close();
         }
@@ -244,10 +257,11 @@ std::vector<std::string> opList() {
     return groupList;
 }
 
-void opSave(const std::string& passphrase, const std::vector<std::string>& groupList, std::ostream& os) {
+void opSave(const std::string& passphrase, const std::string& sessionToken, const std::vector<std::string>& groupList, std::ostream& os) {
     srr::SrrSaveRequest req;
     req.m_group_list = groupList;
     req.m_passphrase = passphrase;
+    req.m_sessionToken = sessionToken;
 
     cxxtools::SerializationInfo reqSi;
 
@@ -284,9 +298,8 @@ void opSave(const std::string& passphrase, const std::vector<std::string>& group
     }
 }
 
-void opRestore(const std::string& passphrase, std::istream& is, bool force) {
+void opRestore(const std::string& passphrase, const std::string& sessionToken, std::istream& is, bool force) {
     std::string reqJson;
-
     while(!is.eof()) {
         reqJson += static_cast<char>(is.get());
     }
@@ -301,6 +314,7 @@ void opRestore(const std::string& passphrase, std::istream& is, bool force) {
 
     srr::SrrRestoreRequest req;
     req.m_passphrase = passphrase;
+    req.m_sessionToken = sessionToken;
     siJson.getMember("version") >>= req.m_version;
     siJson.getMember("checksum") >>= req.m_checksum;
 
@@ -333,7 +347,7 @@ void opRestore(const std::string& passphrase, std::istream& is, bool force) {
         dto::UserData respData = sendRequest ("restore", reqData);
         if (respData.empty ()) {
             throw std::runtime_error (
-              "Impossible to save requested features");
+              "Impossible to restore requested features");
         }
 
         srr::SrrRestoreResponse resp;

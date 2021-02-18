@@ -148,13 +148,13 @@ auto initSrrFeatures= []() {
     tmp[F_SECURITY_WALLET].m_restart = true;
     tmp[F_SECURITY_WALLET].m_reset = false;
 
-    tmp[F_USER_SESSION_FEATURE_NAME];
-    tmp[F_USER_SESSION_FEATURE_NAME].m_id = F_USER_SESSION_FEATURE_NAME;
-    tmp[F_USER_SESSION_FEATURE_NAME].m_name = F_USER_SESSION_FEATURE_NAME;
-    tmp[F_USER_SESSION_FEATURE_NAME].m_description = TRANSLATE_ME("srr_user-session");
-    tmp[F_USER_SESSION_FEATURE_NAME].m_agent = CONFIG_AGENT_NAME;
-    tmp[F_USER_SESSION_FEATURE_NAME].m_restart = true;
-    tmp[F_USER_SESSION_FEATURE_NAME].m_reset = false;
+    tmp[F_USER_SESSION_MANAGEMENT_FEATURE_NAME];
+    tmp[F_USER_SESSION_MANAGEMENT_FEATURE_NAME].m_id = F_USER_SESSION_MANAGEMENT_FEATURE_NAME;
+    tmp[F_USER_SESSION_MANAGEMENT_FEATURE_NAME].m_name = F_USER_SESSION_MANAGEMENT_FEATURE_NAME;
+    tmp[F_USER_SESSION_MANAGEMENT_FEATURE_NAME].m_description = TRANSLATE_ME("srr_user-session-management");
+    tmp[F_USER_SESSION_MANAGEMENT_FEATURE_NAME].m_agent = USM_AGENT_NAME;
+    tmp[F_USER_SESSION_MANAGEMENT_FEATURE_NAME].m_restart = true;
+    tmp[F_USER_SESSION_MANAGEMENT_FEATURE_NAME].m_reset = false;
 
     tmp[F_VIRTUAL_ASSETS];
     tmp[F_VIRTUAL_ASSETS].m_id = F_VIRTUAL_ASSETS;
@@ -180,7 +180,7 @@ auto initSrrGroups = []() {
     tmp[G_MONITORING_FEATURE_NAME];
     tmp[G_NETWORK];
     tmp[G_NOTIFICATION_FEATURE_NAME];
-    tmp[G_USER_SESSION_FEATURE_NAME];
+    tmp[G_USER_SESSION_MANAGEMENT];
 
     // add features to asset group
     tmp[G_ASSETS].m_id = G_ASSETS,
@@ -229,12 +229,12 @@ auto initSrrGroups = []() {
 
     tmp[G_NOTIFICATION_FEATURE_NAME].m_fp.push_back(SrrFeaturePriorityStruct(F_NOTIFICATION_FEATURE_NAME, 1));
 
-    // add features to user session group
-    tmp[G_USER_SESSION_FEATURE_NAME].m_id = G_USER_SESSION_FEATURE_NAME;
-    tmp[G_USER_SESSION_FEATURE_NAME].m_name = G_USER_SESSION_FEATURE_NAME;
-    tmp[G_USER_SESSION_FEATURE_NAME].m_description = TRANSLATE_ME("srr_group-user-session-feature-name");
+    // add features to user session management group
+    tmp[G_USER_SESSION_MANAGEMENT].m_id = G_USER_SESSION_MANAGEMENT;
+    tmp[G_USER_SESSION_MANAGEMENT].m_name = G_USER_SESSION_MANAGEMENT;
+    tmp[G_USER_SESSION_MANAGEMENT].m_description = TRANSLATE_ME("srr_group-user-session-management");
 
-    tmp[G_USER_SESSION_FEATURE_NAME].m_fp.push_back(SrrFeaturePriorityStruct(F_USER_SESSION_FEATURE_NAME, 1));
+    tmp[G_USER_SESSION_MANAGEMENT].m_fp.push_back(SrrFeaturePriorityStruct(F_USER_SESSION_MANAGEMENT_FEATURE_NAME, 1));
 
     return tmp;
 };
@@ -246,7 +246,8 @@ const std::map<const std::string, const std::string> g_agentToQueue = {
     { ASSET_AGENT_NAME      , ASSET_AGENT_MSG_QUEUE_NAME },
     { CONFIG_AGENT_NAME     , CONFIG_MSG_QUEUE_NAME },
     { EMC4J_AGENT_NAME      , EMC4J_MSG_QUEUE_NAME },
-    { SECU_WALLET_AGENT_NAME, SECU_WALLET_MSG_QUEUE_NAME }
+    { SECU_WALLET_AGENT_NAME, SECU_WALLET_MSG_QUEUE_NAME },
+    { USM_AGENT_NAME        , USM_AGENT_MSG_QUEUE_NAME }
 };
 
 }

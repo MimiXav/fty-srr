@@ -34,7 +34,7 @@ namespace srr
 {
     class SrrWorker
     {
-        public:            
+        public:
             explicit SrrWorker(messagebus::MessageBus& msgBus, const std::map<std::string, std::string>& parameters, const std::set<std::string> supportedVersions);
             ~SrrWorker() = default;
 
@@ -58,11 +58,11 @@ namespace srr
             bool isVerstionCompatible(const std::string& version);
 
             // SRR methods
-            dto::srr::SaveResponse saveFeature(const dto::srr::FeatureName& featureName, const std::string& passphrase);
+            dto::srr::SaveResponse saveFeature(const dto::srr::FeatureName& featureName, const std::string& passphrase, const std::string& sessionToken);
             dto::srr::RestoreResponse restoreFeature(const dto::srr::FeatureName& featureName, const dto::srr::RestoreQuery& query);
             dto::srr::ResetResponse resetFeature(const dto::srr::FeatureName& featureName);
             bool rollback(const dto::srr::SaveResponse& rollbackSaveResponse, const std::string& passphrase);
-    };    
+    };
 }
 
 #endif
