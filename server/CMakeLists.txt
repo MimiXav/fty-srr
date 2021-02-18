@@ -17,7 +17,7 @@ etn_target(exe ${PROJECT_NAME}
 
     INCLUDE_DIRS
         include
-        
+
     USES_PRIVATE
         cxxtools
         fty_common
@@ -40,7 +40,7 @@ etn_target(exe ${PROJECT_NAME}-cmd
         src/dto/request.cc
         src/dto/response.cc
     INCLUDE_DIRS
-        include   
+        include
     USES_PRIVATE
         cxxtools
         fty_common
@@ -50,6 +50,7 @@ etn_target(exe ${PROJECT_NAME}-cmd
         fty_common_mlm
         fty-utils
         protobuf
+        czmq
 )
 
 ##############################################################################################################
