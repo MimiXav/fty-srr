@@ -380,7 +380,7 @@ namespace srr
                         }
                     } catch (std::exception& e) {
                         allGroupsSaved = false;
-                        log_error("Error while saving group %s: %s. Will not be included in the payload", e.what(), groupId.c_str());
+                        log_error("Error while saving group %s: %s. Will not be included in the payload", groupId.c_str(), e.what());
                         // delete the current group, as it would be incomplete
                         savedGroups.erase(groupId);
                         continue;
