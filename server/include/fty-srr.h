@@ -48,7 +48,7 @@ constexpr auto SECU_WALLET_MSG_QUEUE_NAME              = "ETN.Q.IPMCORE.SECUWALL
 constexpr auto ASSET_AGENT_NAME                        = "asset-agent-srr";
 constexpr auto ASSET_AGENT_MSG_QUEUE_NAME              = "FTY.Q.ASSET.SRR";
 // Automatic groups
-constexpr auto AUTOMATIC_GROUPS_NAME                   = "automatic-group-srr";
+constexpr auto AUTOMATIC_GROUPS_NAME                   = "automatic-group";
 constexpr auto AUTOMATIC_GROUPS_QUEUE_NAME             = "FTY.Q.GROUP.SRR";
 // Alert agent definition
 constexpr auto ALERT_AGENT_NAME                        = "alert-agent-srr";
