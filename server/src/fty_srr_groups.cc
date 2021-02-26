@@ -89,7 +89,7 @@ auto initSrrFeatures= []() {
     tmp[F_AUTOMATIC_GROUPS].m_description = TRANSLATE_ME("srr_automatic-groups");
     tmp[F_AUTOMATIC_GROUPS].m_agent = AUTOMATIC_GROUPS_NAME;
     tmp[F_AUTOMATIC_GROUPS].m_restart = true;
-    tmp[F_AUTOMATIC_GROUPS].m_reset = false;
+    tmp[F_AUTOMATIC_GROUPS].m_reset = true;
 
     tmp[F_AUTOMATION_SETTINGS];
     tmp[F_AUTOMATION_SETTINGS].m_id = F_AUTOMATION_SETTINGS;
