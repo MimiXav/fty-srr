@@ -118,15 +118,10 @@ namespace srr
         message.userData() >> featureResponse;
 
         // check all features in the map of the response. If one failed, the save operation fails
-        bool saveOk = true;
         for(const auto& f : featureResponse.save().map_features_data()) {
             if (f.second.status().status() != Status::SUCCESS) {
-                saveOk = false;
+                throw (SrrSaveFailed("Save failed for feature " + featureName));
             }
-        }
-
-        if(!saveOk) {
-            throw (SrrSaveFailed("Save failed for feature " + featureName));
         }
 
         response = featureResponse.save();
