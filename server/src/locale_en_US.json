@@ -2,6 +2,7 @@
 	"srr_group-assets" : "Assets management", 
 	"srr_security-wallet" : "Security Wallet",
 	"srr_asset-agent" : "Physical assets",
+	"srr_automatic-groups" : "Automatic groups",
 	"srr_virtual-assets" : "Virtual assets",
 	"srr_alert-agent" : "Alert settings",
 	"srr_automation-settings" : "Automation settings",

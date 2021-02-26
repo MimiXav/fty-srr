@@ -83,6 +83,14 @@ auto initSrrFeatures= []() {
     tmp[F_ASSET_AGENT].m_restart = true;
     tmp[F_ASSET_AGENT].m_reset = true;
 
+    tmp[F_AUTOMATIC_GROUPS];
+    tmp[F_AUTOMATIC_GROUPS].m_id = F_AUTOMATIC_GROUPS;
+    tmp[F_AUTOMATIC_GROUPS].m_name = F_AUTOMATIC_GROUPS;
+    tmp[F_AUTOMATIC_GROUPS].m_description = TRANSLATE_ME("srr_automatic-groups");
+    tmp[F_AUTOMATIC_GROUPS].m_agent = AUTOMATIC_GROUPS_NAME;
+    tmp[F_AUTOMATIC_GROUPS].m_restart = true;
+    tmp[F_AUTOMATIC_GROUPS].m_reset = true;
+
     tmp[F_AUTOMATION_SETTINGS];
     tmp[F_AUTOMATION_SETTINGS].m_id = F_AUTOMATION_SETTINGS;
     tmp[F_AUTOMATION_SETTINGS].m_name = F_AUTOMATION_SETTINGS;
@@ -189,10 +197,11 @@ auto initSrrGroups = []() {
 
     tmp[G_ASSETS].m_fp.push_back(SrrFeaturePriorityStruct(F_SECURITY_WALLET, 1));
     tmp[G_ASSETS].m_fp.push_back(SrrFeaturePriorityStruct(F_ASSET_AGENT, 2));
-    tmp[G_ASSETS].m_fp.push_back(SrrFeaturePriorityStruct(F_VIRTUAL_ASSETS, 3));
-    tmp[G_ASSETS].m_fp.push_back(SrrFeaturePriorityStruct(F_ALERT_AGENT, 4));
-    tmp[G_ASSETS].m_fp.push_back(SrrFeaturePriorityStruct(F_AUTOMATION_SETTINGS, 5));
-    tmp[G_ASSETS].m_fp.push_back(SrrFeaturePriorityStruct(F_AUTOMATIONS, 6));
+    tmp[G_ASSETS].m_fp.push_back(SrrFeaturePriorityStruct(F_AUTOMATIC_GROUPS, 3));
+    tmp[G_ASSETS].m_fp.push_back(SrrFeaturePriorityStruct(F_VIRTUAL_ASSETS, 4));
+    tmp[G_ASSETS].m_fp.push_back(SrrFeaturePriorityStruct(F_ALERT_AGENT, 5));
+    tmp[G_ASSETS].m_fp.push_back(SrrFeaturePriorityStruct(F_AUTOMATION_SETTINGS, 6));
+    tmp[G_ASSETS].m_fp.push_back(SrrFeaturePriorityStruct(F_AUTOMATIONS, 7));
 
     // add features to discovery group
     tmp[G_DISCOVERY].m_id = G_DISCOVERY,
@@ -244,6 +253,7 @@ const std::map<std::string, SrrGroupStruct> g_srrGroupMap = initSrrGroups();
 const std::map<const std::string, const std::string> g_agentToQueue = {
     { ALERT_AGENT_NAME      , ALERT_AGENT_MSG_QUEUE_NAME },
     { ASSET_AGENT_NAME      , ASSET_AGENT_MSG_QUEUE_NAME },
+    { AUTOMATIC_GROUPS_NAME , AUTOMATIC_GROUPS_QUEUE_NAME },
     { CONFIG_AGENT_NAME     , CONFIG_MSG_QUEUE_NAME },
     { EMC4J_AGENT_NAME      , EMC4J_MSG_QUEUE_NAME },
     { SECU_WALLET_AGENT_NAME, SECU_WALLET_MSG_QUEUE_NAME },

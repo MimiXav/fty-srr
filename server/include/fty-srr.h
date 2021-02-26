@@ -47,6 +47,9 @@ constexpr auto SECU_WALLET_MSG_QUEUE_NAME              = "ETN.Q.IPMCORE.SECUWALL
 // Asset agent definition
 constexpr auto ASSET_AGENT_NAME                        = "asset-agent-srr";
 constexpr auto ASSET_AGENT_MSG_QUEUE_NAME              = "FTY.Q.ASSET.SRR";
+// Automatic groups
+constexpr auto AUTOMATIC_GROUPS_NAME                   = "automatic-group";
+constexpr auto AUTOMATIC_GROUPS_QUEUE_NAME             = "FTY.Q.GROUP.SRR";
 // Alert agent definition
 constexpr auto ALERT_AGENT_NAME                        = "alert-agent-srr";
 constexpr auto ALERT_AGENT_MSG_QUEUE_NAME              = "FTY.Q.ALERT.SRR";
@@ -66,6 +69,7 @@ constexpr auto G_USER_SESSION_MANAGEMENT               = "group-user-session-man
 // FEATURES
 constexpr auto F_ALERT_AGENT                           = "alert-agent";
 constexpr auto F_ASSET_AGENT                           = "asset-agent";
+constexpr auto F_AUTOMATIC_GROUPS                      = "automatic-groups";
 constexpr auto F_AUTOMATION_SETTINGS                   = "automation-settings";
 constexpr auto F_AUTOMATIONS                           = "automations";
 constexpr auto F_DISCOVERY                             = "discovery";
