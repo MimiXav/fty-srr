@@ -538,6 +538,20 @@ namespace srr
                 std::shared_ptr<SrrRestoreRequestDataV2> dataPtr = std::dynamic_pointer_cast<SrrRestoreRequestDataV2>(srrRestoreReq.m_data_ptr);
                 auto& groups = dataPtr->m_data;
 
+                // sort groups by restore order
+                std::sort(groups.begin(), groups.end(), [&] (const Group& l, const Group& r) {
+                    unsigned priorityL = 0;
+                    unsigned priorityR = 0;
+                    try{
+                        // unknown groups will be placed at the end and skipped
+                        priorityL = g_srrGroupMap.at(l.m_group_id).m_restoreOrder;
+                        priorityR = g_srrGroupMap.at(r.m_group_id).m_restoreOrder;
+                    } catch(const std::exception& e) {
+                        return false;
+                    }
+                    return priorityL < priorityR;
+                });
+
                 // sort features in each group by priority
                 for(auto& group : groups) {
                     std::sort(group.m_features.begin(), group.m_features.end(), [&] (SrrFeature l, SrrFeature r) {

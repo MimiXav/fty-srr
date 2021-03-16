@@ -207,6 +207,7 @@ auto initSrrGroups = []() {
     tmp[G_ASSETS].m_id = G_ASSETS,
     tmp[G_ASSETS].m_name = G_ASSETS,
     tmp[G_ASSETS].m_description = TRANSLATE_ME("srr_group-assets");
+    tmp[G_ASSETS].m_restoreOrder = 0;
 
     tmp[G_ASSETS].m_fp.push_back(SrrFeaturePriorityStruct(F_SECURITY_WALLET, 1));
     tmp[G_ASSETS].m_fp.push_back(SrrFeaturePriorityStruct(F_ASSET_AGENT, 2));
@@ -220,6 +221,7 @@ auto initSrrGroups = []() {
     tmp[G_DISCOVERY].m_id = G_DISCOVERY,
     tmp[G_DISCOVERY].m_name = G_DISCOVERY,
     tmp[G_DISCOVERY].m_description = TRANSLATE_ME("srr_group-discovery");
+    tmp[G_DISCOVERY].m_restoreOrder = 1;
 
     tmp[G_DISCOVERY].m_fp.push_back(SrrFeaturePriorityStruct(F_DISCOVERY, 1));
 
@@ -227,6 +229,7 @@ auto initSrrGroups = []() {
     tmp[G_MASS_MANAGEMENT].m_id = G_MASS_MANAGEMENT;
     tmp[G_MASS_MANAGEMENT].m_name = G_MASS_MANAGEMENT;
     tmp[G_MASS_MANAGEMENT].m_description = TRANSLATE_ME("srr_group-mass-management");
+    tmp[G_MASS_MANAGEMENT].m_restoreOrder = 2;
 
     tmp[G_MASS_MANAGEMENT].m_fp.push_back(SrrFeaturePriorityStruct(F_MASS_MANAGEMENT, 1));
 
@@ -234,6 +237,7 @@ auto initSrrGroups = []() {
     tmp[G_MONITORING_FEATURE_NAME].m_id = G_MONITORING_FEATURE_NAME;
     tmp[G_MONITORING_FEATURE_NAME].m_name = G_MONITORING_FEATURE_NAME;
     tmp[G_MONITORING_FEATURE_NAME].m_description = TRANSLATE_ME("srr_group-monitoring-feature-name");
+    tmp[G_MONITORING_FEATURE_NAME].m_restoreOrder = 3;
 
     tmp[G_MONITORING_FEATURE_NAME].m_fp.push_back(SrrFeaturePriorityStruct(F_MONITORING_FEATURE_NAME, 1));
 
@@ -241,6 +245,7 @@ auto initSrrGroups = []() {
     tmp[G_NETWORK].m_id = G_NETWORK;
     tmp[G_NETWORK].m_name = G_NETWORK;
     tmp[G_NETWORK].m_description = TRANSLATE_ME("srr_group-network");
+    tmp[G_NETWORK].m_restoreOrder = 4;
 
     tmp[G_NETWORK].m_fp.push_back(SrrFeaturePriorityStruct(F_NETWORK, 1));
 
@@ -248,6 +253,7 @@ auto initSrrGroups = []() {
     tmp[G_NOTIFICATION_FEATURE_NAME].m_id = G_NOTIFICATION_FEATURE_NAME;
     tmp[G_NOTIFICATION_FEATURE_NAME].m_name = G_NOTIFICATION_FEATURE_NAME;
     tmp[G_NOTIFICATION_FEATURE_NAME].m_description = TRANSLATE_ME("srr_group-notification-feature-name");
+    tmp[G_NOTIFICATION_FEATURE_NAME].m_restoreOrder = 5;
 
     tmp[G_NOTIFICATION_FEATURE_NAME].m_fp.push_back(SrrFeaturePriorityStruct(F_NOTIFICATION_FEATURE_NAME, 1));
 
@@ -255,6 +261,7 @@ auto initSrrGroups = []() {
     /*tmp[G_USER_SESSION_MANAGEMENT].m_id = G_USER_SESSION_MANAGEMENT;
     tmp[G_USER_SESSION_MANAGEMENT].m_name = G_USER_SESSION_MANAGEMENT;
     tmp[G_USER_SESSION_MANAGEMENT].m_description = TRANSLATE_ME("srr_group-user-session-management");
+    tmp[G_USER_SESSION_MANAGEMENT].m_restoreOrder = 6;
 
     tmp[G_USER_SESSION_MANAGEMENT].m_fp.push_back(SrrFeaturePriorityStruct(F_USER_SESSION_MANAGEMENT_FEATURE_NAME, 1));*/
 

@@ -60,6 +60,7 @@ typedef struct SrrGroupStruct
     std::string m_id;
     std::string m_name;
     std::string m_description;
+    unsigned    m_restoreOrder; // define restore order (lower is restored before)
 
     std::vector<SrrFeaturePriorityStruct> m_fp;
 } SrrGroupStruct;
