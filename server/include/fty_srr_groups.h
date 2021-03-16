@@ -24,6 +24,7 @@
 #include "fty-srr.h"
 
 #include <fty_common_macros.h>
+#include <list>
 #include <map>
 #include <string>
 #include <vector>
@@ -40,6 +41,8 @@ typedef struct SrrFeatureStruct
     std::string m_description;
 
     std::string m_agent;
+
+    std::list<std::string> m_requiredIn;
 
     bool m_restart;
     bool m_reset;
