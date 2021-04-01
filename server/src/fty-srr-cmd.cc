@@ -28,9 +28,9 @@
 
 #include "dto/request.h"
 #include "dto/response.h"
+#include "helpers/utilsReauth.h"
 
 #include <cxxtools/serializationinfo.h>
-#include <cxxtools/base64codec.h>
 #include <fty/command-line.h>
 #include <fty_common.h>
 #include <fty_common_dto.h>
@@ -69,8 +69,6 @@ std::ostream &operator<< (std::ostream &os, const std::vector<T> &vec)
 // Utils
 dto::UserData sendRequest (const std::string &action,
                            const dto::UserData &userData);
-auto buildReauthToken(const std::string& sessionToken, const std::string& reauthPasswd) -> std::string;
-
 
 // operations
 std::vector<std::string> opList (void);
@@ -191,7 +189,7 @@ int main (int argc, char **argv)
         } else {
             std::cout << "### - No input file specified, waiting for input from stdin" << std::endl;
         }
-        std::string reauthToken = buildReauthToken(sessionToken, reauthPasswd);
+        std::string reauthToken = srr::utils::buildReauthToken(sessionToken, reauthPasswd);
         opRestore(passphrase, reauthToken, inputFile.is_open() ? inputFile : std::cin, force);
         if(inputFile.is_open()) {
             inputFile.close();
@@ -380,9 +378,4 @@ void opRestore(const std::string& passphrase, const std::string& sessionToken, s
 
 void opReset() {
     std::cerr << "Srr daemon does not handle reset operation" << std::endl;
-}
-
-auto buildReauthToken(const std::string& sessionToken, const std::string& reauthPasswd) -> std::string
-{
-  return cxxtools::Base64Codec::encode({sessionToken + ":" + reauthPasswd});
 }
