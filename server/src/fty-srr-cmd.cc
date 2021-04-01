@@ -29,8 +29,8 @@
 #include "dto/request.h"
 #include "dto/response.h"
 
-
 #include <cxxtools/serializationinfo.h>
+#include <cxxtools/base64codec.h>
 #include <fty/command-line.h>
 #include <fty_common.h>
 #include <fty_common_dto.h>
@@ -66,9 +66,11 @@ std::ostream &operator<< (std::ostream &os, const std::vector<T> &vec)
     os << *it;
     return os;
 }
-
+// Utils
 dto::UserData sendRequest (const std::string &action,
                            const dto::UserData &userData);
+auto buildReauthToken(const std::string& sessionToken, const std::string& reauthPasswd) -> std::string;
+
 
 // operations
 std::vector<std::string> opList (void);
@@ -99,6 +101,7 @@ int main (int argc, char **argv)
     std::string fileName;
     std::string groups;
     std::string passphrase;
+    std::string reauthPasswd{};
     std::string sessionToken{};
 
     if(std::getenv(SESSION_TOKEN_ENV_VAR))
@@ -110,6 +113,7 @@ int main (int argc, char **argv)
     fty::CommandLine cmd("### - SRR command line\n      Usage: fty-srr-cmd <list|save|restore|reset> [options]", {
         {"--help|-h", help, "Show this help"},
         {"--passphrase|-p", passphrase, "Passhphrase to save/restore groups"},
+        {"--password|-pwd", reauthPasswd, "Password to restore groups (reauthorization)"},
         {"--token|-t", sessionToken, "Session token to save/restore groups if needed"},
         {"--groups|-g", groups, "Select groups to save (default to all groups)"},
         {"--file|-f", fileName, "Path to the JSON file to save/restore. If not specified, standard input/output is used"},
@@ -171,6 +175,11 @@ int main (int argc, char **argv)
             std::cout << cmd.help() << std::endl;
             return EXIT_FAILURE;
         }
+        if(reauthPasswd.empty()) {
+            std::cerr << "### - Password for reauthorization is required with restore operation" << std::endl;
+            std::cout << cmd.help() << std::endl;
+            return EXIT_FAILURE;
+        }
         std::ifstream inputFile;
         if(!fileName.empty()) {
             try{
@@ -182,7 +191,8 @@ int main (int argc, char **argv)
         } else {
             std::cout << "### - No input file specified, waiting for input from stdin" << std::endl;
         }
-        opRestore(passphrase, sessionToken, inputFile.is_open() ? inputFile : std::cin, force);
+        std::string reauthToken = buildReauthToken(sessionToken, reauthPasswd);
+        opRestore(passphrase, reauthToken, inputFile.is_open() ? inputFile : std::cin, force);
         if(inputFile.is_open()) {
             inputFile.close();
         }
@@ -370,4 +380,9 @@ void opRestore(const std::string& passphrase, const std::string& sessionToken, s
 
 void opReset() {
     std::cerr << "Srr daemon does not handle reset operation" << std::endl;
+}
+
+auto buildReauthToken(const std::string& sessionToken, const std::string& reauthPasswd) -> std::string
+{
+  return cxxtools::Base64Codec::encode({sessionToken + ":" + reauthPasswd});
 }
