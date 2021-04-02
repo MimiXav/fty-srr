@@ -111,7 +111,7 @@ int main (int argc, char **argv)
     fty::CommandLine cmd("### - SRR command line\n      Usage: fty-srr-cmd <list|save|restore|reset> [options]", {
         {"--help|-h", help, "Show this help"},
         {"--passphrase|-p", passphrase, "Passhphrase to save/restore groups"},
-        {"--password|-pwd", reauthPasswd, "Password to restore groups (reauthorization)"},
+        {"--password|-pwd", reauthPasswd, "Password to restore groups (reauthentication)"},
         {"--token|-t", sessionToken, "Session token to save/restore groups if needed"},
         {"--groups|-g", groups, "Select groups to save (default to all groups)"},
         {"--file|-f", fileName, "Path to the JSON file to save/restore. If not specified, standard input/output is used"},
@@ -174,7 +174,7 @@ int main (int argc, char **argv)
             return EXIT_FAILURE;
         }
         if(reauthPasswd.empty()) {
-            std::cerr << "### - Password for reauthorization is required with restore operation" << std::endl;
+            std::cerr << "### - Password for reauthentication is required with restore operation" << std::endl;
             std::cout << cmd.help() << std::endl;
             return EXIT_FAILURE;
         }
