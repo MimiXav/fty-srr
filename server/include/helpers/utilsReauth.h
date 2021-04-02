@@ -25,5 +25,5 @@
 
 namespace srr::utils
 {
-  auto buildReauthToken(const std::string& sessionToken, const std::string& reauthPasswd) -> std::string;
+  auto buildReauthToken(const std::string& sessionToken, const std::string& passwd) -> std::string;
 }

@@ -25,8 +25,8 @@
 
 namespace srr::utils
 {
-  auto buildReauthToken(const std::string& sessionToken, const std::string& reauthPasswd) -> std::string
+  auto buildReauthToken(const std::string& sessionToken, const std::string& passwd) -> std::string
   {
-    return cxxtools::Base64Codec::encode({sessionToken + ":" + reauthPasswd});
+    return cxxtools::Base64Codec::encode({sessionToken + ":" + passwd});
   }
 }

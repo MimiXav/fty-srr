@@ -99,7 +99,7 @@ int main (int argc, char **argv)
     std::string fileName;
     std::string groups;
     std::string passphrase;
-    std::string reauthPasswd{};
+    std::string passwd{};
     std::string sessionToken{};
 
     if(std::getenv(SESSION_TOKEN_ENV_VAR))
@@ -111,7 +111,7 @@ int main (int argc, char **argv)
     fty::CommandLine cmd("### - SRR command line\n      Usage: fty-srr-cmd <list|save|restore|reset> [options]", {
         {"--help|-h", help, "Show this help"},
         {"--passphrase|-p", passphrase, "Passhphrase to save/restore groups"},
-        {"--password|-pwd", reauthPasswd, "Password to restore groups (reauthentication)"},
+        {"--password|-pwd", passwd, "Password to restore groups (reauthentication)"},
         {"--token|-t", sessionToken, "Session token to save/restore groups if needed"},
         {"--groups|-g", groups, "Select groups to save (default to all groups)"},
         {"--file|-f", fileName, "Path to the JSON file to save/restore. If not specified, standard input/output is used"},
@@ -173,7 +173,7 @@ int main (int argc, char **argv)
             std::cout << cmd.help() << std::endl;
             return EXIT_FAILURE;
         }
-        if(reauthPasswd.empty()) {
+        if(passwd.empty()) {
             std::cerr << "### - Password for reauthentication is required with restore operation" << std::endl;
             std::cout << cmd.help() << std::endl;
             return EXIT_FAILURE;
@@ -189,7 +189,7 @@ int main (int argc, char **argv)
         } else {
             std::cout << "### - No input file specified, waiting for input from stdin" << std::endl;
         }
-        std::string reauthToken = srr::utils::buildReauthToken(sessionToken, reauthPasswd);
+        std::string reauthToken = srr::utils::buildReauthToken(sessionToken, passwd);
         opRestore(passphrase, reauthToken, inputFile.is_open() ? inputFile : std::cin, force);
         if(inputFile.is_open()) {
             inputFile.close();
