@@ -25,5 +25,6 @@
 
 namespace srr::utils
 {
-  auto buildReauthToken(const std::string& sessionToken, const std::string& passwd) -> std::string;
+  bool isPasswordValidated(const std::string& passwd);
+  std::string buildReauthToken(const std::string& sessionToken, const std::string& passwd);
 }

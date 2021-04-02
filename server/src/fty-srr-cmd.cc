@@ -177,6 +177,9 @@ int main (int argc, char **argv)
             std::cerr << "### - Password for reauthentication is required with restore operation" << std::endl;
             std::cout << cmd.help() << std::endl;
             return EXIT_FAILURE;
+        } else if(!srr::utils::isPasswordValidated(passwd)) {
+            std::cerr << "### - Wrong password, please retry" << std::endl;
+            return EXIT_FAILURE;
         }
         std::ifstream inputFile;
         if(!fileName.empty()) {
